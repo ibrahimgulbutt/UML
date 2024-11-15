@@ -5,16 +5,20 @@ import javafx.scene.layout.*;
 import javafx.geometry.Insets;
 import org.example.scdpro2.ui.controllers.MainController;
 import org.example.scdpro2.business.services.DiagramService;
+import org.example.scdpro2.ui.views.RelationshipLine.RelationshipType;
 
 public class MainView extends BorderPane {
     private final MainController controller;
     private final ClassDiagramPane diagramPane;
     private ToggleButton relationshipModeToggle;
+    private RelationshipType selectedRelationshipType; // Current selected relationship type
+    private ClassBox sourceClassBox; // Temporarily holds the source ClassBox for relationship
 
     public MainView() {
         DiagramService diagramService = new DiagramService();
         this.controller = new MainController(diagramService);
-        this.diagramPane = new ClassDiagramPane(controller, diagramService);
+        this.diagramPane = new ClassDiagramPane(this, controller, diagramService);
+
 
         MenuBar menuBar = createMenuBar();
         ToolBar toolbar = createToolbar();
@@ -49,7 +53,7 @@ public class MainView extends BorderPane {
         return menuBar;
     }
 
-    // Toolbar setup, including the "Add Class" button that calls addClassBox
+    // Toolbar setup, including the "Add Class" button and relationship type selection
     private ToolBar createToolbar() {
         ToolBar toolbar = new ToolBar();
 
@@ -63,13 +67,44 @@ public class MainView extends BorderPane {
             boolean isActive = relationshipModeToggle.isSelected();
             diagramPane.setRelationshipModeEnabled(isActive);
             relationshipModeToggle.setText(isActive ? "Exit Relationship Mode" : "Relationship Mode");
+            System.out.println("Relationship mode: " + (isActive ? "Enabled" : "Disabled"));
 
             if (!isActive) {
+                sourceClassBox = null; // Clear source selection when exiting relationship mode
                 diagramPane.clearSelectedClass();
             }
         });
 
-        toolbar.getItems().addAll(addClassButton, relationshipModeToggle);
+
+
+        // Relationship Type Selection Buttons
+        ToggleGroup relationshipGroup = new ToggleGroup();
+
+        RadioButton associationBtn = new RadioButton("Association");
+        associationBtn.setToggleGroup(relationshipGroup);
+        associationBtn.setUserData(RelationshipType.ASSOCIATION);
+
+        RadioButton aggregationBtn = new RadioButton("Aggregation");
+        aggregationBtn.setToggleGroup(relationshipGroup);
+        aggregationBtn.setUserData(RelationshipType.AGGREGATION);
+
+        RadioButton compositionBtn = new RadioButton("Composition");
+        compositionBtn.setToggleGroup(relationshipGroup);
+        compositionBtn.setUserData(RelationshipType.COMPOSITION);
+
+        RadioButton inheritanceBtn = new RadioButton("Inheritance");
+        inheritanceBtn.setToggleGroup(relationshipGroup);
+        inheritanceBtn.setUserData(RelationshipType.INHERITANCE);
+
+        // Update selected relationship type
+        relationshipGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
+            if (newToggle != null) {
+                selectedRelationshipType = (RelationshipType) newToggle.getUserData();
+            }
+        });
+
+        toolbar.getItems().addAll(addClassButton, relationshipModeToggle,
+                new Separator(), associationBtn, aggregationBtn, compositionBtn, inheritanceBtn);
         return toolbar;
     }
 
@@ -92,4 +127,32 @@ public class MainView extends BorderPane {
         codeGenerationPanel.getChildren().addAll(codeGenerationLabel, generateButton);
         return codeGenerationPanel;
     }
+
+    // Handle relationship mode logic for connecting two ClassBox components
+    public void handleClassBoxClick(ClassBox clickedClassBox) {
+        System.out.println("handleClassBoxClick called for " + clickedClassBox.getClassDiagram().getTitle());
+
+        if (!relationshipModeToggle.isSelected() || selectedRelationshipType == null) {
+            System.out.println("Relationship mode not active or no type selected.");
+            return;
+        }
+
+        if (sourceClassBox == null) {
+            sourceClassBox = clickedClassBox;
+            sourceClassBox.setStyle("-fx-border-color: blue;"); // Highlight the source
+            System.out.println("Source class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
+        } else if (!sourceClassBox.equals(clickedClassBox)) {
+            controller.createRelationship(diagramPane, sourceClassBox, clickedClassBox, selectedRelationshipType);
+            sourceClassBox.setStyle("-fx-border-color: black;"); // Reset source style
+            sourceClassBox = null; // Clear source selection
+            System.out.println("Target class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
+        } else {
+            sourceClassBox.setStyle("-fx-border-color: black;");
+            sourceClassBox = null;
+            System.out.println("Source selection cleared.");
+        }
+    }
+
+
+
 }

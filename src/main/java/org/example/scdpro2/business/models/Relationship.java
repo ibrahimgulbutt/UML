@@ -1,26 +1,24 @@
 package org.example.scdpro2.business.models;
 
+import org.example.scdpro2.ui.views.RelationshipLine.RelationshipType;
+
 public class Relationship {
-    private String startClassId;
-    private String endClassId;
-    private RelationshipType type;
+    private final Diagram source;
+    private final Diagram target;
+    private final RelationshipType type;
 
-    public enum RelationshipType {
-        ASSOCIATION, AGGREGATION, COMPOSITION, INHERITANCE
-    }
-
-    public Relationship(String startClassId, String endClassId, RelationshipType type) {
-        this.startClassId = startClassId;
-        this.endClassId = endClassId;
+    public Relationship(Diagram source, Diagram target, RelationshipType type) {
+        this.source = source;
+        this.target = target;
         this.type = type;
     }
 
-    public String getStartClassId() {
-        return startClassId;
+    public Diagram getSource() {
+        return source;
     }
 
-    public String getEndClassId() {
-        return endClassId;
+    public Diagram getTarget() {
+        return target;
     }
 
     public RelationshipType getType() {

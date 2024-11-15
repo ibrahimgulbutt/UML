@@ -2,6 +2,7 @@ package org.example.scdpro2.business.services;
 
 import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.business.models.Project;
+import org.example.scdpro2.business.models.Relationship;
 
 import java.util.Optional;
 
@@ -37,5 +38,11 @@ public class DiagramService {
         if (currentProject != null) {
             currentProject.removeDiagram(diagram);
         }
+    }
+    public void addRelationship(Relationship relationship) {
+        if (currentProject == null) {
+            throw new IllegalStateException("No project is loaded. Please create or load a project first.");
+        }
+        currentProject.addRelationship(relationship);
     }
 }

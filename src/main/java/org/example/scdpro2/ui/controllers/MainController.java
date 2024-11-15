@@ -1,6 +1,7 @@
 package org.example.scdpro2.ui.controllers;
 
 import org.example.scdpro2.business.models.ClassDiagram;
+import org.example.scdpro2.business.models.Relationship;
 import org.example.scdpro2.business.services.DiagramService;
 import org.example.scdpro2.data.dao.ProjectDAOImpl;
 import org.example.scdpro2.business.services.ProjectService;
@@ -62,13 +63,7 @@ public class MainController {
             System.out.println("No diagram available for code generation.");
         }
     }
-
-    // Method for connecting two classes based on the selected relationship type
-    public void connectClasses(ClassDiagramPane pane, ClassBox source, ClassBox target, RelationshipLine.RelationshipType type) {
-        // Implementation to create a relationship line based on type
-        System.out.println("Connecting " + source + " to " + target + " with relationship " + type);
-        // Additional code to render or save the relationship would go here
-    }
+    
     // Method to add a new ClassBox to the ClassDiagramPane
     public void addClassBox(ClassDiagramPane diagramPane) {
         // Ensure a project is initialized
@@ -82,7 +77,28 @@ public class MainController {
 
         // Create a ClassBox and add it to the UI layer
         ClassBox classBox = new ClassBox(classDiagram);
+        diagramPane.addClassBox(classBox); // Ensure click handler is registered
         diagramPane.getChildren().add(classBox);
+        System.out.println("ClassBox added for: " + classDiagram.getTitle());
     }
+
+    public void createRelationship(ClassDiagramPane pane, ClassBox source, ClassBox target, RelationshipLine.RelationshipType type) {
+        if (source == null || target == null || type == null) {
+            System.out.println("Error: Invalid relationship parameters");
+            return;
+        }
+
+        System.out.println("Creating relationship from " + source.getClassDiagram().getTitle() +
+                " to " + target.getClassDiagram().getTitle() + " of type " + type);
+
+        pane.addRelationship(source, target, type);
+
+        // Update the business layer
+        Relationship relationship = new Relationship(source.getClassDiagram(), target.getClassDiagram(), type);
+        diagramService.addRelationship(relationship);
+    }
+
+
+
 
 }

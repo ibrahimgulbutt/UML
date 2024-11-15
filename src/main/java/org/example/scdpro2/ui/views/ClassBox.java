@@ -97,4 +97,7 @@ public class ClassBox extends VBox {
             setPrefHeight(newHeight);
         }
     }
+    public ClassDiagram getClassDiagram() {
+        return classDiagram;
+    }
 }

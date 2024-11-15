@@ -6,10 +6,12 @@ import java.util.List;
 public class Project {
     private String name;
     private List<Diagram> diagrams;
+    private List<Relationship> relationships;
 
     public Project(String name) {
         this.name = name;
         this.diagrams = new ArrayList<>();
+        this.relationships = new ArrayList<>();
     }
 
     public void addDiagram(Diagram diagram) {
@@ -30,5 +32,8 @@ public class Project {
 
     public void removeDiagram(Diagram diagram) {
         diagrams.remove(diagram);
+    }
+    public void addRelationship(Relationship relationship) {
+        relationships.add(relationship);
     }
 }
