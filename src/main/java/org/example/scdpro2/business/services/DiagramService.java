@@ -1,5 +1,6 @@
 package org.example.scdpro2.business.services;
 
+import org.example.scdpro2.business.models.ClassDiagram;
 import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.business.models.Project;
 import org.example.scdpro2.business.models.Relationship;
@@ -45,4 +46,20 @@ public class DiagramService {
         }
         currentProject.addRelationship(relationship);
     }
+    public void removeRelationship(ClassDiagram source, ClassDiagram target) {
+        if (source == null || target == null) return;
+
+        // Remove the relationship from the source diagram
+        source.getRelationships().removeIf(rel ->
+                rel.getSourceDiagram().equals(source) && rel.getTargetDiagram().equals(target)
+        );
+
+        // Remove the relationship from the target diagram
+        target.getRelationships().removeIf(rel ->
+                rel.getSourceDiagram().equals(source) && rel.getTargetDiagram().equals(target)
+        );
+
+        System.out.println("Removed relationship between " + source.getTitle() + " and " + target.getTitle());
+    }
+
 }

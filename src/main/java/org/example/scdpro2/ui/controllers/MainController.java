@@ -12,6 +12,9 @@ import org.example.scdpro2.ui.views.ClassBox;
 import org.example.scdpro2.ui.views.ClassDiagramPane;
 import org.example.scdpro2.ui.views.RelationshipLine;
 
+import java.util.stream.Collectors;
+import java.util.List;
+
 public class MainController {
     private ProjectService projectService;
     private CodeGenerationService codeGenerationService;
@@ -56,14 +59,28 @@ public class MainController {
     public void generateCode() {
         Project project = projectService.getCurrentProject();
         if (project != null && !project.getDiagrams().isEmpty()) {
-            Diagram diagram = project.getDiagrams().get(0); // For demonstration, we use the first diagram
-            String generatedCode = codeGenerationService.generateCode(diagram);
+            String generatedCode = codeGenerationService.generateCode(project);
             System.out.println("Generated Code:\n" + generatedCode);
         } else {
-            System.out.println("No diagram available for code generation.");
+            System.out.println("No diagrams available for code generation.");
         }
     }
-    
+
+
+    public List<String> getAvailableClassNames() {
+        Project currentProject = projectService.getCurrentProject();
+        if (currentProject != null) {
+            return currentProject.getDiagrams().stream()
+                    .filter(diagram -> diagram instanceof ClassDiagram)
+                    .map(diagram -> diagram.getTitle())
+                    .collect(Collectors.toList());
+        }
+        return List.of(); // Return an empty list if no project or diagrams
+    }
+
+
+
+
     // Method to add a new ClassBox to the ClassDiagramPane
     public void addClassBox(ClassDiagramPane diagramPane) {
         // Ensure a project is initialized
@@ -75,12 +92,38 @@ public class MainController {
         ClassDiagram classDiagram = new ClassDiagram("NewClass");
         diagramService.addDiagram(classDiagram);  // Add to the service
 
+        // Retrieve available class names
+        List<String> availableClassNames = getAvailableClassNames();
+
         // Create a ClassBox and add it to the UI layer
-        ClassBox classBox = new ClassBox(classDiagram);
+        ClassBox classBox = new ClassBox(classDiagram, this, diagramPane); // Pass available class names
         diagramPane.addClassBox(classBox); // Ensure click handler is registered
         diagramPane.getChildren().add(classBox);
         System.out.println("ClassBox added for: " + classDiagram.getTitle());
     }
+    public void deleteClassBox(ClassDiagramPane pane, ClassBox classBox) {
+        if (classBox == null) {
+            System.out.println("Error: ClassBox to delete is null");
+            return;
+        }
+
+        // Remove all associated relationships from the UI layer
+        List<RelationshipLine> linesToRemove = pane.getRelationshipLinesConnectedTo(classBox);
+        for (RelationshipLine line : linesToRemove) {
+            pane.removeRelationshipLine(line);
+            diagramService.removeRelationship(line.getSourceDiagram(), line.getTargetDiagram());
+        }
+
+        // Remove the ClassBox from the UI layer
+        pane.getChildren().remove(classBox);
+
+        // Remove the ClassDiagram and its relationships from the business layer
+        diagramService.removeDiagram(classBox.getClassDiagram());
+        System.out.println("Deleted ClassBox and all associated relationships for: " + classBox.getClassDiagram().getTitle());
+    }
+
+
+
 
     public void createRelationship(ClassDiagramPane pane, ClassBox source, ClassBox target, RelationshipLine.RelationshipType type) {
         if (source == null || target == null || type == null) {

@@ -4,8 +4,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Shape;
+import org.example.scdpro2.business.models.ClassDiagram;
 
-public class RelationshipLine {
+public class RelationshipLine extends javafx.scene.Node {
     public enum RelationshipType {
         ASSOCIATION, AGGREGATION, COMPOSITION, INHERITANCE
     }
@@ -14,7 +15,15 @@ public class RelationshipLine {
     private Shape endIndicator;
     private RelationshipType type;
 
-    public RelationshipLine(double startX, double startY, double endX, double endY, RelationshipType type) {
+    private final ClassDiagram sourceDiagram; // Reference to the source ClassDiagram
+    private final ClassDiagram targetDiagram; // Reference to the target ClassDiagram
+
+    public RelationshipLine(ClassDiagram sourceDiagram, ClassDiagram targetDiagram,
+                            double startX, double startY, double endX, double endY,
+                            RelationshipType type) {
+        this.sourceDiagram = sourceDiagram;
+        this.targetDiagram = targetDiagram;
+
         this.type = type;
         this.line = new Line(startX, startY, endX, endY);
         this.line.setStrokeWidth(2);
@@ -84,5 +93,19 @@ public class RelationshipLine {
 
     public Shape getEndIndicator() {
         return endIndicator;
+    }
+
+    // Utility methods to get source and target diagrams
+    public ClassDiagram getSourceDiagram() {
+        return sourceDiagram;
+    }
+
+    public ClassDiagram getTargetDiagram() {
+        return targetDiagram;
+    }
+
+    public boolean isConnectedTo(ClassBox classBox) {
+        ClassDiagram diagram = classBox.getClassDiagram();
+        return diagram.equals(sourceDiagram) || diagram.equals(targetDiagram);
     }
 }

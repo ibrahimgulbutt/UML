@@ -24,4 +24,12 @@ public class Relationship {
     public RelationshipType getType() {
         return type;
     }
+
+    public Object getSourceDiagram() {
+        return source;
+    }
+
+    public Object getTargetDiagram() {
+        return target;
+    }
 }
