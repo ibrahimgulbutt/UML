@@ -11,13 +11,15 @@ public class DiagramService {
     private Project currentProject;
 
     public DiagramService() {
-        // Initialize without a project; it will be set later when created or loaded
         this.currentProject = null;
     }
 
-    // Method to set or update the current project
     public void setCurrentProject(Project project) {
         this.currentProject = project;
+    }
+
+    public Project getCurrentProject() {
+        return currentProject;
     }
 
     public void addDiagram(Diagram diagram) {
@@ -27,39 +29,32 @@ public class DiagramService {
         currentProject.addDiagram(diagram);
     }
 
-    public Optional<Diagram> findDiagramByTitle(String title) {
-        if (currentProject == null) return Optional.empty();
-
-        return currentProject.getDiagrams().stream()
-                .filter(diagram -> diagram.getTitle().equalsIgnoreCase(title))
-                .findFirst();
-    }
-
     public void removeDiagram(Diagram diagram) {
         if (currentProject != null) {
             currentProject.removeDiagram(diagram);
         }
     }
+
+    public Optional<Diagram> findDiagramByTitle(String title) {
+        if (currentProject == null) return Optional.empty();
+        return currentProject.getDiagrams().stream()
+                .filter(diagram -> diagram.getTitle().equalsIgnoreCase(title))
+                .findFirst();
+    }
+
     public void addRelationship(Relationship relationship) {
         if (currentProject == null) {
             throw new IllegalStateException("No project is loaded. Please create or load a project first.");
         }
         currentProject.addRelationship(relationship);
     }
+
     public void removeRelationship(ClassDiagram source, ClassDiagram target) {
         if (source == null || target == null) return;
 
-        // Remove the relationship from the source diagram
-        source.getRelationships().removeIf(rel ->
-                rel.getSourceDiagram().equals(source) && rel.getTargetDiagram().equals(target)
-        );
-
-        // Remove the relationship from the target diagram
-        target.getRelationships().removeIf(rel ->
-                rel.getSourceDiagram().equals(source) && rel.getTargetDiagram().equals(target)
-        );
+        source.getRelationships().removeIf(rel -> rel.getSourceDiagram().equals(source) && rel.getTargetDiagram().equals(target));
+        target.getRelationships().removeIf(rel -> rel.getSourceDiagram().equals(source) && rel.getTargetDiagram().equals(target));
 
         System.out.println("Removed relationship between " + source.getTitle() + " and " + target.getTitle());
     }
-
 }

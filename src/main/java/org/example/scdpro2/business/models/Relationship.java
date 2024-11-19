@@ -2,7 +2,10 @@ package org.example.scdpro2.business.models;
 
 import org.example.scdpro2.ui.views.RelationshipLine.RelationshipType;
 
-public class Relationship {
+import java.io.Serializable;
+
+public class Relationship implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final Diagram source;
     private final Diagram target;
     private final RelationshipType type;
@@ -25,11 +28,19 @@ public class Relationship {
         return type;
     }
 
-    public Object getSourceDiagram() {
-        return source;
+    public ClassDiagram getSourceDiagram() {
+        return (ClassDiagram) source;
     }
 
-    public Object getTargetDiagram() {
-        return target;
+    public ClassDiagram getTargetDiagram() {
+        return (ClassDiagram) target;
+    }
+    @Override
+    public String toString() {
+        return "Relationship{" +
+                "source=" + source.getTitle() +
+                ", target=" + target.getTitle() +
+                ", type=" + type +
+                '}';
     }
 }

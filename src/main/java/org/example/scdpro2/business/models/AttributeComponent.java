@@ -2,9 +2,12 @@ package org.example.scdpro2.business.models;
 
 import org.example.scdpro2.business.models.ModelComponent;
 
-public class AttributeComponent extends ModelComponent {
+import java.io.Serializable;
+
+public class AttributeComponent extends ModelComponent implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String visibility;
-    private final String name;
+    private String name;
 
     public AttributeComponent(String name, String visibility) {
         super(name);
@@ -32,4 +35,7 @@ public class AttributeComponent extends ModelComponent {
         this.visibility = visibility;
     }
 
+    public void setName(String newVal) {
+        this.name=newVal;
+    }
 }

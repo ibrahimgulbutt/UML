@@ -1,34 +1,37 @@
 package org.example.scdpro2.ui.views;
 
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Shape;
 import org.example.scdpro2.business.models.ClassDiagram;
+import org.example.scdpro2.ui.views.RelationshipLine.RelationshipType;
 
-public class RelationshipLine extends javafx.scene.Node {
+public class RelationshipLine {
     public enum RelationshipType {
         ASSOCIATION, AGGREGATION, COMPOSITION, INHERITANCE
     }
 
-    private Line line;
-    private Shape endIndicator;
-    private RelationshipType type;
+    private final Line line;
+    private final Shape endIndicator;
+    private final RelationshipType type;
 
-    private final ClassDiagram sourceDiagram; // Reference to the source ClassDiagram
-    private final ClassDiagram targetDiagram; // Reference to the target ClassDiagram
+    private final ClassDiagram sourceDiagram; // Source class diagram
+    private final ClassDiagram targetDiagram; // Target class diagram
 
     public RelationshipLine(ClassDiagram sourceDiagram, ClassDiagram targetDiagram,
-                            double startX, double startY, double endX, double endY,
-                            RelationshipType type) {
+                            RelationshipType type, double startX, double startY,
+                            double endX, double endY) {
         this.sourceDiagram = sourceDiagram;
         this.targetDiagram = targetDiagram;
-
         this.type = type;
+
         this.line = new Line(startX, startY, endX, endY);
         this.line.setStrokeWidth(2);
         this.line.setStroke(Color.BLACK);
-        this.endIndicator = createEndIndicator(type, endX, endY);
+        this.endIndicator = createEndIndicator(type);
 
         updatePosition(startX, startY, endX, endY);
     }
@@ -40,51 +43,44 @@ public class RelationshipLine extends javafx.scene.Node {
         line.setEndY(endY);
 
         if (endIndicator instanceof Polygon polygon) {
-            polygon.setLayoutX(endX);
-            polygon.setLayoutY(endY);
+            double[] offset = calculateOffset(startX, startY, endX, endY, 20); // Adjust as needed
+            polygon.setLayoutX(offset[0]);
+            polygon.setLayoutY(offset[1]);
+            polygon.setRotate(calculateRotationAngle(startX, startY, endX, endY));
         }
     }
 
-    private Shape createEndIndicator(RelationshipType type, double x, double y) {
+    private Shape createEndIndicator(RelationshipType type) {
         switch (type) {
             case INHERITANCE: // Triangle arrowhead
                 Polygon triangle = new Polygon();
-                triangle.getPoints().addAll(
-                        x, y,
-                        x - 10, y - 5,
-                        x - 10, y + 5
-                );
+                triangle.getPoints().addAll(0.0, 0.0, -10.0, -5.0, -10.0, 5.0);
                 triangle.setFill(Color.WHITE);
                 triangle.setStroke(Color.BLACK);
                 return triangle;
-
             case AGGREGATION: // Diamond
                 Polygon diamond = new Polygon();
-                diamond.getPoints().addAll(
-                        x, y,
-                        x - 10, y - 5,
-                        x - 20, y,
-                        x - 10, y + 5
-                );
+                diamond.getPoints().addAll(0.0, 0.0, -10.0, -5.0, -20.0, 0.0, -10.0, 5.0);
                 diamond.setFill(Color.WHITE);
                 diamond.setStroke(Color.BLACK);
                 return diamond;
-
             case COMPOSITION: // Filled diamond
                 Polygon filledDiamond = new Polygon();
-                filledDiamond.getPoints().addAll(
-                        x, y,
-                        x - 10, y - 5,
-                        x - 20, y,
-                        x - 10, y + 5
-                );
+                filledDiamond.getPoints().addAll(0.0, 0.0, -10.0, -5.0, -20.0, 0.0, -10.0, 5.0);
                 filledDiamond.setFill(Color.BLACK);
                 return filledDiamond;
-
-            case ASSOCIATION: // Plain line (no additional indicator)
             default:
                 return null;
         }
+    }
+
+    private double[] calculateOffset(double startX, double startY, double endX, double endY, double distance) {
+        double angle = Math.atan2(endY - startY, endX - startX);
+        return new double[]{endX - distance * Math.cos(angle), endY - distance * Math.sin(angle)};
+    }
+
+    private double calculateRotationAngle(double startX, double startY, double endX, double endY) {
+        return Math.toDegrees(Math.atan2(endY - startY, endX - startX));
     }
 
     public Line getLine() {
@@ -95,7 +91,6 @@ public class RelationshipLine extends javafx.scene.Node {
         return endIndicator;
     }
 
-    // Utility methods to get source and target diagrams
     public ClassDiagram getSourceDiagram() {
         return sourceDiagram;
     }
@@ -104,8 +99,43 @@ public class RelationshipLine extends javafx.scene.Node {
         return targetDiagram;
     }
 
+    public RelationshipType getType() {
+        return type;
+    }
+
+    public void enableSelectionAndDeletion(ClassDiagramPane parentPane) {
+        line.setOnMouseClicked(event -> {
+            highlightLine(true);
+            showDeleteConfirmation(parentPane);
+        });
+
+        if (endIndicator != null) {
+            endIndicator.setOnMouseClicked(event -> {
+                highlightLine(true);
+                showDeleteConfirmation(parentPane);
+            });
+        }
+    }
+
+    private void highlightLine(boolean highlight) {
+        line.setStroke(highlight ? Color.RED : Color.BLACK);
+    }
+
+    private void showDeleteConfirmation(ClassDiagramPane parentPane) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete this relationship?", ButtonType.YES, ButtonType.NO);
+        alert.showAndWait();
+        if (alert.getResult() == ButtonType.YES) {
+            parentPane.removeRelationshipLine(this);
+        } else {
+            highlightLine(false);
+        }
+    }
+
     public boolean isConnectedTo(ClassBox classBox) {
-        ClassDiagram diagram = classBox.getClassDiagram();
-        return diagram.equals(sourceDiagram) || diagram.equals(targetDiagram);
+        return sourceDiagram.equals(classBox.getClassDiagram()) || targetDiagram.equals(classBox.getClassDiagram());
+    }
+
+    public boolean isConnectedTo(InterfaceBox interfaceBox) {
+        return sourceDiagram.equals(interfaceBox.getInterfaceDiagram()) || targetDiagram.equals(interfaceBox.getInterfaceDiagram());
     }
 }

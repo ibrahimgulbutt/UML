@@ -1,6 +1,9 @@
 package org.example.scdpro2.business.models;
 
-public abstract class Diagram {
+import java.io.Serializable;
+
+public abstract class Diagram implements Serializable {
+    private static final long serialVersionUID = 1L;
     protected String title;
 
     public Diagram(String title) {
@@ -18,4 +21,7 @@ public abstract class Diagram {
     public abstract void render(); // For UI purposes
 
     public abstract String toCode(); // For code generation purposes
+
+
+    public abstract DiagramType getType();
 }

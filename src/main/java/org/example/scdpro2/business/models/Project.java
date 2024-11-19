@@ -1,9 +1,10 @@
 package org.example.scdpro2.business.models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Project {
+public class Project implements Serializable {
     private String name;
     private List<Diagram> diagrams;
     private List<Relationship> relationships;
@@ -35,5 +36,9 @@ public class Project {
     }
     public void addRelationship(Relationship relationship) {
         relationships.add(relationship);
+    }
+
+    public List<Relationship> getRelationships() {
+        return relationships;
     }
 }

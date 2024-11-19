@@ -11,17 +11,19 @@ import org.example.scdpro2.business.models.ClassDiagram;
 import org.example.scdpro2.business.models.OperationComponent;
 import org.example.scdpro2.ui.controllers.MainController;
 
-import java.util.List;
-
 public class ClassBox extends VBox {
+    private final MainController controller;
+    private final ClassDiagram classDiagram;
     private double offsetX, offsetY;
     private final Rectangle resizeHandle = new Rectangle(10, 10); // Resize handle
-    private ClassDiagram classDiagram;
-    private Button updateClassNameButton; // Declare as a field
-    private Runnable onClassNameUpdated; // Callback for class name updates
+    private final VBox attributesBox = new VBox(); // Container for attributes
+    private final VBox operationsBox = new VBox(); // Container for operations
+    private final Button updateClassNameButton = new Button("✔"); // Update class name button
 
     public ClassBox(ClassDiagram classDiagram, MainController controller, ClassDiagramPane diagramPane) {
         this.classDiagram = classDiagram;
+        this.controller = controller;
+
         setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
         setMinWidth(150);
         setMinHeight(100);
@@ -31,7 +33,37 @@ public class ClassBox extends VBox {
         resizeHandle.setOnMouseDragged(this::resize);
 
         // Context Menu for Deleting Class
-        // Add context menu for deleting the class
+        ContextMenu contextMenu = createContextMenu(diagramPane);
+        this.setOnContextMenuRequested(event -> contextMenu.show(this, event.getScreenX(), event.getScreenY()));
+
+        // Class name section
+        HBox nameBox = createNameBox(diagramPane);
+
+        // Attributes section
+        Label attributesLabel = new Label("Attributes:");
+        Button addAttributeButton = new Button("+");
+        addAttributeButton.setOnAction(e -> addAttribute(attributesBox));
+        attributesBox.getChildren().addAll(attributesLabel, addAttributeButton);
+        loadAttributes();
+
+        // Operations section
+        Label operationsLabel = new Label("Operations:");
+        Button addOperationButton = new Button("+");
+        addOperationButton.setOnAction(e -> addOperation(operationsBox));
+        operationsBox.getChildren().addAll(operationsLabel, addOperationButton);
+        loadOperations();
+
+        // Add components to the ClassBox
+        getChildren().addAll(nameBox, attributesBox, operationsBox, resizeHandle);
+        setAlignment(Pos.TOP_LEFT);
+
+        // Enable dragging for repositioning
+        setOnMousePressed(this::handleMousePressed);
+        setOnMouseDragged(this::handleMouseDragged);
+    }
+
+    // Create the context menu for deleting the class
+    private ContextMenu createContextMenu(ClassDiagramPane diagramPane) {
         ContextMenu contextMenu = new ContextMenu();
         MenuItem deleteItem = new MenuItem("Delete Class");
         deleteItem.setOnAction(event -> {
@@ -43,20 +75,21 @@ public class ClassBox extends VBox {
                 }
             });
         });
-
         contextMenu.getItems().add(deleteItem);
-        this.setOnContextMenuRequested(event -> contextMenu.show(this, event.getScreenX(), event.getScreenY()));
+        return contextMenu;
+    }
 
-        // Class name section
+    // Create the name section
+    private HBox createNameBox(ClassDiagramPane diagramPane) {
         HBox nameBox = new HBox();
         TextField classNameField = new TextField(classDiagram.getTitle());
+        classNameField.setPromptText("Class Name");
         classNameField.textProperty().addListener((obs, oldName, newName) -> {
             if (!newName.equals(oldName)) {
-                updateClassNameButton.setVisible(true); // Show tick button when text changes
+                updateClassNameButton.setVisible(true);
             }
         });
 
-        updateClassNameButton = new Button("✔");
         updateClassNameButton.setVisible(false);
         updateClassNameButton.setOnAction(e -> {
             String newClassName = classNameField.getText().trim();
@@ -65,163 +98,98 @@ public class ClassBox extends VBox {
                 alert.showAndWait();
                 return;
             }
-
             classDiagram.setTitle(newClassName);
+            controller.getDiagramService().getCurrentProject().getDiagrams().stream()
+                    .filter(d -> d.equals(classDiagram))
+                    .findFirst()
+                    .ifPresent(d -> ((ClassDiagram) d).setTitle(newClassName));
+
             updateClassNameButton.setVisible(false);
+            diagramPane.getMainView().updateClassListView(); // Update the class list in the UI
             System.out.println("Class name updated to: " + newClassName);
         });
 
-        classNameField.setOnMouseClicked(event -> updateClassNameButton.setVisible(true));
         nameBox.getChildren().addAll(classNameField, updateClassNameButton);
-
-        VBox attributesBox = new VBox();
-        Label attributesLabel = new Label("Attributes:");
-        Button addAttributeButton = new Button("+");
-        addAttributeButton.setOnAction(e -> addAttribute(attributesBox));
-        attributesBox.getChildren().addAll(attributesLabel, addAttributeButton);
-
-        VBox operationsBox = new VBox();
-        Label operationsLabel = new Label("Operations:");
-        Button addOperationButton = new Button("+");
-        addOperationButton.setOnAction(e -> addOperation(operationsBox));
-        operationsBox.getChildren().addAll(operationsLabel, addOperationButton);
-
-        getChildren().addAll(nameBox, attributesBox, operationsBox);
-        setOnMousePressed(this::handleMousePressed);
-        setOnMouseDragged(this::handleMouseDragged);
-        setAlignment(Pos.TOP_LEFT);
-        getChildren().add(resizeHandle);
-
-
+        return nameBox;
     }
 
-
-    private void handleDeleteClass() {
-        Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION,
-                "Are you sure you want to delete this class?",
-                ButtonType.YES, ButtonType.NO);
-        confirmation.setTitle("Delete Class");
-        confirmation.setHeaderText("Confirm Delete");
-        confirmation.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.YES) {
-                // Notify the parent to remove this ClassBox from the UI and business layer
-                if (getParent() instanceof ClassDiagramPane diagramPane) {
-                    diagramPane.removeClassBox(this);
-                }
-                System.out.println("Class deleted: " + classDiagram.getTitle());
-            }
-        });
+    // Load attributes from the business model
+    private void loadAttributes() {
+        for (AttributeComponent attribute : classDiagram.getAttributes()) {
+            addAttributeToUI(attribute);
+        }
     }
-
 
     private void addAttribute(VBox attributesBox) {
+        AttributeComponent attribute = new AttributeComponent("attribute", "+");
+        classDiagram.addAttribute(attribute); // Add to the business model
+        addAttributeToUI(attribute);
+    }
+
+    private void addAttributeToUI(AttributeComponent attribute) {
         HBox attributeBox = new HBox();
         ComboBox<String> visibilityComboBox = new ComboBox<>();
         visibilityComboBox.getItems().addAll("+", "-", "#");
-        visibilityComboBox.getSelectionModel().select("+");
+        visibilityComboBox.getSelectionModel().select(attribute.getVisibility());
 
-        TextField attributeNameField = new TextField("attribute");
-        attributeNameField.setPromptText("Name");
-
+        TextField attributeNameField = new TextField(attribute.getName());
         ComboBox<String> dataTypeComboBox = new ComboBox<>();
         dataTypeComboBox.setEditable(true);
-        dataTypeComboBox.getItems().addAll(
-                "int", "String", "boolean", "double", "float", "char", "long", "short"
-        );
+        dataTypeComboBox.getItems().addAll("int", "String", "boolean", "double", "float", "char", "long", "short");
         dataTypeComboBox.setPromptText("Data Type");
 
-        Button saveButton = new Button("✔");
-        Button deleteButton = new Button("❌"); // Add delete button
-        deleteButton.setVisible(false); // Hidden until saved
+        visibilityComboBox.valueProperty().addListener((obs, oldVal, newVal) -> attribute.setVisibility(newVal));
+        attributeNameField.textProperty().addListener((obs, oldVal, newVal) -> attribute.setName(newVal));
+        dataTypeComboBox.getEditor().textProperty().addListener((obs, oldVal, newVal) -> attribute.setName(attributeNameField.getText() + ": " + newVal));
 
-        saveButton.setOnAction(e -> {
-            String visibility = visibilityComboBox.getValue();
-            String attributeName = attributeNameField.getText().trim();
-            String dataType = dataTypeComboBox.getEditor().getText().trim();
-
-            if (attributeName.isEmpty() || dataType.isEmpty()) {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Attribute name and data type are required.", ButtonType.OK);
-                alert.showAndWait();
-                return;
-            }
-
-            // Update model component in the business layer
-            AttributeComponent attribute = new AttributeComponent(attributeName + ": " + dataType, visibility);
-            classDiagram.addAttribute(attribute);
-
-            visibilityComboBox.valueProperty().addListener((obs, oldVal, newVal) -> attribute.setVisibility(newVal));
-
-            saveButton.setVisible(false);
-            deleteButton.setVisible(true); // Show delete button after saving
-
-            System.out.println("Attribute added: " + attributeName + " : " + dataType);
-        });
-
+        Button deleteButton = new Button("❌");
         deleteButton.setOnAction(e -> {
             attributesBox.getChildren().remove(attributeBox); // Remove from UI
-            classDiagram.getAttributes().removeIf(attr -> attr.getName().equals(attributeNameField.getText())); // Remove from business layer
-            System.out.println("Attribute deleted: " + attributeNameField.getText());
+            classDiagram.getAttributes().remove(attribute);   // Remove from the model
         });
 
-        attributeBox.getChildren().addAll(visibilityComboBox, attributeNameField, dataTypeComboBox, saveButton, deleteButton);
+        attributeBox.getChildren().addAll(visibilityComboBox, attributeNameField, dataTypeComboBox, deleteButton);
         attributesBox.getChildren().add(attributeBox);
     }
 
-
+    // Load operations from the business model
+    private void loadOperations() {
+        for (OperationComponent operation : classDiagram.getOperations()) {
+            addOperationToUI(operation);
+        }
+    }
 
     private void addOperation(VBox operationsBox) {
+        OperationComponent operation = new OperationComponent("operation", "+");
+        classDiagram.addOperation(operation); // Add to the business model
+        addOperationToUI(operation);
+    }
+
+    private void addOperationToUI(OperationComponent operation) {
         HBox operationBox = new HBox();
         ComboBox<String> visibilityComboBox = new ComboBox<>();
         visibilityComboBox.getItems().addAll("+", "-", "#");
-        visibilityComboBox.getSelectionModel().select("+");
+        visibilityComboBox.getSelectionModel().select(operation.getVisibility());
 
-        TextField operationField = new TextField("operation");
-        operationField.setPromptText("Operation Name");
-
+        TextField operationNameField = new TextField(operation.getName());
         ComboBox<String> returnTypeComboBox = new ComboBox<>();
         returnTypeComboBox.setEditable(true);
-        returnTypeComboBox.getItems().addAll(
-                "void", "int", "String", "boolean", "double", "float", "char", "long", "short"
-        );
+        returnTypeComboBox.getItems().addAll("void", "int", "String", "boolean", "double", "float", "char", "long", "short");
         returnTypeComboBox.setPromptText("Return Type");
 
-        Button saveButton = new Button("✔");
-        Button deleteButton = new Button("❌"); // Add delete button
-        deleteButton.setVisible(false);
+        visibilityComboBox.valueProperty().addListener((obs, oldVal, newVal) -> operation.setVisibility(newVal));
+        operationNameField.textProperty().addListener((obs, oldVal, newVal) -> operation.setName(newVal));
+        returnTypeComboBox.getEditor().textProperty().addListener((obs, oldVal, newVal) -> operation.setName(operationNameField.getText() + "(): " + newVal));
 
-        saveButton.setOnAction(e -> {
-            String visibility = visibilityComboBox.getValue();
-            String operationName = operationField.getText().trim();
-            String returnType = returnTypeComboBox.getEditor().getText().trim();
-
-            if (operationName.isEmpty() || returnType.isEmpty()) {
-                Alert alert = new Alert(Alert.AlertType.ERROR, "Operation name and return type are required.", ButtonType.OK);
-                alert.showAndWait();
-                return;
-            }
-
-            OperationComponent operation = new OperationComponent(operationName + "(): " + returnType, visibility);
-            classDiagram.addOperation(operation);
-
-            visibilityComboBox.valueProperty().addListener((obs, oldVal, newVal) -> operation.setVisibility(newVal));
-
-            saveButton.setVisible(false);
-            deleteButton.setVisible(true); // Show delete button after saving
-
-            System.out.println("Operation added: " + operationName + " : " + returnType);
-        });
-
+        Button deleteButton = new Button("❌");
         deleteButton.setOnAction(e -> {
-            operationsBox.getChildren().remove(operationBox);
-            classDiagram.getOperations().removeIf(op -> op.getName().equals(operationField.getText()));
-            System.out.println("Operation deleted: " + operationField.getText());
+            operationsBox.getChildren().remove(operationBox); // Remove from UI
+            classDiagram.getOperations().remove(operation);   // Remove from the model
         });
 
-        operationBox.getChildren().addAll(visibilityComboBox, operationField, returnTypeComboBox, saveButton, deleteButton);
+        operationBox.getChildren().addAll(visibilityComboBox, operationNameField, returnTypeComboBox, deleteButton);
         operationsBox.getChildren().add(operationBox);
     }
-
-
 
     private void handleMousePressed(MouseEvent event) {
         offsetX = event.getSceneX() - getLayoutX();
@@ -247,7 +215,4 @@ public class ClassBox extends VBox {
     public ClassDiagram getClassDiagram() {
         return classDiagram;
     }
-
-
-
 }

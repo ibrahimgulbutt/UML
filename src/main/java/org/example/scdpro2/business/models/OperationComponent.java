@@ -1,8 +1,11 @@
 package org.example.scdpro2.business.models;
 
-public class OperationComponent extends ModelComponent {
+import java.io.Serializable;
+
+public class OperationComponent extends ModelComponent implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String visibility;
-    private final String name;
+    private String name;
 
     public OperationComponent(String name, String visibility) {
         super(name);
@@ -31,4 +34,7 @@ public class OperationComponent extends ModelComponent {
         this.visibility = visibility;
     }
 
+    public void setName(String newVal) {
+        this.name=name;
+    }
 }
