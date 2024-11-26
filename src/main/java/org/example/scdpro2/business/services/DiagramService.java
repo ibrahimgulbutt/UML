@@ -1,14 +1,14 @@
 package org.example.scdpro2.business.services;
 
-import org.example.scdpro2.business.models.ClassDiagram;
-import org.example.scdpro2.business.models.Diagram;
-import org.example.scdpro2.business.models.Project;
-import org.example.scdpro2.business.models.Relationship;
+import org.example.scdpro2.business.models.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class DiagramService {
     private Project currentProject;
+    private List<PackageDiagram> packageDiagrams = new ArrayList<>();
 
     public DiagramService() {
         this.currentProject = null;
@@ -47,14 +47,47 @@ public class DiagramService {
             throw new IllegalStateException("No project is loaded. Please create or load a project first.");
         }
         currentProject.addRelationship(relationship);
+
+        if (relationship.getSource() instanceof PackageComponent sourcePackage) {
+            sourcePackage.addRelationship(relationship);
+        }
+
+        if (relationship.getTarget() instanceof PackageComponent targetPackage) {
+            targetPackage.addRelationship(relationship);
+        }
     }
 
-    public void removeRelationship(ClassDiagram source, ClassDiagram target) {
+    public void removeRelationship(Diagram source, Diagram target) {
         if (source == null || target == null) return;
 
-        source.getRelationships().removeIf(rel -> rel.getSourceDiagram().equals(source) && rel.getTargetDiagram().equals(target));
-        target.getRelationships().removeIf(rel -> rel.getSourceDiagram().equals(source) && rel.getTargetDiagram().equals(target));
+        if (source instanceof PackageComponent sourcePackage && target instanceof PackageComponent targetPackage) {
+            sourcePackage.getRelationships().removeIf(rel -> rel.getTarget() == target);
+            targetPackage.getRelationships().removeIf(rel -> rel.getSource() == source);
+        }
+
+        if (source instanceof ClassDiagram sourceClass && target instanceof ClassDiagram targetClass) {
+            sourceClass.getRelationships().removeIf(rel -> rel.getTargetDiagram().equals(target));
+            targetClass.getRelationships().removeIf(rel -> rel.getSourceDiagram().equals(source));
+        }
 
         System.out.println("Removed relationship between " + source.getTitle() + " and " + target.getTitle());
+    }
+
+    public void addPackageDiagram(PackageDiagram diagram) {
+        if (!packageDiagrams.contains(diagram)) {
+            packageDiagrams.add(diagram);
+        }
+    }
+
+    public List<PackageDiagram> getPackageDiagrams() {
+        return packageDiagrams;
+    }
+
+    public PackageDiagram getOrCreateActivePackageDiagram() {
+        if (getPackageDiagrams().isEmpty()) {
+            PackageDiagram newDiagram = new PackageDiagram("Default Package Diagram");
+            addPackageDiagram(newDiagram);
+        }
+        return getPackageDiagrams().get(0); // Return the first package diagram
     }
 }

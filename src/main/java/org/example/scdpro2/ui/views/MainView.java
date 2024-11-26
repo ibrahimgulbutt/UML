@@ -4,9 +4,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.geometry.Insets;
 import javafx.stage.FileChooser;
-import org.example.scdpro2.business.models.ClassDiagram;
 import org.example.scdpro2.business.models.Diagram;
-import org.example.scdpro2.business.models.Project;
 import org.example.scdpro2.ui.controllers.MainController;
 import org.example.scdpro2.business.services.DiagramService;
 import org.example.scdpro2.ui.views.RelationshipLine.RelationshipType;
@@ -15,17 +13,32 @@ import java.io.File;
 
 public class MainView extends BorderPane {
     private final MainController controller;
-    private final ClassDiagramPane diagramPane;
+    private ClassDiagramPane classDiagramPane;
+    private PackageDiagramPane packageDiagramPane;
     private ToggleButton relationshipModeToggle;
     private RelationshipType selectedRelationshipType; // Current selected relationship type
     private ClassBox sourceClassBox; // Temporarily holds the source ClassBox for relationship
     private final ListView<String> classListView; // Dynamic list of class names
     private TreeView<String> projectExplorer;
 
-    public MainView() {
-        DiagramService diagramService = new DiagramService();
-        this.controller = new MainController(diagramService, this); // Pass MainView to controller
-        this.diagramPane = new ClassDiagramPane(this, controller, diagramService);
+    private boolean relationshipMode = false;
+    private PackageBox sourcePackageBox; // To track the source for relationships
+
+
+    public MainView(MainController controller, String diagramType) {
+        this.controller = controller; // Use the passed controller directly
+
+        DiagramService diagramService = controller.getDiagramService();
+
+        if ("Class Diagram".equals(diagramType)) {
+            this.classDiagramPane = new ClassDiagramPane(this, controller, diagramService);
+            setCenter(classDiagramPane); // Set ClassDiagramPane as the center
+        } else if ("Package Diagram".equals(diagramType)) {
+            this.packageDiagramPane = new PackageDiagramPane(this, controller, diagramService);
+            setCenter(packageDiagramPane); // Set PackageDiagramPane as the center
+        } else {
+            throw new IllegalArgumentException("Invalid diagram type: " + diagramType);
+        }
 
         classListView = new ListView<>(); // Initialize dynamic list
         classListView.setPrefWidth(200); // Optional: Set a preferred width
@@ -40,82 +53,32 @@ public class MainView extends BorderPane {
 
         setTop(new VBox(menuBar, toolbar));
         setLeft(classListPanel);
-        setCenter(diagramPane);
         setRight(codeGenerationPanel);
     }
 
+
+
+
     private MenuBar createMenuBar() {
         MenuBar menuBar = new MenuBar();
+
         Menu projectMenu = new Menu("Project");
-
         MenuItem saveProjectItem = new MenuItem("Save Project");
-        saveProjectItem.setOnAction(event -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Save Project");
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Project Files", "*.proj"));
-            File selectedFile = fileChooser.showSaveDialog(getScene().getWindow());
-            if (selectedFile != null) {
-                controller.saveProjectToFile(selectedFile);
-            }
-        });
-
+        saveProjectItem.setOnAction(e -> controller.saveProject());
         MenuItem loadProjectItem = new MenuItem("Load Project");
-        loadProjectItem.setOnAction(event -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Load Project");
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Project Files", "*.proj"));
-            File selectedFile = fileChooser.showOpenDialog(getScene().getWindow());
-            if (selectedFile != null) {
-                controller.loadProjectFromFile(selectedFile);
-            }
-        });
+        loadProjectItem.setOnAction(e -> controller.loadProject());
+        projectMenu.getItems().addAll(saveProjectItem, loadProjectItem);
 
-        MenuItem newProjectItem = new MenuItem("New Project");
-        newProjectItem.setOnAction(event -> {
-            String projectName = promptForProjectName();
-            controller.createNewProject(projectName);
-            updateClassListView(); // Refresh the class list
-        });
+        Menu diagramMenu = new Menu("Diagrams");
+        MenuItem addClassDiagramItem = new MenuItem("New Class Diagram");
+        addClassDiagramItem.setOnAction(e -> controller.addClassDiagram());
+        MenuItem addPackageDiagramItem = new MenuItem("New Package Diagram");
+        addPackageDiagramItem.setOnAction(e -> controller.addPackageDiagram());
+        diagramMenu.getItems().addAll(addClassDiagramItem, addPackageDiagramItem);
 
-        projectMenu.getItems().addAll(newProjectItem, saveProjectItem, loadProjectItem);
-
-        menuBar.getMenus().add(projectMenu);
-
+        menuBar.getMenus().addAll(projectMenu, diagramMenu);
         return menuBar;
     }
-
-    private String promptForProjectName() {
-        TextInputDialog dialog = new TextInputDialog("Untitled Project");
-        dialog.setTitle("New Project");
-        dialog.setHeaderText("Create a New Project");
-        dialog.setContentText("Enter project name:");
-        return dialog.showAndWait().orElse("Untitled Project");
-    }
-
-
-    private void saveProject() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save Project");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Serialized Files", "*.ser"));
-        File file = fileChooser.showSaveDialog(getScene().getWindow());
-
-        if (file != null) {
-            controller.saveProjectToFile(file);
-        }
-    }
-
-    private void loadProject() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Load Project");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Serialized Files", "*.ser"));
-        File file = fileChooser.showOpenDialog(getScene().getWindow());
-
-        if (file != null) {
-            controller.loadProjectFromFile(file);
-        }
-    }
-
-
 
     public void updateClassListView() {
         projectExplorer.setRoot(new TreeItem<>("Class Diagrams"));
@@ -144,58 +107,80 @@ public class MainView extends BorderPane {
     private ToolBar createToolbar() {
         ToolBar toolbar = new ToolBar();
 
-        // Add Class and Interface buttons
-        Button addClassButton = new Button("Add Class");
-        addClassButton.setOnAction(event -> {
-            controller.addClassBox(diagramPane);
-            updateClassListView(); // Update list
-        });
+        if (classDiagramPane != null) { // Class Diagram-specific toolbar
+            // Add Class and Interface buttons
+            Button addClassButton = new Button("Add Class");
+            addClassButton.setOnAction(event -> {
+                controller.addClassBox(classDiagramPane);
+                updateClassListView(); // Update list
+            });
 
-        Button addInterfaceButton = new Button("Add Interface");
-        addInterfaceButton.setOnAction(event -> {
-            controller.addInterfaceBox(diagramPane);
-            updateClassListView(); // Update list
-        });
+            Button addInterfaceButton = new Button("Add Interface");
+            addInterfaceButton.setOnAction(event -> {
+                controller.addInterfaceBox(classDiagramPane);
+                updateClassListView(); // Update list
+            });
 
-        // Relationship Mode Toggle
-        relationshipModeToggle = new ToggleButton("Relationship Mode");
-        relationshipModeToggle.setOnAction(event -> {
-            boolean isActive = relationshipModeToggle.isSelected();
-            diagramPane.setRelationshipModeEnabled(isActive);
-            relationshipModeToggle.setText(isActive ? "Exit Relationship Mode" : "Relationship Mode");
-            System.out.println("Relationship mode: " + (isActive ? "Enabled" : "Disabled"));
-        });
+            // Relationship Mode Toggle
+            relationshipModeToggle = new ToggleButton("Relationship Mode");
+            relationshipModeToggle.setOnAction(event -> {
+                boolean isActive = relationshipModeToggle.isSelected();
+                classDiagramPane.setRelationshipModeEnabled(isActive);
+                relationshipModeToggle.setText(isActive ? "Exit Relationship Mode" : "Relationship Mode");
+            });
 
-        // Relationship Type Buttons
-        ToggleGroup relationshipGroup = new ToggleGroup();
+            // Relationship Type Buttons
+            ToggleGroup relationshipGroup = new ToggleGroup();
 
-        RadioButton associationBtn = new RadioButton("Association");
-        associationBtn.setToggleGroup(relationshipGroup);
-        associationBtn.setUserData(RelationshipType.ASSOCIATION);
+            RadioButton associationBtn = new RadioButton("Association");
+            associationBtn.setToggleGroup(relationshipGroup);
+            associationBtn.setUserData(RelationshipType.ASSOCIATION);
 
-        RadioButton aggregationBtn = new RadioButton("Aggregation");
-        aggregationBtn.setToggleGroup(relationshipGroup);
-        aggregationBtn.setUserData(RelationshipType.AGGREGATION);
+            RadioButton aggregationBtn = new RadioButton("Aggregation");
+            aggregationBtn.setToggleGroup(relationshipGroup);
+            aggregationBtn.setUserData(RelationshipType.AGGREGATION);
 
-        RadioButton compositionBtn = new RadioButton("Composition");
-        compositionBtn.setToggleGroup(relationshipGroup);
-        compositionBtn.setUserData(RelationshipType.COMPOSITION);
+            RadioButton compositionBtn = new RadioButton("Composition");
+            compositionBtn.setToggleGroup(relationshipGroup);
+            compositionBtn.setUserData(RelationshipType.COMPOSITION);
 
-        RadioButton inheritanceBtn = new RadioButton("Inheritance");
-        inheritanceBtn.setToggleGroup(relationshipGroup);
-        inheritanceBtn.setUserData(RelationshipType.INHERITANCE);
+            RadioButton inheritanceBtn = new RadioButton("Inheritance");
+            inheritanceBtn.setToggleGroup(relationshipGroup);
+            inheritanceBtn.setUserData(RelationshipType.INHERITANCE);
 
-        // Update the selected relationship type
-        relationshipGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
-            if (newToggle != null) {
-                selectedRelationshipType = (RelationshipType) newToggle.getUserData();
-            }
-        });
+            // Update the selected relationship type
+            relationshipGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
+                if (newToggle != null) {
+                    selectedRelationshipType = (RelationshipType) newToggle.getUserData();
+                }
+            });
 
-        toolbar.getItems().addAll(addClassButton, addInterfaceButton, relationshipModeToggle,
-                new Separator(), associationBtn, aggregationBtn, compositionBtn, inheritanceBtn);
+            toolbar.getItems().addAll(
+                    addClassButton, addInterfaceButton, relationshipModeToggle,
+                    new Separator(), associationBtn, aggregationBtn, compositionBtn, inheritanceBtn
+            );
+
+        } else if (packageDiagramPane != null) {
+            // Package Diagram-specific toolbar
+            Button addPackageButton = new Button("Add Package");
+            addPackageButton.setOnAction(event -> {
+                // Prompt the user for a package name (for simplicity, using a fixed name here)
+                String packageName = "NewPackage"; // Replace with a user input dialog
+                controller.addPackageBox(packageDiagramPane);
+            });
+
+            Button removePackageButton = new Button("Remove Package");
+            removePackageButton.setOnAction(event -> {
+                String packageName = "New Package"; // This can be updated with a dialog input
+                //packageDiagramPane.removePackage(packageName);
+            });
+
+            toolbar.getItems().addAll(addPackageButton, removePackageButton);
+        }
+
         return toolbar;
     }
+
 
 
     private VBox createClassListPanel() {
@@ -220,6 +205,26 @@ public class MainView extends BorderPane {
         return codeGenerationPanel;
     }
 
+    public void setRelationshipModeEnabled(boolean enabled) {
+        this.relationshipMode = enabled;
+        if (!enabled) {
+            packageDiagramPane.clearSelectedPackage(); // Clear selection when exiting relationship mode
+        }
+    }
+
+    public void handlePackageBoxClick(PackageBox clickedPackageBox) {
+        if (!relationshipMode) return;
+
+        if (sourcePackageBox == null) {
+            sourcePackageBox = clickedPackageBox;
+            sourcePackageBox.setStyle("-fx-border-color: blue;");
+        } else {
+            packageDiagramPane.addRelationshipLine(sourcePackageBox.getPackageComponent(), clickedPackageBox.getPackageComponent(), "Dependency");
+            sourcePackageBox.setStyle("-fx-border-color: black;");
+            sourcePackageBox = null;
+        }
+    }
+
     // Handle relationship mode logic for connecting two ClassBox components
     public void handleClassBoxClick(ClassBox clickedClassBox) {
         System.out.println("handleClassBoxClick called for " + clickedClassBox.getClassDiagram().getTitle());
@@ -234,7 +239,7 @@ public class MainView extends BorderPane {
             sourceClassBox.setStyle("-fx-border-color: blue;"); // Highlight the source
             System.out.println("Source class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
         } else if (!sourceClassBox.equals(clickedClassBox)) {
-            controller.createRelationship(diagramPane, sourceClassBox, clickedClassBox, selectedRelationshipType);
+            controller.createRelationship(classDiagramPane, sourceClassBox, clickedClassBox, selectedRelationshipType);
             sourceClassBox.setStyle("-fx-border-color: black;"); // Reset source style
             sourceClassBox = null; // Clear source selection
             System.out.println("Target class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
@@ -258,14 +263,22 @@ public class MainView extends BorderPane {
             sourceClassBox = null; // Clear any selected class box
             System.out.println("Source interface box is selected: " + clickedInterfaceBox.getInterfaceDiagram().getTitle());
         } else {
-            controller.createRelationship(diagramPane, sourceClassBox, clickedInterfaceBox, selectedRelationshipType);
+            controller.createRelationship(classDiagramPane, sourceClassBox, clickedInterfaceBox, selectedRelationshipType);
             sourceClassBox = null; // Clear source selection
             System.out.println("Relationship created with interface box as target.");
         }
     }
 
 
-    public ClassDiagramPane getDiagramPane() {
-        return diagramPane;
+    public ClassDiagramPane getClassDiagramPane() {
+        return classDiagramPane;
     }
+
+    public MainController getController() {
+        return controller;
+    }
+
+
+
+
 }

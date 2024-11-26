@@ -26,9 +26,11 @@ public class ClassDiagramPane extends Pane {
     private final MainView mainView;
 
     public ClassDiagramPane(MainView mainView, MainController controller, DiagramService diagramService) {
+        System.out.println("Class diagaram pane is called ");
         this.mainView = mainView; // Store MainView reference
         this.controller = controller;
         this.diagramService = diagramService;
+        this.setStyle("-fx-background-color: red;");
     }
 
     public void setRelationshipModeEnabled(boolean enabled) {

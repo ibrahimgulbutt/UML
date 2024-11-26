@@ -35,6 +35,7 @@ public class ProjectService {
         currentProject = projectDAO.loadProject(file);
         return Optional.ofNullable(currentProject);
     }
+
     public Project getCurrentProject() {
         return currentProject;
     }

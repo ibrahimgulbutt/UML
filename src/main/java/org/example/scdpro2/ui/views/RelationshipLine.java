@@ -2,11 +2,13 @@ package org.example.scdpro2.ui.views;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Shape;
 import org.example.scdpro2.business.models.ClassDiagram;
+import org.example.scdpro2.business.models.PackageComponent;
 import org.example.scdpro2.ui.views.RelationshipLine.RelationshipType;
 
 public class RelationshipLine {
@@ -14,12 +16,17 @@ public class RelationshipLine {
         ASSOCIATION, AGGREGATION, COMPOSITION, INHERITANCE
     }
 
-    private final Line line;
-    private final Shape endIndicator;
-    private final RelationshipType type;
+    private Line line;
+    private Shape endIndicator;
+    private RelationshipType type;
 
-    private final ClassDiagram sourceDiagram; // Source class diagram
-    private final ClassDiagram targetDiagram; // Target class diagram
+    private Label relationshipLabel;
+
+    private ClassDiagram sourceDiagram; // Source class diagram
+    private ClassDiagram targetDiagram; // Target class diagram
+
+    private PackageComponent sourcePackage;
+    private PackageComponent targetPackage;
 
     public RelationshipLine(ClassDiagram sourceDiagram, ClassDiagram targetDiagram,
                             RelationshipType type, double startX, double startY,
@@ -36,6 +43,35 @@ public class RelationshipLine {
         updatePosition(startX, startY, endX, endY);
     }
 
+    public RelationshipLine(PackageComponent sourcePackage, PackageComponent targetPackage,
+                            double startX, double startY, double endX, double endY, String title) {
+        this.sourcePackage = sourcePackage;
+        this.targetPackage = targetPackage;
+
+        // Create the line
+        this.line = new Line(startX, startY, endX, endY);
+        this.line.setStrokeWidth(2);
+        this.line.setStroke(Color.BLACK);
+
+        // Create the label for the title above the line
+        this.relationshipLabel = new Label(title);
+        this.relationshipLabel.setStyle("-fx-font-size: 12; -fx-background-color: white;");
+        updatepackPosition(startX, startY, endX, endY);
+    }
+
+    public void updatepackPosition(double startX, double startY, double endX, double endY) {
+        line.setStartX(startX);
+        line.setStartY(startY);
+        line.setEndX(endX);
+        line.setEndY(endY);
+
+        // Position the label at the midpoint of the line
+        double midX = (startX + endX) / 2;
+        double midY = (startY + endY) / 2 - 15; // Slightly above the line
+        relationshipLabel.setLayoutX(midX - relationshipLabel.getWidth() / 2);
+        relationshipLabel.setLayoutY(midY - relationshipLabel.getHeight() / 2);
+    }
+
     public void updatePosition(double startX, double startY, double endX, double endY) {
         line.setStartX(startX);
         line.setStartY(startY);
@@ -48,6 +84,18 @@ public class RelationshipLine {
             polygon.setLayoutY(offset[1]);
             polygon.setRotate(calculateRotationAngle(startX, startY, endX, endY));
         }
+    }
+
+    public Label getRelationshipLabel() {
+        return relationshipLabel;
+    }
+
+    public PackageComponent getSourcePackage() {
+        return sourcePackage;
+    }
+
+    public PackageComponent getTargetPackage() {
+        return targetPackage;
     }
 
     private Shape createEndIndicator(RelationshipType type) {

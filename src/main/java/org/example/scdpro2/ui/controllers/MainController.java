@@ -1,17 +1,16 @@
 package org.example.scdpro2.ui.controllers;
 
-import org.example.scdpro2.business.models.ClassDiagram;
-import org.example.scdpro2.business.models.Relationship;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.stage.FileChooser;
+import org.example.scdpro2.business.models.*;
 import org.example.scdpro2.business.services.DiagramService;
 import org.example.scdpro2.data.dao.ProjectDAOImpl;
 import org.example.scdpro2.business.services.ProjectService;
 import org.example.scdpro2.business.services.CodeGenerationService;
-import org.example.scdpro2.business.models.Project;
-import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.ui.views.*;
 
 import java.io.*;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.List;
 
@@ -20,20 +19,20 @@ public class MainController {
     private CodeGenerationService codeGenerationService;
     private ProjectDAOImpl projectDAO;
     private final DiagramService diagramService;
-    private final MainView mainView;
+    private MainView mainView;
 
-    public MainController(DiagramService diagramService, MainView mainView) {
+
+
+    public MainController(DiagramService diagramService) {
         this.diagramService = diagramService;
         this.projectDAO = new ProjectDAOImpl();
         this.projectService = new ProjectService(projectDAO);
         this.codeGenerationService = new CodeGenerationService();
+
+    }
+
+    public void setMainView(MainView mainView) {
         this.mainView = mainView;
-
-
-        // Automatically create a new project at startup
-        Project newProject = projectService.createProject("AutoCreatedProject");
-        diagramService.setCurrentProject(newProject);  // Set current project in DiagramService
-        System.out.println("New Project Created at Startup: " + newProject.getName());
     }
 
     public void createNewProject() {
@@ -44,7 +43,6 @@ public class MainController {
     public DiagramService getDiagramService() {
         return diagramService;
     }
-
 
     public void saveProjectToFile(File file) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
@@ -57,7 +55,7 @@ public class MainController {
             // Save diagram positions
             for (Diagram diagram : currentProject.getDiagrams()) {
                 if (diagram instanceof ClassDiagram classDiagram) {
-                    ClassBox classBox = mainView.getDiagramPane().getClassBoxForDiagram(classDiagram);
+                    ClassBox classBox = mainView.getClassDiagramPane().getClassBoxForDiagram(classDiagram);
                     if (classBox != null) {
                         classDiagram.setX(classBox.getLayoutX());
                         classDiagram.setY(classBox.getLayoutY());
@@ -85,23 +83,20 @@ public class MainController {
         }
     }
 
-
-
-
     public void loadProjectFromFile(File file) {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
             Project loadedProject = (Project) ois.readObject();
             if (loadedProject != null) {
                 diagramService.setCurrentProject(loadedProject);
-                mainView.getDiagramPane().clearDiagrams(); // Clear existing UI
+                mainView.getClassDiagramPane().clearDiagrams(); // Clear existing UI
 
                 // Redraw diagrams (classes/interfaces)
                 for (Diagram diagram : loadedProject.getDiagrams()) {
                     if (diagram instanceof ClassDiagram classDiagram) {
-                        ClassBox classBox = new ClassBox(classDiagram, this, mainView.getDiagramPane());
+                        ClassBox classBox = new ClassBox(classDiagram, this, mainView.getClassDiagramPane());
                         classBox.setLayoutX(classDiagram.getX());
                         classBox.setLayoutY(classDiagram.getY());
-                        mainView.getDiagramPane().addClassBox(classBox);
+                        mainView.getClassDiagramPane().addClassBox(classBox);
                     }
                 }
 
@@ -112,10 +107,10 @@ public class MainController {
                             ", Target = " + relationship.getTarget().getTitle() +
                             ", Type = " + relationship.getType());
 
-                    ClassBox sourceBox = mainView.getDiagramPane().getClassBoxForDiagram((ClassDiagram) relationship.getSource());
-                    ClassBox targetBox = mainView.getDiagramPane().getClassBoxForDiagram((ClassDiagram) relationship.getTarget());
+                    ClassBox sourceBox = mainView.getClassDiagramPane().getClassBoxForDiagram((ClassDiagram) relationship.getSource());
+                    ClassBox targetBox = mainView.getClassDiagramPane().getClassBoxForDiagram((ClassDiagram) relationship.getTarget());
                     if (sourceBox != null && targetBox != null) {
-                        mainView.getDiagramPane().addRelationship(sourceBox, targetBox, relationship.getType());
+                        mainView.getClassDiagramPane().addRelationship(sourceBox, targetBox, relationship.getType());
                     } else {
                         System.err.println("Error: Source or Target ClassBox not found for relationship.");
                     }
@@ -129,25 +124,25 @@ public class MainController {
         }
     }
 
+    public void createNewProject(String projectName) {
+        if (diagramService.getCurrentProject() == null) {
+            Project newProject = projectService.createProject(projectName);
+            diagramService.setCurrentProject(newProject);
+            System.out.println("New project created: " + newProject.getName());
+        }
 
-
-
-
-    public void createNewProject(String name) {
-        Project newProject = projectService.createProject(name);
-        diagramService.setCurrentProject(newProject);
-        System.out.println("New project created: " + name);
-        mainView.updateClassListView(); // Update class list
+        if (mainView != null) {
+            mainView.updateClassListView();
+        } else {
+            System.err.println("MainView is not set in MainController.");
+        }
     }
-
 
     public List<String> getClassNames() {
         return diagramService.getCurrentProject().getDiagrams().stream()
                 .map(Diagram::getTitle)
                 .collect(Collectors.toList());
     }
-
-
 
     // New method to generate code for the current diagram
     public void generateCode() {
@@ -160,7 +155,6 @@ public class MainController {
         }
     }
 
-
     public List<String> getAvailableClassNames() {
         Project currentProject = projectService.getCurrentProject();
         if (currentProject != null) {
@@ -171,9 +165,6 @@ public class MainController {
         }
         return List.of(); // Return an empty list if no project or diagrams
     }
-
-
-
 
     // Method to add a new ClassBox to the ClassDiagramPane
     public void addClassBox(ClassDiagramPane diagramPane) {
@@ -194,6 +185,7 @@ public class MainController {
         diagramPane.addClassBox(classBox); // Ensure click handler is registered
         System.out.println("ClassBox added for: " + classDiagram.getTitle());
     }
+
     public void deleteClassBox(ClassDiagramPane pane, ClassBox classBox) {
         if (classBox == null) {
             System.out.println("Error: ClassBox to delete is null");
@@ -214,9 +206,6 @@ public class MainController {
         diagramService.removeDiagram(classBox.getClassDiagram());
         System.out.println("Deleted ClassBox and all associated relationships for: " + classBox.getClassDiagram().getTitle());
     }
-
-
-
 
     public void createRelationship(ClassDiagramPane pane, Object source, Object target, RelationshipLine.RelationshipType type) {
         if (source == null || target == null || type == null) {
@@ -250,9 +239,6 @@ public class MainController {
         }
     }
 
-
-
-
     public void addInterfaceBox(ClassDiagramPane diagramPane) {
         ClassDiagram interfaceDiagram = new ClassDiagram("NewInterface");
         diagramService.addDiagram(interfaceDiagram);
@@ -264,9 +250,63 @@ public class MainController {
         diagramPane.addInterfaceBox(wrapper[0]);
     }
 
-
     public Project getCurrentProject() {
         return projectService.getCurrentProject();
     }
 
+    public void addClassDiagram() {
+        ClassDiagram classDiagram = new ClassDiagram("NewClassDiagram");
+        diagramService.addDiagram(classDiagram);
+        if (mainView != null) {
+            mainView.updateClassListView();
+        }
+        System.out.println("Class Diagram added: " + classDiagram.getTitle());
+    }
+
+    public void addPackageDiagram() {
+        Project project = diagramService.getCurrentProject();
+        if (project == null) {
+            throw new IllegalStateException("No project loaded.");
+        }
+        PackageDiagram packageDiagram = new PackageDiagram("New Package Diagram");
+        diagramService.addPackageDiagram(packageDiagram);
+        System.out.println("Package diagram added: " + packageDiagram.getTitle());
+    }
+
+    public void saveProject() {
+        File file = new FileChooser().showSaveDialog(null);
+        if (file != null) {
+            saveProjectToFile(file);
+        }
+    }
+
+    public void loadProject() {
+        File file = new FileChooser().showOpenDialog(null);
+        if (file != null) {
+            loadProjectFromFile(file);
+        }
+    }
+
+    public void addPackageBox(PackageDiagramPane diagramPane) {
+        if (projectService.getCurrentProject() == null) {
+            projectService.createProject("Untitled Project");
+        }
+
+        PackageDiagram packageDiagram = diagramService.getOrCreateActivePackageDiagram();
+
+        String packageName = "NewPackage";
+        PackageComponent newPackage = new PackageComponent(packageName);
+        packageDiagram.addPackage(newPackage);
+
+        PackageBox packageBox = new PackageBox(newPackage, this, diagramPane);
+        diagramPane.addPackageBox(packageBox);
+
+        System.out.println("Package added: " + packageName);
+    }
+
+    public void createPackageRelationship(PackageComponent source, PackageComponent target, RelationshipLine.RelationshipType type) {
+        Relationship relationship = new Relationship(source, target, type);
+        diagramService.addRelationship(relationship);
+        System.out.println("Created relationship: " + relationship);
+    }
 }

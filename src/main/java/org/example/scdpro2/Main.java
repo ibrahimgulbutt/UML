@@ -3,16 +3,17 @@ package org.example.scdpro2;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.example.scdpro2.ui.views.MainView;
+import org.example.scdpro2.business.services.DiagramService;
+import org.example.scdpro2.ui.controllers.MainController;
+import org.example.scdpro2.ui.views.StartPageView;
 
 public class Main extends Application {
-
     @Override
     public void start(Stage primaryStage) {
-        MainView mainView = new MainView();
-        Scene scene = new Scene(mainView, 1200, 800);
-        primaryStage.setTitle("UML Editor");
-        primaryStage.setScene(scene);
+
+        StartPageView startPageView = new StartPageView(primaryStage); // Pass controller here
+        primaryStage.setScene(new Scene(startPageView, 800, 600));
+        primaryStage.setTitle("SCDPro2 - Software Construction & Design");
         primaryStage.show();
     }
 
