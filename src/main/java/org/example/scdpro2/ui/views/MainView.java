@@ -18,7 +18,7 @@ public class MainView extends BorderPane {
     private ToggleButton relationshipModeToggle;
     private RelationshipType selectedRelationshipType; // Current selected relationship type
     private ClassBox sourceClassBox; // Temporarily holds the source ClassBox for relationship
-    private final ListView<String> classListView; // Dynamic list of class names
+    public final ListView<String> classListView; // Dynamic list of class names
     private TreeView<String> projectExplorer;
 
     private boolean relationshipMode = false;
@@ -80,16 +80,6 @@ public class MainView extends BorderPane {
         return menuBar;
     }
 
-    public void updateClassListView() {
-        projectExplorer.setRoot(new TreeItem<>("Class Diagrams"));
-        if (controller.getCurrentProject() != null) {
-            for (Diagram diagram : controller.getCurrentProject().getDiagrams()) {
-                TreeItem<String> item = new TreeItem<>(diagram.getTitle());
-                projectExplorer.getRoot().getChildren().add(item);
-            }
-        }
-        projectExplorer.refresh(); // Ensure the view is refreshed
-    }
 
     private TreeView<String> createProjectExplorer() {
         TreeItem<String> rootItem = new TreeItem<>("Project Explorer");
@@ -187,11 +177,87 @@ public class MainView extends BorderPane {
         VBox panel = new VBox();
         panel.setSpacing(10);
         panel.setPadding(new Insets(10));
-        panel.setStyle("-fx-background-color: #f4f4f4;");
+        panel.setStyle("-fx-background-color: green;");
         Label titleLabel = new Label("Class List");
         panel.getChildren().addAll(titleLabel, classListView);
+        classListView.setOnMouseClicked(event -> {
+            String selectedItem = classListView.getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                // Check if the clicked item is already selected
+                if (classListView.getSelectionModel().getSelectedItems().contains(selectedItem)) {
+                    // Unselect the class by clearing the selection
+                    classListView.getSelectionModel().clearSelection();
+                    classDiagramPane.unhighlightAllClassBoxes(); // Unhighlight all classes
+                } else {
+                    // Highlight the newly selected class
+                    classDiagramPane.unhighlightAllClassBoxes(); // First, unhighlight all
+                    classDiagramPane.highlightClassBox(selectedItem); // Then, highlight the selected one
+                }
+            } else {
+                // If no item is selected, ensure all classes are unhighlighted
+                classDiagramPane.unhighlightAllClassBoxes();
+            }
+        });
+
+
+        classListView.setCellFactory(lv -> {
+            ListCell<String> cell = new ListCell<>();
+            ContextMenu contextMenu = new ContextMenu();
+
+            MenuItem deleteItem = new MenuItem("Delete");
+            deleteItem.setOnAction(event -> {
+                String className = cell.getItem();
+                if (className != null) {
+                    Alert confirmationAlert = new Alert(Alert.AlertType.CONFIRMATION,
+                            "Are you sure you want to delete the class \"" + className + "\"?",
+                            ButtonType.YES, ButtonType.NO);
+                    confirmationAlert.showAndWait().ifPresent(response -> {
+                        if (response == ButtonType.YES) {
+                            // Remove the class from the ClassDiagramPane and classListView
+                            controller.deleteClassBox(classDiagramPane,classDiagramPane.getClassBoxByTitle(className));
+                            classListView.getItems().remove(className);
+                        }
+                    });
+                }
+            });
+
+            classListView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+                if (newSelection != null) {
+                    classDiagramPane.unhighlightAllClassBoxes();
+                    classDiagramPane.highlightClassBox(newSelection);
+                } else {
+                    classDiagramPane.unhighlightAllClassBoxes();
+                }
+            });
+
+            classListView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+
+
+            contextMenu.getItems().add(deleteItem);
+            cell.setContextMenu(contextMenu);
+            cell.textProperty().bind(cell.itemProperty()); // Bind text to item
+            return cell;
+        });
+
         return panel;
     }
+
+    public void updateClassListView() {
+        projectExplorer.setRoot(new TreeItem<>("Class Diagrams"));
+        if (controller.getCurrentProject() != null) {
+            for (Diagram diagram : controller.getCurrentProject().getDiagrams()) {
+                TreeItem<String> item = new TreeItem<>(diagram.getTitle());
+                projectExplorer.getRoot().getChildren().add(item);
+            }
+        }
+        projectExplorer.refresh(); // Ensure the view is refreshed
+    }
+
+    public void addClassToList(String className) {
+        classListView.getItems().add(className);
+    }
+
 
     private VBox createCodeGenerationPanel() {
         VBox codeGenerationPanel = new VBox();
@@ -236,15 +302,15 @@ public class MainView extends BorderPane {
 
         if (sourceClassBox == null) {
             sourceClassBox = clickedClassBox;
-            sourceClassBox.setStyle("-fx-border-color: blue;"); // Highlight the source
+            sourceClassBox.setStyle("-fx-border-color: black; -fx-padding: 5;-fx-border-color: blue;"); // Highlight the source
             System.out.println("Source class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
         } else if (!sourceClassBox.equals(clickedClassBox)) {
             controller.createRelationship(classDiagramPane, sourceClassBox, "right", clickedClassBox, "left", selectedRelationshipType);
-            sourceClassBox.setStyle("-fx-border-color: black;"); // Reset source style
+            sourceClassBox.setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;"); // Reset source style
             sourceClassBox = null; // Clear source selection
             System.out.println("Target class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
         } else {
-            sourceClassBox.setStyle("-fx-border-color: black;");
+            sourceClassBox.setStyle("-fx-border-color: black; -fx-padding: 5;-fx-border-color: black;");
             sourceClassBox = null;
             System.out.println("Source selection cleared.");
         }

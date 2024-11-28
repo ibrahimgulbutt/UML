@@ -33,6 +33,7 @@ public class ClassBox extends VBox {
     private static double k=2;
 
 
+
     public ClassBox(ClassDiagram classDiagram, MainController controller, ClassDiagramPane diagramPane) {
         this.classDiagram = classDiagram;
         this.controller = controller;
@@ -145,14 +146,22 @@ public class ClassBox extends VBox {
                 alert.showAndWait();
                 return;
             }
+
+            // Update the model
+            String oldClassName = classDiagram.getTitle();
             classDiagram.setTitle(newClassName);
             controller.getDiagramService().getCurrentProject().getDiagrams().stream()
                     .filter(d -> d.equals(classDiagram))
                     .findFirst()
                     .ifPresent(d -> ((ClassDiagram) d).setTitle(newClassName));
 
+            // Update the classListView
+            int index = diagramPane.getMainView().classListView.getItems().indexOf(oldClassName);
+            if (index != -1) {
+                diagramPane.getMainView().classListView.getItems().set(index, newClassName);
+            }
+
             updateClassNameButton.setVisible(false);
-            diagramPane.getMainView().updateClassListView(); // Update the class list in the UI
             System.out.println("Class name updated to: " + newClassName);
         });
 
@@ -263,4 +272,7 @@ public class ClassBox extends VBox {
         return classDiagram;
     }
 
+    public String getClassName() {
+        return classDiagram.getTitle();
+    }
 }

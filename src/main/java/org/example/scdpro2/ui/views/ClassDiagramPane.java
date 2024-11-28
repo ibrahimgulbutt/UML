@@ -33,6 +33,36 @@ public class ClassDiagramPane extends Pane {
         this.diagramService = diagramService;
     }
 
+    public void highlightClassBox(String className) {
+        ClassBox classBox = getClassBoxByTitle(className);
+        if (classBox != null) {
+            classBox.setStyle("-fx-border-color: blue; -fx-border-width: 3;");
+        }
+    }
+
+    public void unhighlightAllClassBoxes() {
+        for (Node node : getChildren()) {
+            if (node instanceof ClassBox) {
+                ((ClassBox) node).setStyle("-fx-border-color: black; -fx-border-width: 1;");
+            }
+        }
+    }
+
+
+    public ClassBox getClassBoxByTitle(String className) {
+        for (Node node : getChildren()) {
+            if (node instanceof ClassBox) {
+                ClassBox classBox = (ClassBox) node;
+                if (classBox.getClassName().equals(className)) {
+                    return classBox;
+                }
+            }
+        }
+        System.out.println("Error: No ClassBox found with the name \"" + className + "\".");
+        return null;
+    }
+
+
     public void handleClassBoxClick(ClassBox clickedClassBox, MouseEvent event) {
         mainView.handleClassBoxClick(clickedClassBox);
     }
@@ -76,6 +106,10 @@ public class ClassDiagramPane extends Pane {
             registerClassBox(classBox);
             getChildren().add(classBox);
             diagramToUIMap.put(classBox.getClassDiagram(), classBox);
+            // Notify MainView to update classListView
+            if (mainView != null) {
+                mainView.addClassToList(classBox.getClassName());
+            }
         } else {
             System.out.println("Warning: ClassBox already exists in diagramPane.");
         }

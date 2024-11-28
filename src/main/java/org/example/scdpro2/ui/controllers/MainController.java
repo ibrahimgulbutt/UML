@@ -209,7 +209,11 @@ public class MainController {
         // Remove the ClassDiagram from the business layer
         diagramService.removeDiagram(classBox.getClassDiagram());
         System.out.println("Deleted ClassBox and all associated relationships for: " + classBox.getClassDiagram().getTitle());
+        if (mainView != null) {
+            mainView.classListView.getItems().remove(classBox.getClassName());
+        }
     }
+
 
 
     private List<RelationshipLine> relationships = new ArrayList<>();
