@@ -41,59 +41,15 @@ public class StartPageView extends BorderPane {
     }
 
     private void showNewProjectDialog() {
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Create New Project");
+        String projectName = "ClassDiagram";
+        String projectPath = "C:\\Users\\DeLL\\Desktop";
+        String projectType = "Class Diagram";
 
-        VBox dialogContent = new VBox(10);
-        dialogContent.setPadding(new Insets(10));
-
-        Label projectTypeLabel = new Label("Select Project Type:");
-        ToggleGroup projectTypeGroup = new ToggleGroup();
-        RadioButton classDiagramButton = new RadioButton("Class Diagram");
-        classDiagramButton.setToggleGroup(projectTypeGroup);
-        RadioButton packageDiagramButton = new RadioButton("Package Diagram");
-        packageDiagramButton.setToggleGroup(projectTypeGroup);
-
-        Label projectNameLabel = new Label("Enter Project Name:");
-        TextField projectNameField = new TextField();
-
-        Label projectPathLabel = new Label("Select Project Path:");
-        Button selectPathButton = new Button("Select Path");
-        TextField selectedPathField = new TextField();
-        selectedPathField.setEditable(false);
-        selectPathButton.setOnAction(e -> {
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            File selectedDirectory = directoryChooser.showDialog(primaryStage);
-            if (selectedDirectory != null) {
-                selectedPathField.setText(selectedDirectory.getAbsolutePath());
-            }
-        });
-
-        dialogContent.getChildren().addAll(
-                projectTypeLabel, classDiagramButton, packageDiagramButton,
-                projectNameLabel, projectNameField,
-                projectPathLabel, new HBox(5, selectedPathField, selectPathButton)
-        );
-
-        dialog.getDialogPane().setContent(dialogContent);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        dialog.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                String projectName = projectNameField.getText().trim();
-                String projectPath = selectedPathField.getText().trim();
-                RadioButton selectedType = (RadioButton) projectTypeGroup.getSelectedToggle();
-
-                if (!projectName.isEmpty() && !projectPath.isEmpty() && selectedType != null) {
-                    mainController.createNewProject(projectName);
-                    openMainView(selectedType.getText());
-                } else {
-                    Alert alert = new Alert(Alert.AlertType.ERROR, "Please fill all fields.", ButtonType.OK);
-                    alert.showAndWait();
-                }
-            }
-        });
+        mainController.createNewProject(projectName);
+        openMainView(projectType);
     }
+
+
 
     private void openExistingProject() {
         FileChooser fileChooser = new FileChooser();

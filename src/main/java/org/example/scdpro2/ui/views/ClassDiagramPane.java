@@ -1,6 +1,7 @@
 package org.example.scdpro2.ui.views;
 
 import javafx.scene.Node;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.business.models.Project;
@@ -30,9 +31,11 @@ public class ClassDiagramPane extends Pane {
         this.mainView = mainView; // Store MainView reference
         this.controller = controller;
         this.diagramService = diagramService;
-        this.setStyle("-fx-background-color: red;");
     }
 
+    public void handleClassBoxClick(ClassBox clickedClassBox, MouseEvent event) {
+        mainView.handleClassBoxClick(clickedClassBox);
+    }
     public void setRelationshipModeEnabled(boolean enabled) {
         this.relationshipModeEnabled = enabled;
         if (!enabled && selectedClassBox != null) {
@@ -78,16 +81,6 @@ public class ClassDiagramPane extends Pane {
         }
     }
 
-    public void removeClassBox(ClassBox classBox) {
-        List<RelationshipLine> linesToRemove = getRelationshipLinesConnectedTo(classBox);
-        for (RelationshipLine line : linesToRemove) {
-            removeRelationshipLine(line);
-        }
-        getChildren().remove(classBox); // Remove from UI
-        diagramService.removeDiagram(classBox.getClassDiagram()); // Remove from business layer
-        System.out.println("Removed class from diagram pane: " + classBox.getClassDiagram().getTitle());
-    }
-
     // Retrieve all relationship lines connected to a given ClassBox or InterfaceBox
     public List<RelationshipLine> getRelationshipLinesConnectedTo(Object box) {
         List<RelationshipLine> connectedLines = new ArrayList<>();
@@ -103,13 +96,16 @@ public class ClassDiagramPane extends Pane {
 
     // Remove a specific relationship line from the UI
     public void removeRelationshipLine(RelationshipLine line) {
-        getChildren().remove(line.getLine());
+        getChildren().remove(line.getLine()); // Remove the line
         if (line.getEndIndicator() != null) {
-            getChildren().remove(line.getEndIndicator());
+            getChildren().remove(line.getEndIndicator()); // Remove arrowheads if any
         }
-        relationships.remove(line);
-        System.out.println("Removed RelationshipLine from UI");
+        relationships.remove(line); // Remove from tracked relationships
+        System.out.println("RelationshipLine removed from ClassDiagramPane.");
     }
+
+
+
 
 
     public void removeInterfaceBox(InterfaceBox interfaceBox) {
@@ -180,25 +176,30 @@ public class ClassDiagramPane extends Pane {
     }
 
     private void attachDynamicListeners(Node sourceNode, Node targetNode, RelationshipLine relationship,
-                                        double sourceWidth, double sourceHeight, double targetWidth, double targetHeight) {
-        if (sourceNode instanceof ClassBox || sourceNode instanceof InterfaceBox) {
-            sourceNode.layoutXProperty().addListener((obs, oldX, newX) ->
-                    relationship.updatePosition(newX.doubleValue() + sourceWidth / 2, sourceNode.getLayoutY() + sourceHeight / 2,
-                            relationship.getLine().getEndX(), relationship.getLine().getEndY()));
-            sourceNode.layoutYProperty().addListener((obs, oldY, newY) ->
-                    relationship.updatePosition(sourceNode.getLayoutX() + sourceWidth / 2, newY.doubleValue() + sourceHeight / 2,
-                            relationship.getLine().getEndX(), relationship.getLine().getEndY()));
-        }
-
-        if (targetNode instanceof ClassBox || targetNode instanceof InterfaceBox) {
-            targetNode.layoutXProperty().addListener((obs, oldX, newX) ->
-                    relationship.updatePosition(relationship.getLine().getStartX(), relationship.getLine().getStartY(),
-                            newX.doubleValue() + targetWidth / 2, targetNode.getLayoutY() + targetHeight / 2));
-            targetNode.layoutYProperty().addListener((obs, oldY, newY) ->
-                    relationship.updatePosition(relationship.getLine().getStartX(), relationship.getLine().getStartY(),
-                            targetNode.getLayoutX() + targetWidth / 2, newY.doubleValue() + targetHeight / 2));
-        }
+                                        double sourceWidth, double sourceHeight,
+                                        double targetWidth, double targetHeight) {
+        sourceNode.layoutXProperty().addListener((observable, oldValue, newValue) -> {
+            relationship.updateStartCoordinates(
+                    sourceNode.getLayoutX() + sourceWidth / 2,
+                    sourceNode.getLayoutY() + sourceHeight / 2);
+        });
+        sourceNode.layoutYProperty().addListener((observable, oldValue, newValue) -> {
+            relationship.updateStartCoordinates(
+                    sourceNode.getLayoutX() + sourceWidth / 2,
+                    sourceNode.getLayoutY() + sourceHeight / 2);
+        });
+        targetNode.layoutXProperty().addListener((observable, oldValue, newValue) -> {
+            relationship.updateEndCoordinates(
+                    targetNode.getLayoutX() + targetWidth / 2,
+                    targetNode.getLayoutY() + targetHeight / 2);
+        });
+        targetNode.layoutYProperty().addListener((observable, oldValue, newValue) -> {
+            relationship.updateEndCoordinates(
+                    targetNode.getLayoutX() + targetWidth / 2,
+                    targetNode.getLayoutY() + targetHeight / 2);
+        });
     }
+
 
 
 

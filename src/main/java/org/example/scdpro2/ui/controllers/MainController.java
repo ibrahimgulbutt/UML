@@ -11,6 +11,7 @@ import org.example.scdpro2.business.services.CodeGenerationService;
 import org.example.scdpro2.ui.views.*;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.List;
 
@@ -166,25 +167,25 @@ public class MainController {
         return List.of(); // Return an empty list if no project or diagrams
     }
 
-    // Method to add a new ClassBox to the ClassDiagramPane
-    public void addClassBox(ClassDiagramPane diagramPane) {
-        // Ensure a project is initialized
-        if (projectService.getCurrentProject() == null) {
-            projectService.createProject("Untitled Project");
+        // Method to add a new ClassBox to the ClassDiagramPane
+        public void addClassBox(ClassDiagramPane diagramPane) {
+            // Ensure a project is initialized
+            if (projectService.getCurrentProject() == null) {
+                projectService.createProject("Untitled Project");
+            }
+
+            // Create a new ClassDiagram and add it to the business layer
+            ClassDiagram classDiagram = new ClassDiagram("NewClass");
+            diagramService.addDiagram(classDiagram);  // Add to the service
+
+            // Retrieve available class names
+            List<String> availableClassNames = getAvailableClassNames();
+
+            // Create a ClassBox and add it to the UI layer
+            ClassBox classBox = new ClassBox(classDiagram, this, diagramPane); // Pass available class names
+            diagramPane.addClassBox(classBox); // Ensure click handler is registered
+            System.out.println("ClassBox added for: " + classDiagram.getTitle());
         }
-
-        // Create a new ClassDiagram and add it to the business layer
-        ClassDiagram classDiagram = new ClassDiagram("NewClass");
-        diagramService.addDiagram(classDiagram);  // Add to the service
-
-        // Retrieve available class names
-        List<String> availableClassNames = getAvailableClassNames();
-
-        // Create a ClassBox and add it to the UI layer
-        ClassBox classBox = new ClassBox(classDiagram, this, diagramPane); // Pass available class names
-        diagramPane.addClassBox(classBox); // Ensure click handler is registered
-        System.out.println("ClassBox added for: " + classDiagram.getTitle());
-    }
 
     public void deleteClassBox(ClassDiagramPane pane, ClassBox classBox) {
         if (classBox == null) {
@@ -192,52 +193,47 @@ public class MainController {
             return;
         }
 
-        // Remove all associated relationships from the UI layer
+        // Remove all connected relationships
+        classBox.deleteConnectedRelationships(pane);
+        // Remove all associated relationship lines
         List<RelationshipLine> linesToRemove = pane.getRelationshipLinesConnectedTo(classBox);
         for (RelationshipLine line : linesToRemove) {
             pane.removeRelationshipLine(line);
             diagramService.removeRelationship(line.getSourceDiagram(), line.getTargetDiagram());
+
         }
 
-        // Remove the ClassBox from the UI layer
+        // Remove the ClassBox from the pane
         pane.getChildren().remove(classBox);
 
-        // Remove the ClassDiagram and its relationships from the business layer
+        // Remove the ClassDiagram from the business layer
         diagramService.removeDiagram(classBox.getClassDiagram());
         System.out.println("Deleted ClassBox and all associated relationships for: " + classBox.getClassDiagram().getTitle());
     }
 
-    public void createRelationship(ClassDiagramPane pane, Object source, Object target, RelationshipLine.RelationshipType type) {
-        if (source == null || target == null || type == null) {
-            System.out.println("Error: Invalid relationship parameters");
-            return;
-        }
 
-        Relationship relationship = null;
+    private List<RelationshipLine> relationships = new ArrayList<>();
 
-        if (source instanceof ClassBox && target instanceof ClassBox) {
-            pane.addRelationship((ClassBox) source, (ClassBox) target, type);
-            relationship = new Relationship(((ClassBox) source).getClassDiagram(), ((ClassBox) target).getClassDiagram(), type);
-        } else if (source instanceof InterfaceBox && target instanceof ClassBox) {
-            pane.addRelationship((InterfaceBox) source, (ClassBox) target, type);
-            relationship = new Relationship(((InterfaceBox) source).getInterfaceDiagram(), ((ClassBox) target).getClassDiagram(), type);
-        } else if (source instanceof ClassBox && target instanceof InterfaceBox) {
-            pane.addRelationship((ClassBox) source, (InterfaceBox) target, type);
-            relationship = new Relationship(((ClassBox) source).getClassDiagram(), ((InterfaceBox) target).getInterfaceDiagram(), type);
-        } else if (source instanceof InterfaceBox && target instanceof InterfaceBox) {
-            pane.addRelationship((InterfaceBox) source, (InterfaceBox) target, type);
-            relationship = new Relationship(((InterfaceBox) source).getInterfaceDiagram(), ((InterfaceBox) target).getInterfaceDiagram(), type);
-        } else {
-            System.out.println("Unsupported relationship type.");
-            return;
-        }
+    public void createRelationship(ClassDiagramPane pane, ClassBox source, String sourceSide, ClassBox target, String targetSide, RelationshipLine.RelationshipType type) {
+        int relationshipIndex = countRelationshipsBetween(source, target);
+        RelationshipLine line = new RelationshipLine(source, sourceSide, target, targetSide, type, 0, 0, relationshipIndex);
 
-        // Add the relationship to the project
-        if (relationship != null) {
-            diagramService.addRelationship(relationship);
-            System.out.println("Added relationship: " + relationship);
-        }
+        relationships.add(line); // Track the new relationship
+        pane.getChildren().add(line); // Add to UI
     }
+
+    private int countRelationshipsBetween(ClassBox source, ClassBox target) {
+        return (int) relationships.stream()
+                .filter(rel -> (rel.getSource() == source && rel.getTarget() == target) || (rel.getSource() == target && rel.getTarget() == source))
+                .count();
+    }
+
+
+
+
+
+
+
 
     public void addInterfaceBox(ClassDiagramPane diagramPane) {
         ClassDiagram interfaceDiagram = new ClassDiagram("NewInterface");

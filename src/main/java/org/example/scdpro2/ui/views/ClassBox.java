@@ -1,5 +1,8 @@
 package org.example.scdpro2.ui.views;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.input.MouseEvent;
@@ -11,6 +14,11 @@ import org.example.scdpro2.business.models.ClassDiagram;
 import org.example.scdpro2.business.models.OperationComponent;
 import org.example.scdpro2.ui.controllers.MainController;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class ClassBox extends VBox {
     private final MainController controller;
     private final ClassDiagram classDiagram;
@@ -19,10 +27,20 @@ public class ClassBox extends VBox {
     private final VBox attributesBox = new VBox(); // Container for attributes
     private final VBox operationsBox = new VBox(); // Container for operations
     private final Button updateClassNameButton = new Button("✔"); // Update class name button
+    private final Map<String, Integer> sideRelationships = new HashMap<>();
+    private final Map<String, List<RelationshipLine>> linesBySide = new HashMap<>();
+    private List<RelationshipLine> connectedRelationships = new ArrayList<>();
+    private static double k=2;
+
 
     public ClassBox(ClassDiagram classDiagram, MainController controller, ClassDiagramPane diagramPane) {
         this.classDiagram = classDiagram;
         this.controller = controller;
+
+        linesBySide.put("top", new ArrayList<>());
+        linesBySide.put("bottom", new ArrayList<>());
+        linesBySide.put("left", new ArrayList<>());
+        linesBySide.put("right", new ArrayList<>());
 
         setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
         setMinWidth(150);
@@ -61,6 +79,35 @@ public class ClassBox extends VBox {
         setOnMousePressed(this::handleMousePressed);
         setOnMouseDragged(this::handleMouseDragged);
     }
+
+    public void deleteConnectedRelationships(Pane parentPane) {
+        for (RelationshipLine relationship : new ArrayList<>(connectedRelationships)) {
+            parentPane.getChildren().remove(relationship); // Remove the relationship from the UI
+            if (parentPane instanceof ClassDiagramPane) {
+                ((ClassDiagramPane) parentPane).removeRelationshipLine(relationship);
+            }
+        }
+        connectedRelationships.clear();
+    }
+
+
+    public void addRelationship(RelationshipLine relationship) {
+        connectedRelationships.add(relationship);
+    }
+
+    public void removeRelationship(RelationshipLine relationship) {
+        connectedRelationships.remove(relationship);
+    }
+
+    public List<RelationshipLine> getConnectedRelationships() {
+        return connectedRelationships;
+    }
+
+
+
+
+
+
 
     // Create the context menu for deleting the class
     private ContextMenu createContextMenu(ClassDiagramPane diagramPane) {
@@ -215,4 +262,5 @@ public class ClassBox extends VBox {
     public ClassDiagram getClassDiagram() {
         return classDiagram;
     }
+
 }

@@ -239,7 +239,7 @@ public class MainView extends BorderPane {
             sourceClassBox.setStyle("-fx-border-color: blue;"); // Highlight the source
             System.out.println("Source class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
         } else if (!sourceClassBox.equals(clickedClassBox)) {
-            controller.createRelationship(classDiagramPane, sourceClassBox, clickedClassBox, selectedRelationshipType);
+            controller.createRelationship(classDiagramPane, sourceClassBox, "right", clickedClassBox, "left", selectedRelationshipType);
             sourceClassBox.setStyle("-fx-border-color: black;"); // Reset source style
             sourceClassBox = null; // Clear source selection
             System.out.println("Target class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
@@ -263,7 +263,7 @@ public class MainView extends BorderPane {
             sourceClassBox = null; // Clear any selected class box
             System.out.println("Source interface box is selected: " + clickedInterfaceBox.getInterfaceDiagram().getTitle());
         } else {
-            controller.createRelationship(classDiagramPane, sourceClassBox, clickedInterfaceBox, selectedRelationshipType);
+            //controller.createRelationship(classDiagramPane, sourceClassBox, clickedInterfaceBox, selectedRelationshipType);
             sourceClassBox = null; // Clear source selection
             System.out.println("Relationship created with interface box as target.");
         }
