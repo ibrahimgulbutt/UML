@@ -1,68 +1,59 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.StackPane?>
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.scdpro2.ui.controllers.MainController" stylesheets="/org/example/scdpro2/styles/styles.css">
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.geometry.*?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.scdpro2.ui.controllers.MainController">
-    <!-- Top Menu and Toolbar -->
+    <!-- Top: MenuBar -->
     <top>
-        <VBox>
-            <MenuBar>
-                <Menu text="Project">
-                    <MenuItem text="Save Project" onAction="#saveProject"/>
-                    <MenuItem text="Load Project" onAction="#loadProject"/>
-                </Menu>
-                <Menu text="Diagrams">
-                    <MenuItem text="New Class Diagram" onAction="#addClassDiagram"/>
-                    <MenuItem text="New Package Diagram" onAction="#addPackageDiagram"/>
-                </Menu>
-            </MenuBar>
-            <ToolBar>
-                <Button text="Add Class" onAction="#addClassBox" />
-                <Button text="Add Interface" onAction="#addInterfaceBox" />
-                <Separator orientation="VERTICAL"/>
-                <ToggleButton fx:id="relationshipModeToggle" text="Relationship Mode" />
-                <Separator orientation="VERTICAL"/>
-                <RadioButton text="Association" toggleGroup="relationshipGroup" userData="ASSOCIATION"/>
-                <RadioButton text="Aggregation" toggleGroup="relationshipGroup" userData="AGGREGATION"/>
-                <RadioButton text="Composition" toggleGroup="relationshipGroup" userData="COMPOSITION"/>
-                <RadioButton text="Inheritance" toggleGroup="relationshipGroup" userData="INHERITANCE"/>
-            </ToolBar>
-        </VBox>
+        <MenuBar>
+            <Menu text="Project">
+                <MenuItem text="Save Project" onAction="#saveProject"/>
+                <MenuItem text="Load Project" onAction="#loadProject"/>
+            </Menu>
+            <Menu text="Diagrams">
+                <MenuItem text="New Class Diagram" onAction="#addClassDiagram"/>
+                <MenuItem text="New Package Diagram" onAction="#addPackageDiagram"/>
+            </Menu>
+        </MenuBar>
     </top>
 
-    <!-- Left Panel: Class List -->
+    <!-- Left: Class List -->
     <left>
-        <VBox spacing="10" padding="10" style="-fx-background-color: #28334A;">
-            <Label text="Class List" style="-fx-text-fill: white; -fx-font-size: 14px;"/>
+        <VBox spacing="10" style="-fx-background-color: #ffffff; -fx-padding: 10;">
+            <Label text="Class List" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
             <ListView fx:id="classListView" prefWidth="200"/>
         </VBox>
     </left>
 
-    <!-- Center Panel: Dynamic Diagram Area -->
+    <!-- Center: Diagram Pane -->
     <center>
-        <StackPane fx:id="diagramPane" style="-fx-background-color: #FAFAFA;">
-            <!-- Content dynamically added -->
-        </StackPane>
+        <StackPane fx:id="diagramPane" style="-fx-background-color: #e0e0e0; -fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1;"/>
     </center>
 
-    <!-- Right Panel: Code Generation -->
+    <!-- Right: Code Generation Panel -->
     <right>
-        <VBox spacing="10" padding="10" style="-fx-background-color: #2C3E50; -fx-text-fill: white;">
-            <Label text="Code Generation" style="-fx-font-size: 14px; -fx-text-fill: white;"/>
-            <Button text="Generate Code" onAction="#generateCode" />
-            <Separator orientation="HORIZONTAL"/>
-            <Label text="Details" style="-fx-font-size: 14px; -fx-text-fill: white;"/>
-            <!-- Details dynamically updated -->
+        <VBox spacing="10" style="-fx-background-color: #ffffff; -fx-padding: 10;">
+            <Label text="Code Generation" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+            <Button text="Generate Code" onAction="#generateCode"/>
         </VBox>
     </right>
 
-    <!-- Bottom Panel: Project Explorer -->
+    <!-- Bottom: Toolbar -->
     <bottom>
-        <VBox spacing="10" padding="10" style="-fx-background-color: #34495E;">
-            <Label text="Project Explorer" style="-fx-text-fill: white; -fx-font-size: 14px;"/>
-            <TreeView fx:id="projectExplorer" />
-        </VBox>
+        <ToolBar>
+            <Button text="Add Class" onAction="#addClass"/>
+            <Button text="Add Interface" onAction="#addInterface"/>
+            <ToggleButton text="Relationship Mode" fx:id="relationshipModeToggle"/>
+        </ToolBar>
     </bottom>
+
 </BorderPane>

@@ -1,0 +1,30 @@
+.menu-bar {
+    -fx-background-color: #333333;
+    -fx-text-fill: white;
+}
+
+.list-view {
+    -fx-background-color: #f9f9f9;
+    -fx-border-color: #cccccc;
+}
+
+.toolbar {
+    -fx-background-color: #dddddd;
+}
+
+.button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+}
+
+.toggle-button {
+    -fx-background-color: #f39c12;
+    -fx-text-fill: white;
+}
+
+.label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+}
