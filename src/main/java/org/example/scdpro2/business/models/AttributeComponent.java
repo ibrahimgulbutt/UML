@@ -15,6 +15,13 @@ public class AttributeComponent extends ModelComponent implements Serializable {
         this.visibility = visibility;
     }
 
+    @Override
+    public String toString() {
+        return visibility + '\'' +
+                " name='" + name + '\'' +
+                ':';
+    }
+
     public String getVisibility() {
         return visibility;
     }

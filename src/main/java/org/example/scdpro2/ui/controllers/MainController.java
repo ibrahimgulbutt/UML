@@ -21,7 +21,10 @@ public class MainController {
     private ProjectDAOImpl projectDAO;
     private final DiagramService diagramService;
     private MainView mainView;
+    private List<RelationshipLine> relationships = new ArrayList<>();
 
+    private static int countclasses = 1;
+    private static int countinterface = 1;
 
 
     public MainController(DiagramService diagramService) {
@@ -168,23 +171,22 @@ public class MainController {
     }
 
         // Method to add a new ClassBox to the ClassDiagramPane
-        public void addClassBox(ClassDiagramPane diagramPane) {
+    public void addClassBox(ClassDiagramPane diagramPane) {
             // Ensure a project is initialized
             if (projectService.getCurrentProject() == null) {
                 projectService.createProject("Untitled Project");
             }
 
             // Create a new ClassDiagram and add it to the business layer
-            ClassDiagram classDiagram = new ClassDiagram("NewClass");
+            ClassDiagram classDiagram = new ClassDiagram("Class "+countclasses);
             diagramService.addDiagram(classDiagram);  // Add to the service
 
-            // Retrieve available class names
-            List<String> availableClassNames = getAvailableClassNames();
 
             // Create a ClassBox and add it to the UI layer
             ClassBox classBox = new ClassBox(classDiagram, this, diagramPane); // Pass available class names
             diagramPane.addClassBox(classBox); // Ensure click handler is registered
             System.out.println("ClassBox added for: " + classDiagram.getTitle());
+            countclasses++;
         }
 
     public void deleteClassBox(ClassDiagramPane pane, ClassBox classBox) {
@@ -214,13 +216,27 @@ public class MainController {
         }
     }
 
-
-
-    private List<RelationshipLine> relationships = new ArrayList<>();
-
     public void createRelationship(ClassDiagramPane pane, ClassBox source, String sourceSide, ClassBox target, String targetSide, RelationshipLine.RelationshipType type) {
         int relationshipIndex = countRelationshipsBetween(source, target);
+        System.out.println(relationshipIndex);
         RelationshipLine line = new RelationshipLine(source, sourceSide, target, targetSide, type, 0, 0, relationshipIndex);
+
+        line.setMainView(mainView);
+        relationships.add(line); // Track the new relationship
+        pane.getChildren().add(line); // Add to UI
+    }
+
+    public void createRelationship(ClassDiagramPane pane, InterfaceBox source, String sourceSide, ClassBox target, String targetSide, RelationshipLine.RelationshipType type) {
+        //int relationshipIndex = countRelationshipsBetween(source, target);
+        RelationshipLine line = new RelationshipLine(source, sourceSide, target, targetSide, type, 0, 0, 0);
+
+        relationships.add(line); // Track the new relationship
+        pane.getChildren().add(line); // Add to UI
+    }
+
+    public void createRelationship(ClassDiagramPane pane, ClassBox source, String sourceSide, InterfaceBox target, String targetSide, RelationshipLine.RelationshipType type) {
+        //int relationshipIndex = countRelationshipsBetween(source, target);
+        RelationshipLine line = new RelationshipLine(source, sourceSide, target, targetSide, type, 0, 0, 0);
 
         relationships.add(line); // Track the new relationship
         pane.getChildren().add(line); // Add to UI
@@ -232,22 +248,19 @@ public class MainController {
                 .count();
     }
 
-
-
-
-
-
-
-
     public void addInterfaceBox(ClassDiagramPane diagramPane) {
-        ClassDiagram interfaceDiagram = new ClassDiagram("NewInterface");
+
+        if (projectService.getCurrentProject() == null) {
+            projectService.createProject("Untitled Project");
+        }
+
+        ClassDiagram interfaceDiagram = new ClassDiagram("Interface "+countinterface);
         diagramService.addDiagram(interfaceDiagram);
 
-        // Use a mutable wrapper to hold the reference
-        final InterfaceBox[] wrapper = new InterfaceBox[1];
 
-        wrapper[0] = new InterfaceBox(interfaceDiagram, () -> diagramPane.removeInterfaceBox(wrapper[0]));
-        diagramPane.addInterfaceBox(wrapper[0]);
+        InterfaceBox interfaceBox = new InterfaceBox(interfaceDiagram, this ,diagramPane);
+        diagramPane.addInterfaceBox(interfaceBox);
+        countinterface++;
     }
 
     public Project getCurrentProject() {
@@ -309,4 +322,31 @@ public class MainController {
         diagramService.addRelationship(relationship);
         System.out.println("Created relationship: " + relationship);
     }
+
+    public void deleteInterfaceBox(ClassDiagramPane pane, InterfaceBox interfaceBox) {
+        if (interfaceBox == null) {
+            System.out.println("Error: ClassBox to delete is null");
+            return;
+        }
+
+        // Remove all connected relationships
+        interfaceBox.deleteConnectedRelationships(pane);
+        // Remove all associated relationship lines
+        List<RelationshipLine> linesToRemove = pane.getRelationshipLinesConnectedTo(interfaceBox);
+        for (RelationshipLine line : linesToRemove) {
+            pane.removeRelationshipLine(line);
+            diagramService.removeRelationship(line.getSourceDiagram(), line.getTargetDiagram());
+
+        }
+
+        // Remove the ClassBox from the pane
+        pane.getChildren().remove(interfaceBox);
+
+        // Remove the ClassDiagram from the business layer
+        diagramService.removeDiagram(interfaceBox.getInterfaceDiagram());
+        System.out.println("Deleted ClassBox and all associated relationships for: " + interfaceBox.getInterfaceDiagram().getTitle());
+        if (mainView != null) {
+            mainView.classListView.getItems().remove(interfaceBox.getClassName());
+        }
+        }
 }

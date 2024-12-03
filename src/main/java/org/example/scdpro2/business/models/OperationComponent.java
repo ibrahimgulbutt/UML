@@ -13,6 +13,13 @@ public class OperationComponent extends ModelComponent implements Serializable {
         this.visibility = visibility;
     }
 
+    @Override
+    public String toString() {
+        return "visibility='" + visibility + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
+
     public String getVisibility() {
         return visibility;
     }

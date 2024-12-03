@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.scdpro2.ui.controllers.MainController">
+    <!-- Top Menu and Toolbar -->
+    <top>
+        <VBox>
+            <MenuBar>
+                <Menu text="Project">
+                    <MenuItem text="Save Project" onAction="#saveProject"/>
+                    <MenuItem text="Load Project" onAction="#loadProject"/>
+                </Menu>
+                <Menu text="Diagrams">
+                    <MenuItem text="New Class Diagram" onAction="#addClassDiagram"/>
+                    <MenuItem text="New Package Diagram" onAction="#addPackageDiagram"/>
+                </Menu>
+            </MenuBar>
+            <ToolBar>
+                <Button text="Add Class" onAction="#addClassBox" />
+                <Button text="Add Interface" onAction="#addInterfaceBox" />
+                <Separator orientation="VERTICAL"/>
+                <ToggleButton fx:id="relationshipModeToggle" text="Relationship Mode" />
+                <Separator orientation="VERTICAL"/>
+                <RadioButton text="Association" toggleGroup="relationshipGroup" userData="ASSOCIATION"/>
+                <RadioButton text="Aggregation" toggleGroup="relationshipGroup" userData="AGGREGATION"/>
+                <RadioButton text="Composition" toggleGroup="relationshipGroup" userData="COMPOSITION"/>
+                <RadioButton text="Inheritance" toggleGroup="relationshipGroup" userData="INHERITANCE"/>
+            </ToolBar>
+        </VBox>
+    </top>
+
+    <!-- Left Panel: Class List -->
+    <left>
+        <VBox spacing="10" padding="10" style="-fx-background-color: #28334A;">
+            <Label text="Class List" style="-fx-text-fill: white; -fx-font-size: 14px;"/>
+            <ListView fx:id="classListView" prefWidth="200"/>
+        </VBox>
+    </left>
+
+    <!-- Center Panel: Dynamic Diagram Area -->
+    <center>
+        <StackPane fx:id="diagramPane" style="-fx-background-color: #FAFAFA;">
+            <!-- Content dynamically added -->
+        </StackPane>
+    </center>
+
+    <!-- Right Panel: Code Generation -->
+    <right>
+        <VBox spacing="10" padding="10" style="-fx-background-color: #2C3E50; -fx-text-fill: white;">
+            <Label text="Code Generation" style="-fx-font-size: 14px; -fx-text-fill: white;"/>
+            <Button text="Generate Code" onAction="#generateCode" />
+            <Separator orientation="HORIZONTAL"/>
+            <Label text="Details" style="-fx-font-size: 14px; -fx-text-fill: white;"/>
+            <!-- Details dynamically updated -->
+        </VBox>
+    </right>
+
+    <!-- Bottom Panel: Project Explorer -->
+    <bottom>
+        <VBox spacing="10" padding="10" style="-fx-background-color: #34495E;">
+            <Label text="Project Explorer" style="-fx-text-fill: white; -fx-font-size: 14px;"/>
+            <TreeView fx:id="projectExplorer" />
+        </VBox>
+    </bottom>
+</BorderPane>

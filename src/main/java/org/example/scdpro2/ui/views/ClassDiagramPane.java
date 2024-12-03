@@ -36,14 +36,14 @@ public class ClassDiagramPane extends Pane {
     public void highlightClassBox(String className) {
         ClassBox classBox = getClassBoxByTitle(className);
         if (classBox != null) {
-            classBox.setStyle("-fx-border-color: blue; -fx-border-width: 3;");
+            classBox.setStyle("-fx-border-color: blue; -fx-padding: 5; -fx-background-color: #e0e0e0;");
         }
     }
 
     public void unhighlightAllClassBoxes() {
         for (Node node : getChildren()) {
             if (node instanceof ClassBox) {
-                ((ClassBox) node).setStyle("-fx-border-color: black; -fx-border-width: 1;");
+                ((ClassBox) node).setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
             }
         }
     }
@@ -69,14 +69,14 @@ public class ClassDiagramPane extends Pane {
     public void setRelationshipModeEnabled(boolean enabled) {
         this.relationshipModeEnabled = enabled;
         if (!enabled && selectedClassBox != null) {
-            selectedClassBox.setStyle("-fx-border-color: black;");
+            selectedClassBox.setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
             selectedClassBox = null;
         }
     }
 
     public void clearSelectedClass() {
         if (selectedClassBox != null) {
-            selectedClassBox.setStyle("-fx-border-color: black;");
+            selectedClassBox.setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
             selectedClassBox = null;
         }
     }
@@ -139,18 +139,6 @@ public class ClassDiagramPane extends Pane {
     }
 
 
-
-
-
-    public void removeInterfaceBox(InterfaceBox interfaceBox) {
-        List<RelationshipLine> linesToRemove = getRelationshipLinesConnectedTo(interfaceBox);
-        for (RelationshipLine line : linesToRemove) {
-            removeRelationshipLine(line);
-        }
-        getChildren().remove(interfaceBox);
-        diagramService.removeDiagram(interfaceBox.getInterfaceDiagram());
-        System.out.println("Removed interface: " + interfaceBox.getInterfaceDiagram().getTitle());
-    }
 
     public void addRelationship(ClassBox source, ClassBox target, RelationshipLine.RelationshipType type) {
         System.out.println("Creating relationship: Source = " + source.getClassDiagram().getTitle() +
@@ -234,35 +222,6 @@ public class ClassDiagramPane extends Pane {
         });
     }
 
-
-
-
-    public void handleInterfaceBoxClick(InterfaceBox interfaceBox) {
-        if (!relationshipModeEnabled || currentRelationshipType == null) {
-            System.out.println("Relationship mode not active or no type selected.");
-            return;
-        }
-
-        if (selectedClassBox == null && interfaceBox != null) {
-            interfaceBox.setStyle("-fx-border-color: blue;");
-            selectedClassBox = null; // Clear any selected class box
-            System.out.println("Source interface selected: " + interfaceBox.getInterfaceDiagram().getTitle());
-        } else if (selectedClassBox != null) {
-            // Handle relationship creation between ClassBox and InterfaceBox
-            createRelationship(selectedClassBox, interfaceBox);
-            selectedClassBox.setStyle("-fx-border-color: black;");
-            selectedClassBox = null;
-            System.out.println("Target interface selected: " + interfaceBox.getInterfaceDiagram().getTitle());
-        }
-    }
-
-    public void createRelationship(ClassBox source, InterfaceBox target) {
-        addRelationship(source, target, currentRelationshipType);
-    }
-
-    public void createRelationship(InterfaceBox source, ClassBox target) {
-        addRelationship(source, target, currentRelationshipType);
-    }
 
     public boolean isRelationshipModeEnabled() {
         return relationshipModeEnabled;

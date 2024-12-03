@@ -18,6 +18,7 @@ public class MainView extends BorderPane {
     private ToggleButton relationshipModeToggle;
     private RelationshipType selectedRelationshipType; // Current selected relationship type
     private ClassBox sourceClassBox; // Temporarily holds the source ClassBox for relationship
+    private InterfaceBox sourceInterfaceBox;
     public final ListView<String> classListView; // Dynamic list of class names
     private TreeView<String> projectExplorer;
 
@@ -27,6 +28,7 @@ public class MainView extends BorderPane {
 
     public MainView(MainController controller, String diagramType) {
         this.controller = controller; // Use the passed controller directly
+
 
         DiagramService diagramService = controller.getDiagramService();
 
@@ -51,9 +53,16 @@ public class MainView extends BorderPane {
         VBox classListPanel = createClassListPanel();
         VBox codeGenerationPanel = createCodeGenerationPanel();
 
+        this.rightSideToolbar = createRightSideToolbar();
+        setRight(rightSideToolbar);
+
         setTop(new VBox(menuBar, toolbar));
         setLeft(classListPanel);
         setRight(codeGenerationPanel);
+
+        this.rightSideToolbar = createRightSideToolbar();
+        setRight(rightSideToolbar);
+
     }
 
 
@@ -85,6 +94,62 @@ public class MainView extends BorderPane {
         TreeItem<String> rootItem = new TreeItem<>("Project Explorer");
         rootItem.setExpanded(true);
         return new TreeView<>(rootItem);
+    }
+
+
+    private VBox rightSideToolbar;
+
+    private VBox createRightSideToolbar() {
+        VBox toolbar = new VBox();
+        toolbar.setPadding(new Insets(10));
+        toolbar.setSpacing(10);
+        toolbar.setStyle("-fx-background-color: lightgrey;");
+
+        Label title = new Label("Details");
+        toolbar.getChildren().add(title);
+
+        return toolbar;
+    }
+
+    public void updateRightSideToolbar(Object selectedItem) {
+        rightSideToolbar.getChildren().clear();
+
+        if (selectedItem instanceof ClassBox) {
+            ClassBox classBox = (ClassBox) selectedItem;
+
+            Label nameLabel = new Label("Class: " + classBox.getTitle());
+            Label AttributesLabel = new Label("Attributes : "+classBox.getAttributesBox().toString());
+            Label OperationLabel = new Label("Operations : "+ classBox.getOperationsBox().toString());
+            rightSideToolbar.getChildren().add(nameLabel);
+            rightSideToolbar.getChildren().add(AttributesLabel);
+            rightSideToolbar.getChildren().add(OperationLabel);
+
+        } else if (selectedItem instanceof RelationshipLine) {
+            RelationshipLine relationship = (RelationshipLine) selectedItem;
+
+            TextField titleField = new TextField(relationship.getTitle());
+            titleField.setPromptText("Enter Relationship Title");
+            titleField.setOnAction(e -> relationship.setTitle(titleField.getText()));
+
+            TextField startMultiplicityField = new TextField(relationship.getMultiplicityStart());
+            startMultiplicityField.setPromptText("Start Multiplicity");
+            startMultiplicityField.setOnAction(e -> relationship.setMultiplicityStart(startMultiplicityField.getText()));
+
+            TextField endMultiplicityField = new TextField(relationship.getMultiplicityEnd());
+            endMultiplicityField.setPromptText("End Multiplicity");
+            endMultiplicityField.setOnAction(e -> relationship.setMultiplicityEnd(endMultiplicityField.getText()));
+
+            rightSideToolbar.getChildren().addAll(
+                    new Label("Relationship Details"),
+                    new Label("Title:"), titleField,
+                    new Label("Start Multiplicity:"), startMultiplicityField,
+                    new Label("End Multiplicity:"), endMultiplicityField
+            );
+        }
+    }
+
+    public void handleSelection(Object selectedItem) {
+        this.updateRightSideToolbar(selectedItem);
     }
 
 
@@ -294,6 +359,7 @@ public class MainView extends BorderPane {
     // Handle relationship mode logic for connecting two ClassBox components
     public void handleClassBoxClick(ClassBox clickedClassBox) {
         System.out.println("handleClassBoxClick called for " + clickedClassBox.getClassDiagram().getTitle());
+        handleSelection(clickedClassBox);
 
         if (!relationshipModeToggle.isSelected() || selectedRelationshipType == null) {
             System.out.println("Relationship mode not active or no type selected.");
@@ -302,7 +368,7 @@ public class MainView extends BorderPane {
 
         if (sourceClassBox == null) {
             sourceClassBox = clickedClassBox;
-            sourceClassBox.setStyle("-fx-border-color: black; -fx-padding: 5;-fx-border-color: blue;"); // Highlight the source
+            sourceClassBox.setStyle("-fx-padding: 5;-fx-border-color: blue;-fx-background-color: #e0e0e0;"); // Highlight the source
             System.out.println("Source class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
         } else if (!sourceClassBox.equals(clickedClassBox)) {
             controller.createRelationship(classDiagramPane, sourceClassBox, "right", clickedClassBox, "left", selectedRelationshipType);
@@ -310,7 +376,7 @@ public class MainView extends BorderPane {
             sourceClassBox = null; // Clear source selection
             System.out.println("Target class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
         } else {
-            sourceClassBox.setStyle("-fx-border-color: black; -fx-padding: 5;-fx-border-color: black;");
+            sourceClassBox.setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
             sourceClassBox = null;
             System.out.println("Source selection cleared.");
         }
@@ -318,22 +384,31 @@ public class MainView extends BorderPane {
 
     public void handleInterfaceBoxClick(InterfaceBox clickedInterfaceBox) {
         System.out.println("handleInterfaceBoxClick called for " + clickedInterfaceBox.getInterfaceDiagram().getTitle());
+        handleSelection(clickedInterfaceBox);
 
         if (!relationshipModeToggle.isSelected() || selectedRelationshipType == null) {
             System.out.println("Relationship mode not active or no type selected.");
             return;
         }
 
-        if (sourceClassBox == null) {
+        if (sourceClassBox == null && sourceInterfaceBox == null) {
+            sourceInterfaceBox = clickedInterfaceBox;
             clickedInterfaceBox.setStyle("-fx-border-color: blue;"); // Highlight the source
-            sourceClassBox = null; // Clear any selected class box
             System.out.println("Source interface box is selected: " + clickedInterfaceBox.getInterfaceDiagram().getTitle());
         } else {
-            //controller.createRelationship(classDiagramPane, sourceClassBox, clickedInterfaceBox, selectedRelationshipType);
-            sourceClassBox = null; // Clear source selection
+            if (sourceClassBox != null) {
+                controller.createRelationship(classDiagramPane, sourceClassBox, "right", clickedInterfaceBox, "left", selectedRelationshipType);
+                sourceClassBox.setStyle("-fx-border-color: blue; -fx-padding: 5; -fx-background-color: #e0e0e0;"); // Reset style
+                sourceClassBox = null;
+            } else if (sourceInterfaceBox != null) {
+                //controller.createRelationship(classDiagramPane, sourceInterfaceBox, "right", clickedInterfaceBox, "left", selectedRelationshipType);
+                sourceInterfaceBox.setStyle(""); // Reset style
+                sourceInterfaceBox = null;
+            }
             System.out.println("Relationship created with interface box as target.");
         }
     }
+
 
 
     public ClassDiagramPane getClassDiagramPane() {

@@ -27,7 +27,6 @@ public class ClassBox extends VBox {
     private final VBox attributesBox = new VBox(); // Container for attributes
     private final VBox operationsBox = new VBox(); // Container for operations
     private final Button updateClassNameButton = new Button("✔"); // Update class name button
-    private final Map<String, Integer> sideRelationships = new HashMap<>();
     private final Map<String, List<RelationshipLine>> linesBySide = new HashMap<>();
     private List<RelationshipLine> connectedRelationships = new ArrayList<>();
     private static double k=2;
@@ -274,5 +273,17 @@ public class ClassBox extends VBox {
 
     public String getClassName() {
         return classDiagram.getTitle();
+    }
+
+    public String getTitle() {
+        return classDiagram.getTitle();
+    }
+
+    public Object getAttributesBox() {
+        return classDiagram.getAttributes().toString();
+    }
+
+    public Object getOperationsBox() {
+        return classDiagram.getOperations().toString();
     }
 }
