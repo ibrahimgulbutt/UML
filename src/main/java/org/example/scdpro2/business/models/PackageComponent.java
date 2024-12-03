@@ -14,6 +14,9 @@ public class PackageComponent extends Diagram implements Serializable {
     private String name;
     private final List<Relationship> relationships;
 
+    private double width = 200; // Default width
+    private double height = 150; // Default height
+
     public PackageComponent(String name) {
         super(name);
         this.id = UUID.randomUUID().toString(); // Generate a unique ID
@@ -67,5 +70,21 @@ public class PackageComponent extends Diagram implements Serializable {
     @Override
     public DiagramType getType() {
         return DiagramType.PACKAGE;
+    }
+
+    public double getWidth() {
+        return width;
+    }
+
+    public void setWidth(double width) {
+        this.width = width;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public void setHeight(double height) {
+        this.height = height;
     }
 }

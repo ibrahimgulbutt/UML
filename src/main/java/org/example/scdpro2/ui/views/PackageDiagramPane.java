@@ -65,9 +65,9 @@ public class PackageDiagramPane extends Pane {
             System.out.println("PackageBox clicked: " + packageBox.getPackageComponent().getName());
             if (selectedPackageBox == null) {
                 selectedPackageBox = packageBox;
-                packageBox.setStyle("-fx-border-color: blue;");
+                packageBox.setStyle("-fx-border-color: lightGrey;");
             } else {
-                selectedPackageBox.setStyle("-fx-border-color: black;");
+                selectedPackageBox.setStyle("-fx-border-color: transparent;");
                 selectedPackageBox = null;
             }
         });
@@ -84,6 +84,8 @@ public class PackageDiagramPane extends Pane {
         getChildren().clear();
         for (PackageComponent pkg : activePackageDiagram.getPackages()) {
             PackageBox packageBox = new PackageBox(pkg, controller, this);
+            packageBox.setPrefWidth(pkg.getWidth());
+            packageBox.setPrefHeight(pkg.getHeight());
             addPackageBox(packageBox);
         }
     }
@@ -103,11 +105,6 @@ public class PackageDiagramPane extends Pane {
         //    break; // Load only the first diagram for now
         // }
     }
-
-    // public Map<PackageComponent, Node> getPackageToUIMap() {
-    //     return packageToUIMap;
-    //}
-
 
     public void addRelationshipLine(PackageComponent source, PackageComponent target, String title) {
         // Create the relationship line
