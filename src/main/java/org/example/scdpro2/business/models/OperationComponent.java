@@ -37,6 +37,7 @@ public class OperationComponent extends ModelComponent implements Serializable {
     public String generateCode() {
         return visibility + " " + name + "() {}";
     }
+
     public void setVisibility(String visibility) {
         this.visibility = visibility;
     }

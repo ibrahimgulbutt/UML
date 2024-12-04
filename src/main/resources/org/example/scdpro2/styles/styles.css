@@ -1,30 +1,107 @@
-.menu-bar {
-    -fx-background-color: #333333;
-    -fx-text-fill: white;
+/* General Styling */
+.root {
+    -fx-font-family: 'Arial', sans-serif;
+
+    -fx-shadow-color: rgba(0, 0, 0, 0.1);
+    -fx-shadow-offset-x: 2px;
+    -fx-shadow-offset-y: 2px;
+    -fx-shadow-radius: 4px;
 }
 
-.list-view {
-    -fx-background-color: #f9f9f9;
-    -fx-border-color: #cccccc;
+/* Class List Panel */
+.class-list-panel {
+    -fx-background-color: #f8f9fa; /* Light gray background */
+    -fx-padding: 10px;
+    -fx-border-color: #dee2e6; /* Light border color */
+    -fx-border-width: 1px;
 }
 
-.toolbar {
-    -fx-background-color: #dddddd;
+/* Diagram Pane */
+.diagram-pane {
+    -fx-background-color: #e9ecef; /* Light gray background */
+    -fx-border-color: #adb5bd; /* Mid-gray border */
+    -fx-border-width: 1px;
+    -fx-padding: 10px;
+
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
 }
 
-.button {
-    -fx-background-color: #4CAF50;
-    -fx-text-fill: white;
-    -fx-border-radius: 5;
-    -fx-background-radius: 5;
-}
-
-.toggle-button {
-    -fx-background-color: #f39c12;
-    -fx-text-fill: white;
-}
-
-.label {
+/* Buttons */
+.btn {
     -fx-font-size: 14px;
-    -fx-text-fill: #333333;
+    -fx-padding: 8px 12px;
+    -fx-background-radius: 5px;
+    -fx-border-radius: 5px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.2), 5, 0, 1, 1);
+
+    -fx-transition: all 0.3s ease-in-out;
+}
+
+.btn-primary {
+    -fx-background-color: #007bff; /* Blue */
+    -fx-text-fill: #ffffff;
+}
+
+.btn-secondary {
+    -fx-background-color: #6c757d; /* Gray */
+    -fx-text-fill: #ffffff;
+}
+
+.btn-success {
+    -fx-background-color: #28a745; /* Green */
+    -fx-text-fill: #ffffff;
+}
+
+.btn-danger {
+    -fx-background-color: #dc3545; /* Red */
+    -fx-text-fill: #ffffff;
+}
+
+.btn-warning {
+    -fx-background-color: #ffc107; /* Yellow */
+    -fx-text-fill: #212529;
+}
+
+.btn-toggle {
+    -fx-font-size: 12px;  /* Standard button font size */
+    -fx-padding: 6px 12px;  /* Standard padding */
+    -fx-background-color: transparent;  /* No background color */
+    -fx-text-fill: #333;  /* Dark text color for good contrast */
+    -fx-border-radius: 4px;  /* Slightly rounded corners */
+    -fx-border-color: #ccc;  /* Subtle border color */
+    -fx-border-width: 1px;  /* Thin border for minimal effect */
+    -fx-cursor: hand;  /* Pointer cursor on hover */
+    -fx-transition: background-color 0.2s ease, border-color 0.2s ease;  /* Smooth transitions for background and border */
+}
+
+.btn-toggle:hover {
+    -fx-background-color: #f8f9fa;  /* Light background on hover */
+    -fx-border-color: #007bff;  /* Border color on hover */
+}
+
+.btn-toggle:pressed {
+    -fx-background-color: #e9ecef;  /* Slightly darker background on click */
+}
+
+.btn-toggle:disabled {
+    -fx-background-color: #f8f9fa;  /* Light gray background when disabled */
+    -fx-text-fill: #6c757d;  /* Muted text color when disabled */
+    -fx-border-color: #ddd;  /* Lighter border when disabled */
+}
+
+
+/* Code Generation Panel */
+.code-generation-panel {
+    -fx-background-color: #ffffff; /* White background */
+    -fx-padding: 15px;
+    -fx-border-color: #dee2e6; /* Light border */
+    -fx-border-width: 1px;
+    -fx-spacing: 10px;
+}
+
+/* Labels */
+.label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
 }

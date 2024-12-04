@@ -3,6 +3,7 @@ package org.example.scdpro2.ui.views;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.input.MouseEvent;
@@ -22,30 +23,45 @@ import java.util.Map;
 public class ClassBox extends VBox {
     private final MainController controller;
     private final ClassDiagram classDiagram;
+
     private double offsetX, offsetY;
     private final Rectangle resizeHandle = new Rectangle(10, 10); // Resize handle
+
     private final VBox attributesBox = new VBox(); // Container for attributes
     private final VBox operationsBox = new VBox(); // Container for operations
+
     private final Button updateClassNameButton = new Button("✔"); // Update class name button
+
     private final Map<String, List<RelationshipLine>> linesBySide = new HashMap<>();
     private List<RelationshipLine> connectedRelationships = new ArrayList<>();
     private static double k=2;
-
 
 
     public ClassBox(ClassDiagram classDiagram, MainController controller, ClassDiagramPane diagramPane) {
         this.classDiagram = classDiagram;
         this.controller = controller;
 
+        this.getStylesheets().add(getClass().getResource("/org/example/scdpro2/styles/classbox.css").toExternalForm());
+
+        // Add CSS class for the entire ClassBox
+        getStyleClass().add("vbox");
+
         linesBySide.put("top", new ArrayList<>());
         linesBySide.put("bottom", new ArrayList<>());
         linesBySide.put("left", new ArrayList<>());
         linesBySide.put("right", new ArrayList<>());
 
-        setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
+        setPadding(new Insets(10)); // Add padding inside the ClassBox
+        setSpacing(8); // Set spacing between child elements (class name, attributes, and operations)
         setMinWidth(150);
         setMinHeight(100);
 
+        // Set margin for the ClassBox itself to give some space outside
+        setMargin(resizeHandle, new Insets(5)); // Space around the resize handle
+        setMargin(attributesBox, new Insets(5)); // Space around the attributes section
+        setMargin(operationsBox, new Insets(5)); // Space around the operations section
+
+        // Resize handle styling
         resizeHandle.setStyle("-fx-fill: grey;");
         resizeHandle.setCursor(Cursor.SE_RESIZE);
         resizeHandle.setOnMouseDragged(this::resize);
@@ -56,6 +72,7 @@ public class ClassBox extends VBox {
 
         // Class name section
         HBox nameBox = createNameBox(diagramPane);
+        nameBox.getStyleClass().add("hbox");
 
         // Attributes section
         Label attributesLabel = new Label("Attributes:");
@@ -71,6 +88,13 @@ public class ClassBox extends VBox {
         operationsBox.getChildren().addAll(operationsLabel, addOperationButton);
         loadOperations();
 
+        // Attributes and Operations sections
+        attributesBox.getStyleClass().add("vbox");
+        operationsBox.getStyleClass().add("vbox");
+
+        // Add the update button
+        updateClassNameButton.getStyleClass().add("button");
+
         // Add components to the ClassBox
         getChildren().addAll(nameBox, attributesBox, operationsBox, resizeHandle);
         setAlignment(Pos.TOP_LEFT);
@@ -80,34 +104,7 @@ public class ClassBox extends VBox {
         setOnMouseDragged(this::handleMouseDragged);
     }
 
-    public void deleteConnectedRelationships(Pane parentPane) {
-        for (RelationshipLine relationship : new ArrayList<>(connectedRelationships)) {
-            parentPane.getChildren().remove(relationship); // Remove the relationship from the UI
-            if (parentPane instanceof ClassDiagramPane) {
-                ((ClassDiagramPane) parentPane).removeRelationshipLine(relationship);
-            }
-        }
-        connectedRelationships.clear();
-    }
-
-
-    public void addRelationship(RelationshipLine relationship) {
-        connectedRelationships.add(relationship);
-    }
-
-    public void removeRelationship(RelationshipLine relationship) {
-        connectedRelationships.remove(relationship);
-    }
-
-    public List<RelationshipLine> getConnectedRelationships() {
-        return connectedRelationships;
-    }
-
-
-
-
-
-
+    // creational functions
 
     // Create the context menu for deleting the class
     private ContextMenu createContextMenu(ClassDiagramPane diagramPane) {
@@ -128,8 +125,12 @@ public class ClassBox extends VBox {
 
     // Create the name section
     private HBox createNameBox(ClassDiagramPane diagramPane) {
-        HBox nameBox = new HBox();
+        HBox nameBox = new HBox(10); // Spacing between class name and button
+        nameBox.setAlignment(Pos.CENTER); // Center the class name
+
         TextField classNameField = new TextField(classDiagram.getTitle());
+        classNameField.getStyleClass().add("text-field");
+
         classNameField.setPromptText("Class Name");
         classNameField.textProperty().addListener((obs, oldName, newName) -> {
             if (!newName.equals(oldName)) {
@@ -168,17 +169,30 @@ public class ClassBox extends VBox {
         return nameBox;
     }
 
-    // Load attributes from the business model
-    private void loadAttributes() {
-        for (AttributeComponent attribute : classDiagram.getAttributes()) {
-            addAttributeToUI(attribute);
-        }
-    }
+    private void addOperationToUI(OperationComponent operation) {
+        HBox operationBox = new HBox();
+        ComboBox<String> visibilityComboBox = new ComboBox<>();
+        visibilityComboBox.getItems().addAll("+", "-", "#");
+        visibilityComboBox.getSelectionModel().select(operation.getVisibility());
 
-    private void addAttribute(VBox attributesBox) {
-        AttributeComponent attribute = new AttributeComponent("attribute", "+");
-        classDiagram.addAttribute(attribute); // Add to the business model
-        addAttributeToUI(attribute);
+        TextField operationNameField = new TextField(operation.getName());
+        ComboBox<String> returnTypeComboBox = new ComboBox<>();
+        returnTypeComboBox.setEditable(true);
+        returnTypeComboBox.getItems().addAll("void", "int", "String", "boolean", "double", "float", "char", "long", "short");
+        returnTypeComboBox.setPromptText("Return Type");
+
+        visibilityComboBox.valueProperty().addListener((obs, oldVal, newVal) -> operation.setVisibility(newVal));
+        operationNameField.textProperty().addListener((obs, oldVal, newVal) -> operation.setName(newVal));
+        returnTypeComboBox.getEditor().textProperty().addListener((obs, oldVal, newVal) -> operation.setName(operationNameField.getText() + "(): " + newVal));
+
+        Button deleteButton = new Button("❌");
+        deleteButton.setOnAction(e -> {
+            operationsBox.getChildren().remove(operationBox); // Remove from UI
+            classDiagram.getOperations().remove(operation);   // Remove from the model
+        });
+
+        operationBox.getChildren().addAll(visibilityComboBox, operationNameField, returnTypeComboBox, deleteButton);
+        operationsBox.getChildren().add(operationBox);
     }
 
     private void addAttributeToUI(AttributeComponent attribute) {
@@ -207,6 +221,44 @@ public class ClassBox extends VBox {
         attributesBox.getChildren().add(attributeBox);
     }
 
+
+    // non creational functions
+
+    public void deleteConnectedRelationships(Pane parentPane) {
+        for (RelationshipLine relationship : new ArrayList<>(connectedRelationships)) {
+            parentPane.getChildren().remove(relationship); // Remove the relationship from the UI
+            if (parentPane instanceof ClassDiagramPane) {
+                ((ClassDiagramPane) parentPane).removeRelationshipLine(relationship);
+            }
+        }
+        connectedRelationships.clear();
+    }
+
+    public void addRelationship(RelationshipLine relationship) {
+        connectedRelationships.add(relationship);
+    }
+
+    public void removeRelationship(RelationshipLine relationship) {
+        connectedRelationships.remove(relationship);
+    }
+
+    public List<RelationshipLine> getConnectedRelationships() {
+        return connectedRelationships;
+    }
+
+    // Load attributes from the business model
+    private void loadAttributes() {
+        for (AttributeComponent attribute : classDiagram.getAttributes()) {
+            addAttributeToUI(attribute);
+        }
+    }
+
+    private void addAttribute(VBox attributesBox) {
+        AttributeComponent attribute = new AttributeComponent("attribute", "+");
+        classDiagram.addAttribute(attribute); // Add to the business model
+        addAttributeToUI(attribute);
+    }
+
     // Load operations from the business model
     private void loadOperations() {
         for (OperationComponent operation : classDiagram.getOperations()) {
@@ -218,32 +270,6 @@ public class ClassBox extends VBox {
         OperationComponent operation = new OperationComponent("operation", "+");
         classDiagram.addOperation(operation); // Add to the business model
         addOperationToUI(operation);
-    }
-
-    private void addOperationToUI(OperationComponent operation) {
-        HBox operationBox = new HBox();
-        ComboBox<String> visibilityComboBox = new ComboBox<>();
-        visibilityComboBox.getItems().addAll("+", "-", "#");
-        visibilityComboBox.getSelectionModel().select(operation.getVisibility());
-
-        TextField operationNameField = new TextField(operation.getName());
-        ComboBox<String> returnTypeComboBox = new ComboBox<>();
-        returnTypeComboBox.setEditable(true);
-        returnTypeComboBox.getItems().addAll("void", "int", "String", "boolean", "double", "float", "char", "long", "short");
-        returnTypeComboBox.setPromptText("Return Type");
-
-        visibilityComboBox.valueProperty().addListener((obs, oldVal, newVal) -> operation.setVisibility(newVal));
-        operationNameField.textProperty().addListener((obs, oldVal, newVal) -> operation.setName(newVal));
-        returnTypeComboBox.getEditor().textProperty().addListener((obs, oldVal, newVal) -> operation.setName(operationNameField.getText() + "(): " + newVal));
-
-        Button deleteButton = new Button("❌");
-        deleteButton.setOnAction(e -> {
-            operationsBox.getChildren().remove(operationBox); // Remove from UI
-            classDiagram.getOperations().remove(operation);   // Remove from the model
-        });
-
-        operationBox.getChildren().addAll(visibilityComboBox, operationNameField, returnTypeComboBox, deleteButton);
-        operationsBox.getChildren().add(operationBox);
     }
 
     private void handleMousePressed(MouseEvent event) {

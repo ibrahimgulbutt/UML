@@ -9,12 +9,10 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.StackPane?>
+
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="org.example.scdpro2.ui.controllers.MainController" stylesheets="/org/example/scdpro2/styles/styles.css">
-
-
-    <!-- Top: MenuBar -->
     <top>
-        <MenuBar>
+        <MenuBar styleClass="navbar bg-light">
             <Menu text="Project">
                 <MenuItem text="Save Project" onAction="#saveProject"/>
                 <MenuItem text="Load Project" onAction="#loadProject"/>
@@ -26,34 +24,29 @@
         </MenuBar>
     </top>
 
-    <!-- Left: Class List -->
     <left>
-        <VBox spacing="10" style="-fx-background-color: #ffffff; -fx-padding: 10;">
-            <Label text="Class List" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+        <VBox styleClass="class-list-panel">
+            <Label text="Class List" styleClass="label"/>
             <ListView fx:id="classListView" prefWidth="200"/>
         </VBox>
     </left>
 
-    <!-- Center: Diagram Pane -->
     <center>
-        <StackPane fx:id="diagramPane" style="-fx-background-color: #e0e0e0; -fx-padding: 10; -fx-border-color: #ccc; -fx-border-width: 1;"/>
+        <StackPane fx:id="diagramPane" styleClass="diagram-pane"/>
     </center>
 
-    <!-- Right: Code Generation Panel -->
     <right>
-        <VBox spacing="10" style="-fx-background-color: #ffffff; -fx-padding: 10;">
-            <Label text="Code Generation" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
-            <Button text="Generate Code" onAction="#generateCode"/>
+        <VBox styleClass="code-generation-panel">
+            <Label text="Code Generation" styleClass="label"/>
+            <Button text="Generate Code" onAction="#generateCode" styleClass="btn btn-primary"/>
         </VBox>
     </right>
 
-    <!-- Bottom: Toolbar -->
     <bottom>
-        <ToolBar>
-            <Button text="Add Class" onAction="#addClass"/>
-            <Button text="Add Interface" onAction="#addInterface"/>
-            <ToggleButton text="Relationship Mode" fx:id="relationshipModeToggle"/>
+        <ToolBar styleClass="btn-toolbar">
+            <Button text="Add Class" onAction="#addClass" styleClass="btn btn-primary"/>
+            <Button text="Add Interface" onAction="#addInterface" styleClass="btn btn-secondary"/>
+            <ToggleButton text="Relationship Mode" fx:id="relationshipModeToggle" styleClass="btn btn-warning"/>
         </ToolBar>
     </bottom>
-
 </BorderPane>

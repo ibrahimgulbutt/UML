@@ -1,0 +1,66 @@
+/* General ClassBox styling */
+.vbox {
+    -fx-alignment: top-left;
+    -fx-background-color: #f9f9f9; /* Light background */
+    -fx-border-color: #cccccc; /* Soft border color */
+    -fx-border-width: 1; /* Thin border for minimalistic look */
+    -fx-padding: 10; /* Padding inside the box */
+    -fx-spacing: 8; /* Space between child elements */
+    -fx-background-radius: 6; /* Rounded corners */
+    -fx-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+/* Resize handle styling */
+.rectangle {
+    -fx-fill: #888888; /* Neutral color */
+    -fx-cursor: se-resize; /* Resize cursor */
+    -fx-background-radius: 50%; /* Round corners for a modern feel */
+}
+
+/* Styling for buttons */
+.button {
+    -fx-background-color: #007bff; /* Blue background */
+    -fx-text-fill: white; /* White text */
+    -fx-font-weight: bold; /* Bold text */
+    -fx-background-radius: 4; /* Rounded corners */
+    -fx-transition: background-color 0.2s ease-in-out; /* Smooth hover effect */
+    -fx-alignment: center; /* Align text to the center */
+}
+
+/* Button hover effects */
+.button:hover {
+    -fx-background-color: #0056b3; /* Darker blue on hover */
+}
+
+.button:focused {
+    -fx-border-color: #0056b3; /* Highlight border when focused */
+}
+
+/* "+" Add button specific styling */
+.hbox .button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #007bff; /* Blue text for "+ Add" buttons */
+}
+
+.hbox .button:hover {
+    -fx-text-fill: #0056b3; /* Darker blue on hover */
+}
+
+/* Remove button (❌) styling */
+.button.delete-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ff3b30; /* Red text for delete button */
+}
+
+.button.delete-button:hover {
+    -fx-text-fill: #cc2a1f; /* Darker red on hover */
+}
+
+/* Context menu item styling */
+.menu-item {
+    -fx-text-fill: #007bff; /* Blue text for menu items */
+}
+
+.menu-item:hover {
+    -fx-text-fill: #0056b3; /* Darker blue on hover */
+}
