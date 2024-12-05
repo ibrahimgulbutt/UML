@@ -1,7 +1,7 @@
 /* General ClassBox styling */
 .vbox {
     -fx-alignment: top-left;
-    -fx-background-color: #f9f9f9; /* Light background */
+    -fx-background-color: #e0e0e0; /* Light background */
     -fx-border-color: #cccccc; /* Soft border color */
     -fx-border-width: 1; /* Thin border for minimalistic look */
     -fx-padding: 10; /* Padding inside the box */

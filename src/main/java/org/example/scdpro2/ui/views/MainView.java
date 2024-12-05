@@ -64,8 +64,6 @@ public class MainView extends BorderPane {
         VBox classListPanel = createClassListPanel();
         VBox codeGenerationPanel = createCodeGenerationPanel();
 
-        this.rightSideToolbar = createRightSideToolbar();
-        setRight(rightSideToolbar);
 
         setTop(new VBox(menuBar, toolbar));
         setLeft(classListPanel);
@@ -180,9 +178,36 @@ public class MainView extends BorderPane {
                 }
             });
 
+
+            // Zoom controls
+            Button zoomInButton = new Button("+");
+            Button zoomOutButton = new Button("-");
+
+            zoomInButton.setOnAction(event -> {
+                classDiagramPane.zoomFactor += 0.1;
+                classDiagramPane.setScaleX(classDiagramPane.zoomFactor);
+                classDiagramPane.setScaleY(classDiagramPane.zoomFactor);
+            });
+
+            zoomOutButton.setOnAction(event -> {
+                classDiagramPane.zoomFactor -= 0.1;
+                if (classDiagramPane.zoomFactor < 0.1) classDiagramPane.zoomFactor = 0.1;
+                classDiagramPane.setScaleX(classDiagramPane.zoomFactor);
+                classDiagramPane.setScaleY(classDiagramPane.zoomFactor);
+            });
+
+            VBox codeGenerationPanel = new VBox();
+            codeGenerationPanel.setSpacing(10);
+            codeGenerationPanel.setPadding(new Insets(10));
+            codeGenerationPanel.setStyle("-fx-background-color: #f4f4f4;");
+            Label codeGenerationLabel = new Label("Code Generation");
+            Button generateButton = new Button("Generate Code");
+            generateButton.setOnAction(event -> controller.generateCode());
+            codeGenerationPanel.getChildren().addAll(codeGenerationLabel, generateButton);
+
             toolbar.getItems().addAll(
                     addClassButton, addInterfaceButton, relationshipModeToggle,
-                    new Separator(), associationBtn, aggregationBtn, compositionBtn, inheritanceBtn
+                    new Separator(), associationBtn, aggregationBtn, compositionBtn, inheritanceBtn,zoomInButton,zoomOutButton,codeGenerationPanel
             );
 
         }

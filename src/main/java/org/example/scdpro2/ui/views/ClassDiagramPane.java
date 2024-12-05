@@ -1,8 +1,11 @@
 package org.example.scdpro2.ui.views;
 
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.business.models.Project;
 import org.example.scdpro2.ui.controllers.MainController;
@@ -25,13 +28,52 @@ public class ClassDiagramPane extends Pane {
     private final Map<ClassDiagram, Node> diagramToUIMap = new HashMap<>();
 
     private final MainView mainView;
+    public double zoomFactor = 1.0; // Default zoom level
 
     public ClassDiagramPane(MainView mainView, MainController controller, DiagramService diagramService) {
         System.out.println("Class diagaram pane is called ");
         this.mainView = mainView; // Store MainView reference
         this.controller = controller;
         this.diagramService = diagramService;
+
+        // Create zoom buttons
+        //createZoomControls();
     }
+
+
+
+    private void createZoomControls() {
+        Button zoomInButton = new Button("+");
+        Button zoomOutButton = new Button("-");
+
+        // Styling the buttons (optional)
+        zoomInButton.setStyle("-fx-font-size: 14px; -fx-padding: 5px;");
+        zoomOutButton.setStyle("-fx-font-size: 14px; -fx-padding: 5px;");
+
+        // Add event handlers for zooming in and out
+        zoomInButton.setOnAction(event -> {
+            zoomFactor += 0.1;
+            setScaleX(zoomFactor);
+            setScaleY(zoomFactor);
+        });
+
+        zoomOutButton.setOnAction(event -> {
+            zoomFactor -= 0.1;
+            if (zoomFactor < 0.1) zoomFactor = 0.1; // Prevent zooming out too much
+            setScaleX(zoomFactor);
+            setScaleY(zoomFactor);
+        });
+
+        // Layout for zoom controls
+        VBox zoomControls = new VBox(10, zoomInButton, zoomOutButton);
+        zoomControls.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5); -fx-padding: 10px;");
+        zoomControls.setTranslateX(10); // Positioning near the top-left corner
+        zoomControls.setTranslateY(10);
+
+        // Add zoom controls directly to this pane
+        getChildren().add(zoomControls);
+    }
+
 
     public void highlightClassBox(String className) {
         ClassBox classBox = getClassBoxByTitle(className);
