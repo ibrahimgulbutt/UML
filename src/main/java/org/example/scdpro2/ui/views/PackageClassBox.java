@@ -84,6 +84,7 @@ public class PackageClassBox extends BorderPane {
         return alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES;
     }
 
+    // Drag and Resize related functions
     private void handleMousePressed(MouseEvent event) {
         if (isOnEdge(event)) {
             // Start resizing
@@ -126,10 +127,6 @@ public class PackageClassBox extends BorderPane {
             setLayoutX(newX);
             setLayoutY(newY);
         }
-    }
-
-    public PackageBox getParentPackageBox() {
-        return parentPackageBox;
     }
 
     private void handleMouseReleased(MouseEvent event) {
@@ -189,6 +186,11 @@ public class PackageClassBox extends BorderPane {
             resizeDirection = "";
             return false;
         }
+    }
+
+    // setter getters
+    public PackageBox getParentPackageBox() {
+        return parentPackageBox;
     }
 
     public TextField getNameField() {

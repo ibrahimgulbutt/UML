@@ -91,8 +91,29 @@ public class PackageBox extends BorderPane  {
     }
 
 
-    public PackageDiagramPane getDiagramPane() {
-        return diagramPane;
+    private void setupNameEditing() {
+        nameLabel.setOnMouseClicked(event -> {
+            TextField nameField = new TextField(packageComponent.getName());
+            nameField.setOnAction(e -> {
+                String newName = nameField.getText().trim();
+                if (!newName.isEmpty()) {
+                    packageComponent.setName(newName);
+                    nameLabel.setText(newName);
+                    contentBox.getChildren().remove(nameField); // Remove TextField
+                    contentBox.getChildren().add(0, nameLabel); // Re-add Label
+                }
+            });
+            contentBox.getChildren().remove(nameLabel); // Remove Label
+            contentBox.getChildren().add(0, nameField); // Add TextField
+            nameField.requestFocus();
+        });
+    }
+
+    private boolean confirmAction(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message, ButtonType.YES, ButtonType.NO);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        return alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES;
     }
 
     public void moveClassBoxes(double deltaX, double deltaY) {
@@ -133,6 +154,35 @@ public class PackageBox extends BorderPane  {
         diagramPane.getChildren().add(classBox);
     }
 
+    private void deletePackage() {
+        if (confirmAction("Delete Package Box", "Are you sure you want to delete this package box and all its relationships?")) {
+            List<PackageRelationship> relationshipsToRemove = new ArrayList<>();
+
+            // Collect relationships involving this package
+            for (PackageRelationship relationship : diagramPane.getRelationships()) {
+                if (relationship.getStartPackage() == this || relationship.getEndPackage() == this) {
+                    relationshipsToRemove.add(relationship);
+                }
+            }
+
+            // Remove the collected relationships
+            for (PackageRelationship relationship : relationshipsToRemove) {
+                diagramPane.removeRelationship(relationship);
+            }
+
+            // Remove the package box itself
+            diagramPane.getChildren().remove(this);
+        }
+    }
+
+    public void addComponent(String componentName) {
+        Label componentLabel = new Label(componentName);
+        componentLabel.setStyle("-fx-background-color: #e6e6e6; -fx-padding: 3; -fx-border-color: black; -fx-border-width: 1;");
+        contentBox.getChildren().add(componentLabel);
+    }
+
+
+    // drag and resize functions
     private void handleMousePressed(MouseEvent event) {
         if (isOnEdge(event)) {
             // Start resizing
@@ -196,38 +246,6 @@ public class PackageBox extends BorderPane  {
             resizeDirection = "";
             return false;
         }
-    }
-
-
-    // Utility method for showing a confirmation dialog
-    private boolean confirmAction(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message, ButtonType.YES, ButtonType.NO);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        return alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES;
-    }
-
-    private void setupNameEditing() {
-        nameLabel.setOnMouseClicked(event -> {
-            TextField nameField = new TextField(packageComponent.getName());
-            nameField.setOnAction(e -> {
-                String newName = nameField.getText().trim();
-                if (!newName.isEmpty()) {
-                    packageComponent.setName(newName);
-                    nameLabel.setText(newName);
-                    contentBox.getChildren().remove(nameField); // Remove TextField
-                    contentBox.getChildren().add(0, nameLabel); // Re-add Label
-                }
-            });
-            contentBox.getChildren().remove(nameLabel); // Remove Label
-            contentBox.getChildren().add(0, nameField); // Add TextField
-            nameField.requestFocus();
-        });
-    }
-
-    private void handleMouseReleased(MouseEvent event) {
-        isResizing = false;
-        resizeDirection = "";
     }
 
     private void resize(MouseEvent event) {
@@ -297,34 +315,20 @@ public class PackageBox extends BorderPane  {
         }
     }
 
-    public void addComponent(String componentName) {
-        Label componentLabel = new Label(componentName);
-        componentLabel.setStyle("-fx-background-color: #e6e6e6; -fx-padding: 3; -fx-border-color: black; -fx-border-width: 1;");
-        contentBox.getChildren().add(componentLabel);
+    private void handleMouseReleased(MouseEvent event) {
+        isResizing = false;
+        resizeDirection = "";
+    }
+
+
+    // setter and getters
+    public PackageDiagramPane getDiagramPane() {
+        return diagramPane;
     }
 
     public PackageComponent getPackageComponent() {
         return packageComponent;
     }
 
-    private void deletePackage() {
-        if (confirmAction("Delete Package Box", "Are you sure you want to delete this package box and all its relationships?")) {
-            List<PackageRelationship> relationshipsToRemove = new ArrayList<>();
 
-            // Collect relationships involving this package
-            for (PackageRelationship relationship : diagramPane.getRelationships()) {
-                if (relationship.getStartPackage() == this || relationship.getEndPackage() == this) {
-                    relationshipsToRemove.add(relationship);
-                }
-            }
-
-            // Remove the collected relationships
-            for (PackageRelationship relationship : relationshipsToRemove) {
-                diagramPane.removeRelationship(relationship);
-            }
-
-            // Remove the package box itself
-            diagramPane.getChildren().remove(this);
-        }
-    }
 }

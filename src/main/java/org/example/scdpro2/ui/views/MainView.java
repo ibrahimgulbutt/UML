@@ -1,6 +1,7 @@
 package org.example.scdpro2.ui.views;
 
 import javafx.embed.swing.SwingFXUtils;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
@@ -90,8 +91,7 @@ public class MainView extends BorderPane {
 
     }
 
-    // creational functions
-
+    // UI functions
     private MenuBar createMenuBar() {
         MenuBar menuBar = new MenuBar();
         menuBar.getStyleClass().addAll("navbar", "navbar-light", "bg-light");
@@ -120,73 +120,92 @@ public class MainView extends BorderPane {
         return new TreeView<>(rootItem);
     }
 
-    private VBox createRightSideToolbar() {
-        VBox toolbar = new VBox();
-        toolbar.setPadding(new Insets(10));
-        toolbar.setSpacing(10);
-        toolbar.setStyle("-fx-background-color: lightgrey;");
-
-        Label title = new Label("Details");
-        toolbar.getChildren().add(title);
-
-        return toolbar;
-    }
-
     private ToolBar createToolbar() {
         ToolBar toolbar = new ToolBar();
+        toolbar.getStyleClass().add("custom-toolbar");
+
+        // Create HBox for the sections (first, second, third)
+        HBox firstSection = new HBox(10); // First section (left-aligned)
+        HBox secondSection = new HBox(10); // Second section (center-aligned)
+        HBox thirdSection = new HBox(10); // Third section (right-aligned)
 
         if (classDiagramPane != null) { // Class Diagram-specific toolbar
-            // Add Class Button (Primary button style)
+
+            // First Section (Left-aligned): Add Class and Add Interface buttons
             Button addClassButton = new Button("Add Class");
-            addClassButton.getStyleClass().addAll("btn", "btn-primary"); // Bootstrap Primary Button
-
+            addClassButton.getStyleClass().addAll("btn", "btn-primary");
             Tooltip.install(addClassButton, new Tooltip("Click to add a new class to the diagram."));
-
             addClassButton.setOnAction(event -> {
                 controller.addClassBox(classDiagramPane);
                 updateClassListView(); // Update the class list
             });
 
-            // Add Interface Button (Secondary button style)
             Button addInterfaceButton = new Button("Add Interface");
-            addInterfaceButton.getStyleClass().addAll("btn", "btn-secondary"); // Bootstrap Secondary Button
+            addInterfaceButton.getStyleClass().addAll("btn", "btn-secondary");
             addInterfaceButton.setOnAction(event -> {
                 controller.addInterfaceBox(classDiagramPane);
                 updateClassListView(); // Update the class list
             });
 
-            // Relationship Mode Toggle Button (Warning button style)
+            firstSection.getChildren().addAll(addClassButton, addInterfaceButton);
+            firstSection.setAlignment(Pos.CENTER_LEFT); // Left-align the first section
+
+            // Second Section (Center-aligned): Relationship Mode Toggle and Relationship Type buttons
             relationshipModeToggle = new ToggleButton("Relationship Mode");
-            relationshipModeToggle.getStyleClass().addAll("btn", "btn-warning"); // Bootstrap Warning Button
+            relationshipModeToggle.getStyleClass().addAll("btn", "btn-outline-warning");
+            relationshipModeToggle.setMinWidth(180);  // Set a fixed width to avoid resizing
+            relationshipModeToggle.setMaxWidth(180);  // Ensure it doesn't stretch or shrink
+            relationshipModeToggle.setPrefWidth(180); // Ensure consistent width
+            relationshipModeToggle.setStyle("-fx-font-size: 14px;");  // Set a consistent font size
 
             relationshipModeToggle.setOnAction(event -> {
                 boolean isActive = relationshipModeToggle.isSelected();
                 classDiagramPane.setRelationshipModeEnabled(isActive);
-                relationshipModeToggle.setText(isActive ? "Exit Relationship Mode" : "Relationship Mode");
+
+                // Keep the text the same, no text change, just toggle button style
+                relationshipModeToggle.getStyleClass().clear();
+                relationshipModeToggle.getStyleClass().add("btn-outline-warning");
+
+                if (isActive) {
+                    relationshipModeToggle.getStyleClass().add("btn-warning");
+                } else {
+                    relationshipModeToggle.getStyleClass().add("btn-outline-warning");
+                }
+
+                // Maintain the consistent button width to prevent expansion
+                relationshipModeToggle.setPrefWidth(180);
             });
 
-            // Relationship Type Buttons (Radio Buttons for toggle group)
+            // Relationship Mode Toggle Button
+            relationshipModeToggle = new ToggleButton("Relationship Mode");
+            relationshipModeToggle.getStyleClass().addAll("btn", "btn-outline-warning");
+            relationshipModeToggle.setMinWidth(180);  // Set a fixed width to avoid resizing
+            relationshipModeToggle.setMaxWidth(180);  // Ensure it doesn't stretch or shrink
+            relationshipModeToggle.setPrefWidth(180); // Ensure consistent width
+            relationshipModeToggle.setStyle("-fx-font-size: 14px;");  // Set a consistent font size
+
+            relationshipModeToggle.setOnAction(event -> {
+                boolean isActive = relationshipModeToggle.isSelected();
+                classDiagramPane.setRelationshipModeEnabled(isActive);
+
+                // Toggle button style
+                relationshipModeToggle.getStyleClass().clear();
+                if (isActive) {
+                    relationshipModeToggle.getStyleClass().add("btn-warning");  // Filled warning button
+                } else {
+                    relationshipModeToggle.getStyleClass().add("btn-outline-warning");  // Outline warning button
+                }
+
+                // Maintain the consistent button width to prevent expansion
+                relationshipModeToggle.setPrefWidth(180);
+            });
+
+            // Relationship Type Radio Buttons
             ToggleGroup relationshipGroup = new ToggleGroup();
-
-            RadioButton associationBtn = new RadioButton("Association");
-            associationBtn.setToggleGroup(relationshipGroup);
-            associationBtn.setUserData(RelationshipType.ASSOCIATION);
-            associationBtn.getStyleClass().add("btn-toggle"); // Custom Toggle Button Style
-
-            RadioButton aggregationBtn = new RadioButton("Aggregation");
-            aggregationBtn.setToggleGroup(relationshipGroup);
-            aggregationBtn.setUserData(RelationshipType.AGGREGATION);
-            aggregationBtn.getStyleClass().add("btn-toggle");
-
-            RadioButton compositionBtn = new RadioButton("Composition");
-            compositionBtn.setToggleGroup(relationshipGroup);
-            compositionBtn.setUserData(RelationshipType.COMPOSITION);
-            compositionBtn.getStyleClass().add("btn-toggle");
-
-            RadioButton inheritanceBtn = new RadioButton("Inheritance");
-            inheritanceBtn.setToggleGroup(relationshipGroup);
-            inheritanceBtn.setUserData(RelationshipType.INHERITANCE);
-            inheritanceBtn.getStyleClass().add("btn-toggle");
+            RadioButton associationBtn = createRadioButton("Association", relationshipGroup, RelationshipType.ASSOCIATION);
+            RadioButton aggregationBtn = createRadioButton("Aggregation", relationshipGroup, RelationshipType.AGGREGATION);
+            RadioButton compositionBtn = createRadioButton("Composition", relationshipGroup, RelationshipType.COMPOSITION);
+            RadioButton inheritanceBtn = createRadioButton("Inheritance", relationshipGroup, RelationshipType.INHERITANCE);
 
             relationshipGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
                 if (newToggle != null) {
@@ -194,10 +213,15 @@ public class MainView extends BorderPane {
                 }
             });
 
+            secondSection.getChildren().addAll(relationshipModeToggle, associationBtn, aggregationBtn, compositionBtn, inheritanceBtn);
+            secondSection.setAlignment(Pos.CENTER); // Center-align the second section
 
-            // Zoom controls
+            // Third Section (Right-aligned): Zoom In/Out, Generate Code, Save as Image
             Button zoomInButton = new Button("+");
+            zoomInButton.getStyleClass().add("zoom-button");
+
             Button zoomOutButton = new Button("-");
+            zoomOutButton.getStyleClass().add("zoom-button");
 
             zoomInButton.setOnAction(event -> {
                 classDiagramPane.zoomFactor += 0.1;
@@ -212,94 +236,71 @@ public class MainView extends BorderPane {
                 classDiagramPane.setScaleY(classDiagramPane.zoomFactor);
             });
 
-            VBox codeGenerationPanel = new VBox();
-            codeGenerationPanel.setSpacing(10);
-            codeGenerationPanel.setPadding(new Insets(10));
-            codeGenerationPanel.setStyle("-fx-background-color: #f4f4f4;");
-            Label codeGenerationLabel = new Label("Code Generation");
+            // Generate Code Button (Metallic style)
             Button generateButton = new Button("Generate Code");
+            generateButton.getStyleClass().addAll("btn", "btn-outline-secondary");
             generateButton.setOnAction(event -> controller.generateCode());
-            codeGenerationPanel.getChildren().addAll(codeGenerationLabel, generateButton);
-            Button saveAsImageButton = new Button("Save as JPEG");
-            saveAsImageButton.getStyleClass().addAll("btn", "btn-info"); // Optional styling
 
+            Button saveAsImageButton = new Button("Save as JPEG");
+            saveAsImageButton.getStyleClass().addAll("btn", "save-image-button");
             saveAsImageButton.setOnAction(event -> saveDiagramAsImage());
 
-            toolbar.getItems().addAll(
-                    addClassButton, addInterfaceButton, relationshipModeToggle,
-                    new Separator(), associationBtn, aggregationBtn, compositionBtn, inheritanceBtn,zoomInButton,zoomOutButton,
-                    codeGenerationPanel, saveAsImageButton
-            );
+            thirdSection.getChildren().addAll(zoomInButton, zoomOutButton, generateButton, saveAsImageButton);
+            thirdSection.setAlignment(Pos.CENTER_RIGHT); // Right-align the third section
 
-        }
-        else if (packageDiagramPane != null) { // Package Diagram-specific toolbar
+            // Add the sections to the toolbar with separators between them
+            toolbar.getItems().addAll(firstSection, new Separator(), secondSection, new Separator(), thirdSection);
+
+        } else if (packageDiagramPane != null) { // Package Diagram-specific toolbar
             Button addPackageButton = new Button("Add Package");
-            addPackageButton.getStyleClass().addAll("btn", "btn-success"); // Bootstrap Success Button
+            addPackageButton.getStyleClass().addAll("btn", "btn-success");
             addPackageButton.setOnAction(event -> {
                 controller.addPackageBox(packageDiagramPane);
             });
 
             relationshipModeToggle = new ToggleButton("Relationship Mode");
-            relationshipModeToggle.getStyleClass().addAll("btn", "btn-warning"); // Bootstrap Warning Button
-
+            relationshipModeToggle.getStyleClass().addAll("btn", "btn-outline-warning");
             relationshipModeToggle.setOnAction(event -> {
                 boolean isActive = relationshipModeToggle.isSelected();
                 packageDiagramPane.setPackageModeEnabled(isActive);
                 relationshipModeToggle.setText(isActive ? "Exit Relationship Mode" : "Relationship Mode");
+                relationshipModeToggle.getStyleClass().clear();
+                relationshipModeToggle.getStyleClass().add(isActive ? "btn" : "btn-outline-warning");
             });
 
-            toolbar.getItems().addAll(addPackageButton,relationshipModeToggle);
+            toolbar.getItems().addAll(addPackageButton, relationshipModeToggle);
         }
 
         return toolbar;
     }
 
-
-    public void saveDiagramAsImage() {
-        // Determine which pane to capture: ClassDiagramPane or PackageDiagramPane
-        WritableImage snapshot = null;
-
-        if (classDiagramPane != null) {
-            snapshot = classDiagramPane.snapshot(new SnapshotParameters(), null);
-        } else if (packageDiagramPane != null) {
-            snapshot = packageDiagramPane.snapshot(new SnapshotParameters(), null);
-        } else {
-            System.out.println("No diagram pane available for saving as an image.");
-            return;
-        }
-
-        // Open a file chooser to save the image
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save Diagram as Image");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG Files", "*.png"));
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JPEG Files", "*.jpg"));
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("BMP Files", "*.bmp"));
-
-        File file = fileChooser.showSaveDialog(this.getScene().getWindow());
-        if (file != null) {
-            try {
-                String extension = getFileExtension(file.getName());
-                if (extension == null) {
-                    // Default to PNG if no extension is specified
-                    extension = "png";
-                    file = new File(file.getAbsolutePath() + ".png");
-                }
-
-                ImageIO.write(SwingFXUtils.fromFXImage(snapshot, null), extension, file);
-                System.out.println("Diagram saved as: " + file.getAbsolutePath());
-            } catch (IOException ex) {
-                ex.printStackTrace();
-                System.out.println("Failed to save the diagram as an image.");
-            }
-        }
+    private RadioButton createRadioButton(String text, ToggleGroup group, RelationshipType type) {
+        RadioButton button = new RadioButton(text);
+        button.setToggleGroup(group);
+        button.setUserData(type);
+        button.getStyleClass().add("btn-toggle");
+        return button;
     }
 
-    // Helper method to get the file extension
-    private String getFileExtension(String fileName) {
-        int dotIndex = fileName.lastIndexOf('.');
-        return (dotIndex > 0 && dotIndex < fileName.length() - 1) ? fileName.substring(dotIndex + 1) : null;
-    }
 
+    private VBox createRightSideToolbar() {
+        VBox toolbar = new VBox();
+        toolbar.setPadding(new Insets(10));
+        toolbar.setSpacing(10);
+        toolbar.setStyle("-fx-background-color: #f8f9fa;"); // Light grey background similar to Bootstrap
+
+        // Title with enhanced styling
+        Label title = new Label("Details");
+        title.getStyleClass().add("h4"); // Bootstrap's heading class for a larger, bold title
+        title.setStyle("-fx-font-weight: bold; -fx-text-fill: #343a40;"); // Dark color for contrast
+
+        // Adding the title to the toolbar
+        toolbar.getChildren().add(title);
+
+        // Optionally, you can add more content here (buttons, text fields, etc.)
+
+        return toolbar;
+    }
 
     private VBox createClassListPanel() {
         VBox panel = new VBox();
@@ -384,31 +385,31 @@ public class MainView extends BorderPane {
         return codeGenerationPanel;
     }
 
-
-    // non-creation functions
-
     public void updateRightSideToolbar(Object selectedItem) {
         rightSideToolbar.getChildren().clear();
 
         if (selectedItem instanceof ClassBox) {
             ClassBox classBox = (ClassBox) selectedItem;
 
+            // Label for Class title
             Label nameLabel = new Label("Class: " + classBox.getTitle());
-            Label AttributesLabel = new Label("Attributes : "+classBox.getAttributesBox().toString());
-            Label OperationLabel = new Label("Operations : "+ classBox.getOperationsBox().toString());
-            rightSideToolbar.getChildren().add(nameLabel);
-            rightSideToolbar.getChildren().add(AttributesLabel);
-            rightSideToolbar.getChildren().add(OperationLabel);
+            nameLabel.getStyleClass().add("h5"); // Bootstrap-like heading
 
-        }
-        else if (selectedItem instanceof RelationshipLine) {
+            // Labels for Attributes and Operations
+            Label attributesLabel = new Label("Attributes: " + classBox.getAttributesBox().toString());
+            attributesLabel.getStyleClass().add("text-muted"); // Muted color for description
+            Label operationLabel = new Label("Operations: " + classBox.getOperationsBox().toString());
+            operationLabel.getStyleClass().add("text-muted");
+
+            // Add to the right-side toolbar
+            rightSideToolbar.getChildren().addAll(nameLabel, attributesLabel, operationLabel);
+        } else if (selectedItem instanceof RelationshipLine) {
             RelationshipLine relationshipLine = (RelationshipLine) selectedItem;
             Relationship relationship = controller.relationshipMapping.get(relationshipLine);
 
-            System.out.println(relationship.relationshipLabel+relationship.targetMultiplicity);
-
             TextField titleField = new TextField(relationshipLine.getTitle());
             titleField.setPromptText("Enter Relationship Title");
+            titleField.getStyleClass().add("form-control"); // Bootstrap form control style
             titleField.setOnAction(e -> {
                 String newTitle = titleField.getText();
                 relationshipLine.setTitle(newTitle);
@@ -418,6 +419,7 @@ public class MainView extends BorderPane {
 
             TextField startMultiplicityField = new TextField(relationshipLine.getMultiplicityStart());
             startMultiplicityField.setPromptText("Start Multiplicity");
+            startMultiplicityField.getStyleClass().add("form-control"); // Bootstrap form control style
             startMultiplicityField.setOnAction(e -> {
                 String newStartMultiplicity = startMultiplicityField.getText();
                 relationshipLine.setMultiplicityStart(newStartMultiplicity);
@@ -427,6 +429,7 @@ public class MainView extends BorderPane {
 
             TextField endMultiplicityField = new TextField(relationshipLine.getMultiplicityEnd());
             endMultiplicityField.setPromptText("End Multiplicity");
+            endMultiplicityField.getStyleClass().add("form-control"); // Bootstrap form control style
             endMultiplicityField.setOnAction(e -> {
                 String newEndMultiplicity = endMultiplicityField.getText();
                 relationshipLine.setMultiplicityEnd(newEndMultiplicity);
@@ -434,22 +437,31 @@ public class MainView extends BorderPane {
                 controller.relationshipMapping.put(relationshipLine, relationship); // Update map
             });
 
+            // Add labels and fields to the toolbar
+            // Adding Relationship Details Label with a style class
+            Label relationshipDetailsLabel = new Label("Relationship Details");
+            relationshipDetailsLabel.getStyleClass().add("h5");
+
+            // Adding labels with text-muted class
+            Label titleLabel = new Label("Title:");
+            titleLabel.getStyleClass().add("text-muted");
+
+            Label startMultiplicityLabel = new Label("Start Multiplicity:");
+            startMultiplicityLabel.getStyleClass().add("text-muted");
+
+            Label endMultiplicityLabel = new Label("End Multiplicity:");
+            endMultiplicityLabel.getStyleClass().add("text-muted");
+
+            // Add to the right side toolbar
             rightSideToolbar.getChildren().addAll(
-                    new Label("Relationship Details"),
-                    new Label("Title:"), titleField,
-                    new Label("Start Multiplicity:"), startMultiplicityField,
-                    new Label("End Multiplicity:"), endMultiplicityField
+                    relationshipDetailsLabel,
+                    titleLabel, titleField,
+                    startMultiplicityLabel, startMultiplicityField,
+                    endMultiplicityLabel, endMultiplicityField
             );
-
-            System.out.println(relationship.relationshipLabel+relationship.targetMultiplicity);
         }
-
-
     }
 
-    public void handleSelection(Object selectedItem) {
-        this.updateRightSideToolbar(selectedItem);
-    }
 
     public void updateClassListView() {
         projectExplorer.setRoot(new TreeItem<>("Class Diagrams"));
@@ -466,14 +478,6 @@ public class MainView extends BorderPane {
         classListView.getItems().add(className);
     }
 
-    public void setRelationshipModeEnabled(boolean enabled) {
-        this.relationshipMode = enabled;
-        if (!enabled) {
-            packageDiagramPane.clearSelectedPackage(); // Clear selection when exiting relationship mode
-        }
-    }
-
-    // Handle relationship mode logic for connecting two ClassBox components
     public void handleClassBoxClick(ClassBox clickedClassBox) {
         System.out.println("handleClassBoxClick called for " + clickedClassBox.getClassDiagram().getTitle());
         handleSelection(clickedClassBox);
@@ -527,6 +531,65 @@ public class MainView extends BorderPane {
         }
     }
 
+
+    // UI helper functions
+    public void saveDiagramAsImage() {
+        // Determine which pane to capture: ClassDiagramPane or PackageDiagramPane
+        WritableImage snapshot = null;
+
+        if (classDiagramPane != null) {
+            snapshot = classDiagramPane.snapshot(new SnapshotParameters(), null);
+        } else if (packageDiagramPane != null) {
+            snapshot = packageDiagramPane.snapshot(new SnapshotParameters(), null);
+        } else {
+            System.out.println("No diagram pane available for saving as an image.");
+            return;
+        }
+
+        // Open a file chooser to save the image
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Diagram as Image");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG Files", "*.png"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JPEG Files", "*.jpg"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("BMP Files", "*.bmp"));
+
+        File file = fileChooser.showSaveDialog(this.getScene().getWindow());
+        if (file != null) {
+            try {
+                String extension = getFileExtension(file.getName());
+                if (extension == null) {
+                    // Default to PNG if no extension is specified
+                    extension = "png";
+                    file = new File(file.getAbsolutePath() + ".png");
+                }
+
+                ImageIO.write(SwingFXUtils.fromFXImage(snapshot, null), extension, file);
+                System.out.println("Diagram saved as: " + file.getAbsolutePath());
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                System.out.println("Failed to save the diagram as an image.");
+            }
+        }
+    }
+
+    public void handleSelection(Object selectedItem) {
+        this.updateRightSideToolbar(selectedItem);
+    }
+
+
+    // setter getters
+    public void setRelationshipModeEnabled(boolean enabled) {
+        this.relationshipMode = enabled;
+        if (!enabled) {
+            packageDiagramPane.clearSelectedPackage(); // Clear selection when exiting relationship mode
+        }
+    }
+
+    private String getFileExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex > 0 && dotIndex < fileName.length() - 1) ? fileName.substring(dotIndex + 1) : null;
+    }
+
     public ClassDiagramPane getClassDiagramPane() {
         return classDiagramPane;
     }
@@ -534,5 +597,6 @@ public class MainView extends BorderPane {
     public MainController getController() {
         return controller;
     }
+
 
 }

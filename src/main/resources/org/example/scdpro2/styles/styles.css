@@ -1,43 +1,33 @@
 /* General Styling */
 .root {
     -fx-font-family: 'Arial', sans-serif;
-
     -fx-shadow-color: rgba(0, 0, 0, 0.1);
     -fx-shadow-offset-x: 2px;
     -fx-shadow-offset-y: 2px;
     -fx-shadow-radius: 4px;
 }
 
-/* Class List Panel */
-.class-list-panel {
-    -fx-background-color: #f8f9fa; /* Light gray background */
-    -fx-padding: 10px;
-    -fx-border-color: #dee2e6; /* Light border color */
-    -fx-border-width: 1px;
-}
-
-/* Diagram Pane */
-.diagram-pane {
-    -fx-background-color: #e9ecef; /* Light gray background */
-    -fx-border-color: #adb5bd; /* Mid-gray border */
-    -fx-border-width: 1px;
-    -fx-padding: 10px;
-
-    -fx-background-radius: 8px;
-    -fx-border-radius: 8px;
-}
-
-/* Buttons */
+/* Common Styles for Buttons */
 .btn {
     -fx-font-size: 14px;
     -fx-padding: 8px 12px;
     -fx-background-radius: 5px;
     -fx-border-radius: 5px;
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.2), 5, 0, 1, 1);
-
     -fx-transition: all 0.3s ease-in-out;
 }
 
+.btn:hover {
+    -fx-opacity: 0.9; /* Slight dim effect on hover */
+}
+
+.btn:disabled {
+    -fx-background-color: #f8f9fa; /* Light gray background when disabled */
+    -fx-text-fill: #6c757d; /* Muted text color when disabled */
+    -fx-border-color: #ddd; /* Lighter border when disabled */
+}
+
+/* Common Button Variants */
 .btn-primary {
     -fx-background-color: #007bff; /* Blue */
     -fx-text-fill: #ffffff;
@@ -63,35 +53,145 @@
     -fx-text-fill: #212529;
 }
 
-.btn-toggle {
-    -fx-font-size: 12px;  /* Standard button font size */
-    -fx-padding: 6px 12px;  /* Standard padding */
-    -fx-background-color: transparent;  /* No background color */
-    -fx-text-fill: #333;  /* Dark text color for good contrast */
-    -fx-border-radius: 4px;  /* Slightly rounded corners */
-    -fx-border-color: #ccc;  /* Subtle border color */
-    -fx-border-width: 1px;  /* Thin border for minimal effect */
-    -fx-cursor: hand;  /* Pointer cursor on hover */
-    -fx-transition: background-color 0.2s ease, border-color 0.2s ease;  /* Smooth transitions for background and border */
+.btn-outline-primary {
+    -fx-background-color: transparent;
+    -fx-text-fill: #007bff;
+    -fx-border-color: #007bff;
+    -fx-border-width: 2px;
 }
 
-.btn-toggle:hover {
-    -fx-background-color: #f8f9fa;  /* Light background on hover */
-    -fx-border-color: #007bff;  /* Border color on hover */
+.btn-outline-primary:hover {
+    -fx-background-color: #007bff;
+    -fx-text-fill: white;
+    -fx-border-color: #007bff;
 }
 
-.btn-toggle:pressed {
-    -fx-background-color: #e9ecef;  /* Slightly darker background on click */
+/* Add similar styles for btn-outline-secondary, btn-outline-success, btn-outline-danger, etc. */
+
+/* Styles Specific to Custom Toolbar */
+.custom-toolbar {
+    -fx-background-color: #f8f9fa; /* Light background color */
+    -fx-padding: 2px 20px; /* Spacing inside the toolbar */
+    -fx-spacing: 10px; /* Space between toolbar items */
+    -fx-alignment: center-left; /* Align items to the left */
+    -fx-border-color: #dee2e6; /* Subtle border */
+    -fx-border-width: 1px; /* Thin border for better separation */
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.1), 5, 0, 0, 2); /* Light shadow for elevation */
+    -fx-transition: background-color 0.3s ease-in-out; /* Smooth color transition */
 }
 
-.btn-toggle:disabled {
-    -fx-background-color: #f8f9fa;  /* Light gray background when disabled */
-    -fx-text-fill: #6c757d;  /* Muted text color when disabled */
-    -fx-border-color: #ddd;  /* Lighter border when disabled */
+.custom-toolbar .btn {
+    -fx-padding: 8px 20px; /* Specific padding for toolbar buttons */
+    -fx-min-width: 120px;
+    -fx-border-radius: 30px; /* Rounded corners */
+    -fx-background-radius: 30px;
 }
 
+.custom-toolbar .btn-outline-primary {
+    /* Extends the general btn-outline-primary with toolbar-specific styles */
+    -fx-font-size: 14px;
+}
 
-/* Code Generation Panel */
+/* Button Styles for Relationship Mode Toggle */
+/* Outline Warning Button (Custom Toolbar) */
+.custom-toolbar .btn-outline-warning {
+    -fx-background-color: transparent; /* No fill */
+    -fx-border-color: #ffc107; /* Yellow border */
+    -fx-text-fill: #ffc107; /* Yellow text */
+    -fx-border-width: 2px; /* Thin border */
+    -fx-border-radius: 20px; /* Rounded corners */
+    -fx-font-size: 14px; /* Consistent font size */
+    -fx-padding: 8px 20px; /* Padding for button */
+    -fx-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Smooth transition */
+}
+
+/* Filled Warning Button (Custom Toolbar) */
+.custom-toolbar .btn-warning {
+    -fx-background-color: #ffc107; /* Filled yellow background */
+    -fx-text-fill: white; /* White text */
+    -fx-border-color: #ffc107; /* Yellow border */
+    -fx-border-width: 2px; /* Thin border */
+    -fx-border-radius: 20px; /* Rounded corners */
+    -fx-font-size: 14px; /* Consistent font size */
+    -fx-padding: 8px 20px; /* Padding for button */
+    -fx-transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Smooth transition */
+    -fx-background-radius: 20px; /* Ensure the background follows the same border-radius */
+}
+
+/* Hover effects */
+.custom-toolbar .btn-outline-warning:hover {
+    -fx-background-color: rgba(255, 193, 7, 0.1); /* Light yellow background on hover */
+    -fx-text-fill: #ffc107; /* Keep yellow text on hover */
+    -fx-border-color: #ffc107; /* Yellow border on hover */
+}
+
+.custom-toolbar .btn-warning:hover {
+    -fx-background-color: #e0a800; /* Slightly darker yellow on hover */
+    -fx-text-fill: white; /* White text on hover */
+    -fx-border-color: #ffc107; /* Yellow border on hover */
+}
+
+/* RadioButton Styles for Relationship Type */
+.custom-toolbar .radio-button {
+    -fx-font-size: 14px; /* Consistent font size */
+    -fx-padding: 8px 15px; /* Padding for radio buttons */
+    -fx-border-radius: 20px; /* Rounded corners */
+}
+
+.custom-toolbar .radio-button:selected {
+    -fx-text-fill: #ffc107; /* Yellow text when selected */
+    -fx-background-color: #f8f9fa; /* Light background */
+}
+
+.custom-toolbar .zoom-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #17a2b8; /* Blue for zoom buttons */
+    -fx-border-radius: 30px;
+    -fx-font-size: 18px;
+    -fx-padding: 8px 20px;
+    -fx-border-width: 2px;
+    -fx-border-color: #17a2b8;
+}
+
+.custom-toolbar .zoom-button:hover {
+    -fx-background-color: #17a2b8;
+    -fx-text-fill: white;
+    -fx-border-color: #17a2b8;
+}
+
+.custom-toolbar .save-image-button {
+    -fx-background-color: #28a745; /* Green for save button */
+    -fx-text-fill: white;
+    -fx-border-radius: 30px;
+    -fx-font-size: 14px;
+    -fx-padding: 8px 20px;
+    -fx-border-width: 2px;
+    -fx-border-color: #28a745;
+}
+
+.custom-toolbar .save-image-button:hover {
+    -fx-background-color: #218838; /* Darker green on hover */
+    -fx-text-fill: white;
+    -fx-border-color: #218838;
+}
+
+/* Other Specific Panel Styles */
+.class-list-panel {
+    -fx-background-color: #f8f9fa; /* Light gray background */
+    -fx-padding: 10px;
+    -fx-border-color: #dee2e6; /* Light border color */
+    -fx-border-width: 1px;
+}
+
+.diagram-pane {
+    -fx-background-color: #e9ecef; /* Light gray background */
+    -fx-border-color: #adb5bd; /* Mid-gray border */
+    -fx-border-width: 1px;
+    -fx-padding: 10px;
+    -fx-background-radius: 8px;
+    -fx-border-radius: 8px;
+}
+
 .code-generation-panel {
     -fx-background-color: #ffffff; /* White background */
     -fx-padding: 15px;

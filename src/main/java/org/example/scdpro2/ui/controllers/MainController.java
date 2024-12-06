@@ -18,12 +18,14 @@ import java.util.List;
 public class MainController {
     private ProjectService projectService;
     private CodeGenerationService codeGenerationService;
-    private ProjectDAOImpl projectDAO;
     private final DiagramService diagramService;
+
+    private ProjectDAOImpl projectDAO;
+
     private MainView mainView;
+
     private List<RelationshipLine> relationshipLines = new ArrayList<>();
     public List<Relationship> relationships = new ArrayList<>();
-
     public Map<RelationshipLine, Relationship> relationshipMapping = new HashMap<>();
 
     private static int countclasses = 1;
@@ -94,16 +96,12 @@ public class MainController {
         }
     }
 
-
-    // Helper method to convert RelationshipLine to Relationship
     private Relationship convertRelationshipLineToRelationship(RelationshipLine relationshipLine) {
         BClassBox source = (BClassBox) relationshipLine.getSource().getDiagram();
         BClassBox target = (BClassBox) relationshipLine.getTarget().getDiagram();
         RelationshipLine.RelationshipType type = relationshipLine.getType();
         return new Relationship(source, target, type,relationshipLine.getMultiplicityStart(),relationshipLine.getMultiplicityEnd(),relationshipLine.getRelationshipLabel());
     }
-
-
 
     public void loadProjectFromFile(File file) {
         System.out.println("LoadProject from filr is called ");
@@ -183,12 +181,9 @@ public class MainController {
         }
     }
 
-
     public Relationship getRelationshipForLine(RelationshipLine line) {
         return relationshipMapping.get(line);
     }
-
-
 
     public void saveProject() {
         File file = new FileChooser().showSaveDialog(null);
@@ -226,7 +221,6 @@ public class MainController {
                 .collect(Collectors.toList());
     }
 
-    // New method to generate code for the current diagram
     public void generateCode() {
         Project project = projectService.getCurrentProject();
         if (project != null && !project.getDiagrams().isEmpty()) {
@@ -248,7 +242,6 @@ public class MainController {
         return List.of(); // Return an empty list if no project or diagrams
     }
 
-        // Method to add a new ClassBox to the ClassDiagramPane
     public void addClassBox(ClassDiagramPane diagramPane) {
             // Ensure a project is initialized
             if (projectService.getCurrentProject() == null) {
@@ -361,8 +354,6 @@ public class MainController {
                 .count();
     }
 
-
-
     public Project getCurrentProject() {
         return projectService.getCurrentProject();
     }
@@ -399,7 +390,6 @@ public class MainController {
 
         System.out.println("Package added: " + packageName);
     }
-
 
     public void deleteInterfaceBox(ClassDiagramPane pane, InterfaceBox interfaceBox) {
         if (interfaceBox == null) {

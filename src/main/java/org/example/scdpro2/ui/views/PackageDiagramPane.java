@@ -21,10 +21,16 @@ public class PackageDiagramPane extends Pane {
     private final MainView mainView;
 
     private PackageBox selectedPackageBox; // To track the selected package box
+
     private final Map<PackageComponent, Node> packageToUIMap = new HashMap<>();
     private PackageDiagram activePackageDiagram; // Current package diagram
+
     private ToggleButton relationshipModeButton = new ToggleButton("Relationship Mode");
+    private final List<PackageRelationship> relationships = new ArrayList<>();
+
     private PackageBox relationshipSourceBox = null;
+    private Node relationshipSourceNode = null; // Source node for relationshipsregisterPackageBox
+
 
     public PackageDiagramPane(MainView mainView, MainController controller, DiagramService diagramService) {
         System.out.println("PackageDiagramPane is initialized.");
@@ -37,6 +43,7 @@ public class PackageDiagramPane extends Pane {
         loadPackagesFromDiagram();
     }
 
+    // UI Functions
     private PackageDiagram initializePackageDiagram() {
         if (diagramService.getPackageDiagrams().isEmpty()) {
             PackageDiagram defaultDiagram = new PackageDiagram("Default Package Diagram");
@@ -65,7 +72,20 @@ public class PackageDiagramPane extends Pane {
         }
     }
 
-    private Node relationshipSourceNode = null; // Source node for relationshipsregisterPackageBox
+    public void addNewPackage(String name) {
+        PackageComponent newPackage = new PackageComponent(name);
+        activePackageDiagram.addPackage(newPackage);
+        PackageBox packageBox = new PackageBox(newPackage, controller, this);
+        addPackageBox(packageBox);
+    }
+
+    public void clearSelectedPackage() {
+        if (selectedPackageBox != null) {
+            selectedPackageBox.setStyle("-fx-border-color: black;");
+            selectedPackageBox = null;
+        }
+    }
+
 
     public void registerPackageBox(PackageBox packageBox) {
         packageBox.setOnMouseClicked(event -> handleRelationshipMode(packageBox));
@@ -75,6 +95,8 @@ public class PackageDiagramPane extends Pane {
         packageClassBox.setOnMouseClicked(event -> handleRelationshipMode(packageClassBox));
     }
 
+
+    // Relationship functions
     private void handleRelationshipMode(Node selectedNode) {
         if (relationshipModeButton.isSelected()) {
             if (relationshipSourceNode == null) {
@@ -104,18 +126,6 @@ public class PackageDiagramPane extends Pane {
         }
     }
 
-    private void createPackageToClassRelationship(PackageBox packageBox, PackageClassBox classBox) {
-        // Implement specific logic for PackageBox to PackageClassBox relationship
-        System.out.println("Relationship created between Package " + packageBox.getPackageComponent().getName() +
-                " and Class " + classBox.getNameField().getText());
-    }
-
-    private void createClassToClassRelationship(PackageClassBox sourceClass, PackageClassBox targetClass) {
-        // Implement specific logic for Class to Class relationship
-        System.out.println("Relationship created between Class " + sourceClass.getNameField().getText() +
-                " and Class " + targetClass.getNameField().getText());
-    }
-
     private void createPackageRelationship(PackageBox source, PackageBox target) {
         if (source == target) {
             Alert alert = new Alert(Alert.AlertType.WARNING, "Cannot create a relationship with the same package.");
@@ -128,7 +138,18 @@ public class PackageDiagramPane extends Pane {
         System.out.println("Relationship created between " + source.getPackageComponent().getName() + " and " + target.getPackageComponent().getName());
     }
 
-    private final List<PackageRelationship> relationships = new ArrayList<>();
+    private void createPackageToClassRelationship(PackageBox packageBox, PackageClassBox classBox) {
+        // Implement specific logic for PackageBox to PackageClassBox relationship
+        System.out.println("Relationship created between Package " + packageBox.getPackageComponent().getName() +
+                " and Class " + classBox.getNameField().getText());
+    }
+
+    private void createClassToClassRelationship(PackageClassBox sourceClass, PackageClassBox targetClass) {
+        // Implement specific logic for Class to Class relationship
+        System.out.println("Relationship created between Class " + sourceClass.getNameField().getText() +
+                " and Class " + targetClass.getNameField().getText());
+    }
+
 
     public void addRelationship(PackageRelationship relationship) {
         relationships.add(relationship);
@@ -149,26 +170,13 @@ public class PackageDiagramPane extends Pane {
     }
 
 
-    public void clearSelectedPackage() {
-        if (selectedPackageBox != null) {
-            selectedPackageBox.setStyle("-fx-border-color: black;");
-            selectedPackageBox = null;
-        }
-    }
-
+    // Business layer functions
     public void loadPackagesFromDiagram() {
         getChildren().clear();
         for (PackageComponent pkg : activePackageDiagram.getPackages()) {
             PackageBox packageBox = new PackageBox(pkg, controller, this);
             addPackageBox(packageBox);
         }
-    }
-
-    public void addNewPackage(String name) {
-        PackageComponent newPackage = new PackageComponent(name);
-        activePackageDiagram.addPackage(newPackage);
-        PackageBox packageBox = new PackageBox(newPackage, controller, this);
-        addPackageBox(packageBox);
     }
 
     public void loadPackagesFromProject(Project project) {
@@ -184,6 +192,7 @@ public class PackageDiagramPane extends Pane {
     //     return packageToUIMap;
     //}
 
+    // Setter Getters
     public void setPackageModeEnabled(boolean isActive) {
         relationshipModeButton.setSelected(isActive);
         relationshipSourceBox = null; // Reset source when disabling

@@ -19,15 +19,19 @@ import java.util.Map;
 
 public class ClassDiagramPane extends Pane {
     private final MainController controller;
-    private ClassBox selectedClassBox;
-    private boolean relationshipModeEnabled = false;
+    private final MainView mainView;
     private DiagramService diagramService;
+    ;
+    private boolean relationshipModeEnabled = false;
     private RelationshipType currentRelationshipType; // Added variable for relationship type
     private final List<RelationshipLine> relationships = new ArrayList<>();
+
+    private ClassBox selectedClassBox;
     private final Map<BClassBox, Node> diagramToUIMap = new HashMap<>();
 
-    private final MainView mainView;
     public double zoomFactor = 1.0; // Default zoom level
+    private double dragStartX;
+    private double dragStartY;
 
     public ClassDiagramPane(MainView mainView, MainController controller, DiagramService diagramService) {
         System.out.println("Class diagaram pane is called ");
@@ -37,9 +41,69 @@ public class ClassDiagramPane extends Pane {
 
         // Create zoom buttons
         //createZoomControls();
+        enableZoomWithScroll();
+        enableDragWithCtrl();
     }
 
+    // grabbing and zooming functions
+    private void enableZoomWithScroll() {
+        this.setOnScroll(event -> {
+            if (event.isControlDown()) { // Check if the Ctrl key is pressed
+                double deltaY = event.getDeltaY(); // Get the scroll delta
+                if (deltaY > 0) {
+                    zoomIn(); // Zoom in when scrolling up
+                } else {
+                    zoomOut(); // Zoom out when scrolling down
+                }
+            }
+        });
+    }
 
+    private void enableDragWithCtrl() {
+        this.setOnMousePressed(event -> {
+            if (event.isControlDown()) { // Only enable dragging when Ctrl is held
+                dragStartX = event.getSceneX();
+                dragStartY = event.getSceneY();
+            }
+        });
+
+        this.setOnMouseDragged(event -> {
+            if (event.isControlDown()) { // Ensure Ctrl is held down for dragging
+                double deltaX = event.getSceneX() - dragStartX;
+                double deltaY = event.getSceneY() - dragStartY;
+
+                // Translate the pane (move it based on drag distance)
+                this.setTranslateX(this.getTranslateX() + deltaX);
+                this.setTranslateY(this.getTranslateY() + deltaY);
+
+                // Update the starting point for the next drag event
+                dragStartX = event.getSceneX();
+                dragStartY = event.getSceneY();
+            }
+        });
+
+        this.setOnMouseReleased(event -> {
+            // Optionally reset translation to avoid drift or additional logic when mouse is released
+            // this.setTranslateX(0);
+            // this.setTranslateY(0);
+        });
+    }
+
+    private void zoomIn() {
+        zoomFactor += 0.1; // Increase zoom factor
+        updateZoom(); // Apply zoom to the pane
+    }
+
+    private void zoomOut() {
+        zoomFactor -= 0.1; // Decrease zoom factor
+        if (zoomFactor < 0.1) zoomFactor = 0.1; // Prevent zooming out too much
+        updateZoom(); // Apply zoom to the pane
+    }
+
+    private void updateZoom() {
+        setScaleX(zoomFactor); // Apply zoom to the X axis
+        setScaleY(zoomFactor); // Apply zoom to the Y axis
+    }
 
     private void createZoomControls() {
         Button zoomInButton = new Button("+");
@@ -50,18 +114,8 @@ public class ClassDiagramPane extends Pane {
         zoomOutButton.setStyle("-fx-font-size: 14px; -fx-padding: 5px;");
 
         // Add event handlers for zooming in and out
-        zoomInButton.setOnAction(event -> {
-            zoomFactor += 0.1;
-            setScaleX(zoomFactor);
-            setScaleY(zoomFactor);
-        });
-
-        zoomOutButton.setOnAction(event -> {
-            zoomFactor -= 0.1;
-            if (zoomFactor < 0.1) zoomFactor = 0.1; // Prevent zooming out too much
-            setScaleX(zoomFactor);
-            setScaleY(zoomFactor);
-        });
+        zoomInButton.setOnAction(event -> zoomIn());
+        zoomOutButton.setOnAction(event -> zoomOut());
 
         // Layout for zoom controls
         VBox zoomControls = new VBox(10, zoomInButton, zoomOutButton);
@@ -73,12 +127,8 @@ public class ClassDiagramPane extends Pane {
         getChildren().add(zoomControls);
     }
 
-    public List<RelationshipLine> getRelationships() {
-        return relationships;
-    }
 
-
-
+    // UI functions
     public void highlightClassBox(String className) {
         ClassBox classBox = getClassBoxByTitle(className);
         if (classBox != null) {
@@ -94,7 +144,54 @@ public class ClassDiagramPane extends Pane {
         }
     }
 
+    public void handleClassBoxClick(ClassBox clickedClassBox, MouseEvent event) {
+        mainView.handleClassBoxClick(clickedClassBox);
+    }
 
+    public void setRelationshipModeEnabled(boolean enabled) {
+        this.relationshipModeEnabled = enabled;
+        if (!enabled && selectedClassBox != null) {
+            selectedClassBox.setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
+            selectedClassBox = null;
+        }
+    }
+
+    public void clearSelectedClass() {
+        if (selectedClassBox != null) {
+            selectedClassBox.setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
+            selectedClassBox = null;
+        }
+    }
+
+    public void addClassBox(ClassBox classBox) {
+        if (!getChildren().contains(classBox)) { // Prevent duplicate addition
+            registerClassBox(classBox);
+            getChildren().add(classBox);
+            diagramToUIMap.put(classBox.getClassDiagram(), classBox);
+            // Notify MainView to update classListView
+            if (mainView != null) {
+                mainView.addClassToList(classBox.getClassName());
+            }
+        } else {
+            System.out.println("Warning: ClassBox already exists in diagramPane.");
+        }
+    }
+
+    public void addInterfaceBox(InterfaceBox interfaceBox) {
+        if (!getChildren().contains(interfaceBox)) { // Prevent duplicate addition
+            registerInterfaceBox(interfaceBox);
+            getChildren().add(interfaceBox);
+            diagramToUIMap.put(interfaceBox.getInterfaceDiagram(), interfaceBox); // Map ClassDiagram to InterfaceBox
+            if (mainView != null) {
+                mainView.addClassToList(interfaceBox.getClassName());
+            }
+        } else {
+            System.out.println("Warning: InterfaceBox already exists in diagramPane.");
+        }
+    }
+
+
+    // UI helper functions
     public ClassBox getClassBoxByTitle(String className) {
         for (Node node : getChildren()) {
             if (node instanceof ClassBox) {
@@ -121,25 +218,6 @@ public class ClassDiagramPane extends Pane {
         return null;
     }
 
-    public void handleClassBoxClick(ClassBox clickedClassBox, MouseEvent event) {
-        mainView.handleClassBoxClick(clickedClassBox);
-    }
-    public void setRelationshipModeEnabled(boolean enabled) {
-        this.relationshipModeEnabled = enabled;
-        if (!enabled && selectedClassBox != null) {
-            selectedClassBox.setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
-            selectedClassBox = null;
-        }
-    }
-
-    public void clearSelectedClass() {
-        if (selectedClassBox != null) {
-            selectedClassBox.setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
-            selectedClassBox = null;
-        }
-    }
-
-    // Method to set the relationship type selected in the toolbar
     public void setCurrentRelationshipType(RelationshipType type) {
         this.currentRelationshipType = type;
     }
@@ -158,6 +236,7 @@ public class ClassDiagramPane extends Pane {
             }
         });
     }
+
     public void registerInterfaceBox(InterfaceBox interfaceBox) {
         interfaceBox.setOnMouseClicked(event -> {
             System.out.println("InterfaceBox clicked: " + interfaceBox.getInterfaceDiagram().getTitle());
@@ -173,31 +252,6 @@ public class ClassDiagramPane extends Pane {
         });
     }
 
-    public void addClassBox(ClassBox classBox) {
-        if (!getChildren().contains(classBox)) { // Prevent duplicate addition
-            registerClassBox(classBox);
-            getChildren().add(classBox);
-            diagramToUIMap.put(classBox.getClassDiagram(), classBox);
-            // Notify MainView to update classListView
-            if (mainView != null) {
-                mainView.addClassToList(classBox.getClassName());
-            }
-        } else {
-            System.out.println("Warning: ClassBox already exists in diagramPane.");
-        }
-    }
-    public void addInterfaceBox(InterfaceBox interfaceBox) {
-        if (!getChildren().contains(interfaceBox)) { // Prevent duplicate addition
-            registerInterfaceBox(interfaceBox);
-            getChildren().add(interfaceBox);
-            diagramToUIMap.put(interfaceBox.getInterfaceDiagram(), interfaceBox); // Map ClassDiagram to InterfaceBox
-            if (mainView != null) {
-                mainView.addClassToList(interfaceBox.getClassName());
-            }
-        } else {
-            System.out.println("Warning: InterfaceBox already exists in diagramPane.");
-        }
-    }
 
 
     // Retrieve all relationship lines connected to a given ClassBox or InterfaceBox
@@ -223,11 +277,16 @@ public class ClassDiagramPane extends Pane {
         System.out.println("RelationshipLine removed from ClassDiagramPane.");
     }
 
-
     public void clearDiagrams() {
         getChildren().clear();
     }
 
+
+
+    // setter getters
+    public List<RelationshipLine> getRelationships() {
+        return relationships;
+    }
 
     public ClassBox getClassBoxForDiagram(BClassBox diagram) {
         for (Node node : getChildren()) {
@@ -246,7 +305,6 @@ public class ClassDiagramPane extends Pane {
         }
         return null;
     }
-
 
     public MainView getMainView() {
         return mainView;

@@ -1,5 +1,5 @@
 /* General ClassBox styling */
-.vbox {
+.classbox {
     -fx-alignment: top-left;
     -fx-background-color: #e0e0e0; /* Light background */
     -fx-border-color: #cccccc; /* Soft border color */
@@ -7,18 +7,18 @@
     -fx-padding: 10; /* Padding inside the box */
     -fx-spacing: 8; /* Space between child elements */
     -fx-background-radius: 6; /* Rounded corners */
-    -fx-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 8, 0, 0, 2); /* Subtle shadow */
 }
 
 /* Resize handle styling */
-.rectangle {
+.classbox-resize-handle {
     -fx-fill: #888888; /* Neutral color */
     -fx-cursor: se-resize; /* Resize cursor */
     -fx-background-radius: 50%; /* Round corners for a modern feel */
 }
 
 /* Styling for buttons */
-.button {
+.classbox-button {
     -fx-background-color: #007bff; /* Blue background */
     -fx-text-fill: white; /* White text */
     -fx-font-weight: bold; /* Bold text */
@@ -28,39 +28,60 @@
 }
 
 /* Button hover effects */
-.button:hover {
+.classbox-button:hover {
     -fx-background-color: #0056b3; /* Darker blue on hover */
 }
 
-.button:focused {
+.classbox-button:focused {
     -fx-border-color: #0056b3; /* Highlight border when focused */
 }
 
 /* "+" Add button specific styling */
-.hbox .button {
+.classbox-add-button {
     -fx-background-color: transparent;
     -fx-text-fill: #007bff; /* Blue text for "+ Add" buttons */
+    -fx-border-radius: 5px; /* Rounded corners */
+    -fx-border-color: #007bff;
 }
 
-.hbox .button:hover {
+.classbox-add-button:hover {
     -fx-text-fill: #0056b3; /* Darker blue on hover */
+    -fx-border-radius: 5px; /* Rounded corners */
+    -fx-border-color: #0056b3;
 }
 
-/* Remove button (❌) styling */
-.button.delete-button {
+/* Delete button (❌) styling */
+.classbox-delete-button {
     -fx-background-color: transparent;
     -fx-text-fill: #ff3b30; /* Red text for delete button */
+    -fx-border-radius: 5px; /* Rounded corners */
+    -fx-border-color: #ff3b30;
 }
 
-.button.delete-button:hover {
+.classbox-delete-button:hover {
     -fx-text-fill: #cc2a1f; /* Darker red on hover */
+    -fx-border-radius: 5px; /* Rounded corners */
+    -fx-border-color: #cc2a1f;
 }
 
-/* Context menu item styling */
-.menu-item {
-    -fx-text-fill: #007bff; /* Blue text for menu items */
+/* Input field styling for attributes and operations */
+.classbox-input {
+    -fx-background-color: white; /* White background */
+    -fx-border-color: #cccccc; /* Light gray border */
+    -fx-border-radius: 4; /* Rounded corners */
+    -fx-font-size: 12px; /* Small font size */
+    -fx-prompt-text-fill: #999999; /* Light gray for placeholder text */
+    -fx-transition: border-color 0.2s ease-in-out;
 }
 
-.menu-item:hover {
-    -fx-text-fill: #0056b3; /* Darker blue on hover */
+.classbox-input:focused {
+    -fx-border-color: #007bff; /* Blue border on focus */
+}
+
+/* ComboBox styling for attributes and operations */
+.classbox-combobox {
+    -fx-background-color: white; /* White background */
+    -fx-border-color: #cccccc; /* Light gray border */
+    -fx-border-radius: 4; /* Rounded corners */
+    -fx-font-size: 12px; /* Small font size */
 }

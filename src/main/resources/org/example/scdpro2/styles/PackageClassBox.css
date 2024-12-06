@@ -1,0 +1,32 @@
+.package-class-box {
+    -fx-border-color: #2c3e50;
+    -fx-border-width: 1px;
+    -fx-padding: 10px;
+    -fx-background-color: #ecf0f1;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+}
+
+.package-class-box .class-name-box {
+    -fx-font-family: "Arial", sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: #34495e;
+    -fx-alignment: center;
+}
+
+.package-class-box .name-field {
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1px;
+    -fx-padding: 5px;
+    -fx-border-radius: 4px;
+}
+
+.package-class-box .visibility-dropdown {
+    -fx-font-size: 12px;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1px;
+    -fx-padding: 3px;
+    -fx-border-radius: 4px;
+}

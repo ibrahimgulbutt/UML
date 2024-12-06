@@ -31,11 +31,9 @@ public class BClassBox extends Diagram implements Serializable {
         this.y = 0;
     }
 
-
     public void setAttributes(List<AttributeComponent> attributes) {
         this.attributes = attributes;
     }
-
 
     public void setOperations(List<OperationComponent> operations) {
         this.operations = operations;

@@ -91,13 +91,6 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
         addRightClickListeners();
     }
 
-    // Method to add click event listeners for toggling line color
-    private void addClickListeners() {
-        horizontalLine.setOnMouseClicked(event -> handleLineClick(event, horizontalLine));
-        verticalLine.setOnMouseClicked(event -> handleLineClick(event, verticalLine));
-    }
-
-    // Handle line click to toggle color
     private void handleLineClick(MouseEvent event, Line line) {
         if (event.getClickCount() == 1) {  // Single click
             if (isLineSelected) {
@@ -117,7 +110,138 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
         }
     }
 
-    // Method to add right-click event listeners for delete confirmation
+    private void deleteLinesAndAnchors() {
+        diagramPane.getChildren().remove(horizontalLine);
+        diagramPane.getChildren().remove(verticalLine);
+        diagramPane.getChildren().remove(arrow);
+        diagramPane.getChildren().remove(startAnchor);
+        diagramPane.getChildren().remove(endAnchor);
+        diagramPane.getChildren().remove(intersectionAnchor);
+        diagramPane.getChildren().remove(relationshipLabel);
+    }
+
+    private void showDeleteConfirmation() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Delete Lines");
+        alert.setHeaderText("Are you sure you want to delete both lines and anchors?");
+        alert.setContentText("This action cannot be undone.");
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                deleteLinesAndAnchors();
+            }
+        });
+    }
+
+    // Updaters
+    private void updateAnchorsToPackageBoundaries() {
+        // Update start anchor
+        startAnchorPosition = getClosestEdgePoint(startAnchor, startPackage);
+
+        // Update end anchor
+        endAnchorPosition = getClosestEdgePoint(endAnchor, endPackage);
+
+        // Calculate intersection anchor position dynamically
+        intersectionAnchorPosition = calculateIntersectionAnchorPosition();
+
+        // Update anchor visuals
+        updateAnchorVisuals();
+
+        // Update lines and arrow
+        updateLines();
+    }
+
+    private void updateAnchorVisuals() {
+        startAnchor.setCenterX(startAnchorPosition.getX());
+        startAnchor.setCenterY(startAnchorPosition.getY());
+        endAnchor.setCenterX(endAnchorPosition.getX());
+        endAnchor.setCenterY(endAnchorPosition.getY());
+        intersectionAnchor.setCenterX(intersectionAnchorPosition.getX());
+        intersectionAnchor.setCenterY(intersectionAnchorPosition.getY());
+    }
+
+    private void updateLines() {
+        // Update horizontal line
+        horizontalLine.setStartX(startAnchorPosition.getX());
+        horizontalLine.setStartY(startAnchorPosition.getY());
+        horizontalLine.setEndX(endAnchorPosition.getX());
+        horizontalLine.setEndY(startAnchorPosition.getY());
+
+        // Update vertical line
+        verticalLine.setStartX(endAnchorPosition.getX());
+        verticalLine.setStartY(startAnchorPosition.getY());
+        verticalLine.setEndX(endAnchorPosition.getX());
+        verticalLine.setEndY(endAnchorPosition.getY());
+
+        // Calculate intersection point
+        double intersectionX = endAnchorPosition.getX();
+        double intersectionY = startAnchorPosition.getY();
+        intersectionAnchorPosition = new Point2D(intersectionX, intersectionY);
+
+        // Update intersection circle
+        intersectionAnchor.setCenterX(intersectionX);
+        intersectionAnchor.setCenterY(intersectionY);
+
+        // Update arrow position relative to intersection anchor
+        arrow.setLayoutX(endAnchorPosition.getX());
+        arrow.setLayoutY(endAnchorPosition.getY());
+        arrow.setRotate(calculateArrowAngle(intersectionAnchorPosition.getX(), intersectionAnchorPosition.getY(),
+                endAnchorPosition.getX(), endAnchorPosition.getY()));
+
+
+        // Update label position
+        relationshipLabel.setLayoutX(intersectionX + 10); // Offset slightly for readability
+        relationshipLabel.setLayoutY(intersectionY - 10); // Offset slightly for readability
+    }
+
+    // Helper Functions
+    private Point2D calculateIntersectionAnchorPosition() {
+        // Midpoint between start and end anchors
+        double midX = (startAnchorPosition.getX() + endAnchorPosition.getX()) / 2;
+        double midY = (startAnchorPosition.getY() + endAnchorPosition.getY()) / 2;
+        return new Point2D(midX, midY);
+    }
+
+    private double calculateArrowAngle(double startX, double startY, double endX, double endY) {
+        return Math.toDegrees(Math.atan2(endY - startY, endX - startX));
+    }
+
+    private Point2D getClosestEdgePoint(Circle anchor, T packageBox) {
+        double boxLeft = packageBox.getLayoutX();
+        double boxRight = boxLeft + packageBox.getWidth();
+        double boxTop = packageBox.getLayoutY();
+        double boxBottom = boxTop + packageBox.getHeight();
+
+        double anchorX = anchor.getCenterX();
+        double anchorY = anchor.getCenterY();
+
+        // Find the closest edge point
+        double distanceToLeft = Math.abs(anchorX - boxLeft);
+        double distanceToRight = Math.abs(anchorX - boxRight);
+        double distanceToTop = Math.abs(anchorY - boxTop);
+        double distanceToBottom = Math.abs(anchorY - boxBottom);
+
+        if (distanceToLeft <= distanceToRight && distanceToLeft <= distanceToTop && distanceToLeft <= distanceToBottom) {
+            // Closest to the left edge
+            return new Point2D(boxLeft, Math.min(Math.max(anchorY, boxTop), boxBottom));
+        } else if (distanceToRight <= distanceToLeft && distanceToRight <= distanceToTop && distanceToRight <= distanceToBottom) {
+            // Closest to the right edge
+            return new Point2D(boxRight, Math.min(Math.max(anchorY, boxTop), boxBottom));
+        } else if (distanceToTop <= distanceToLeft && distanceToTop <= distanceToRight && distanceToTop <= distanceToBottom) {
+            // Closest to the top edge
+            return new Point2D(Math.min(Math.max(anchorX, boxLeft), boxRight), boxTop);
+        } else {
+            // Closest to the bottom edge
+            return new Point2D(Math.min(Math.max(anchorX, boxLeft), boxRight), boxBottom);
+        }
+    }
+
+    private double snapToIncrement(double value) {
+        return Math.round(value / SNAP_INCREMENT) * SNAP_INCREMENT;
+    }
+
+
+    // Listeners
     private void addRightClickListeners() {
         horizontalLine.setOnMousePressed(event -> {
             if (event.isSecondaryButtonDown() && event.getClickCount() == 2) {  // Double right-click
@@ -132,44 +256,10 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
         });
     }
 
-    // Show confirmation dialog for deletion
-    private void showDeleteConfirmation() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Delete Lines");
-        alert.setHeaderText("Are you sure you want to delete both lines and anchors?");
-        alert.setContentText("This action cannot be undone.");
-
-        alert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                deleteLinesAndAnchors();
-            }
-        });
+    private void addClickListeners() {
+        horizontalLine.setOnMouseClicked(event -> handleLineClick(event, horizontalLine));
+        verticalLine.setOnMouseClicked(event -> handleLineClick(event, verticalLine));
     }
-
-    // Method to delete lines and anchors
-    private void deleteLinesAndAnchors() {
-        diagramPane.getChildren().remove(horizontalLine);
-        diagramPane.getChildren().remove(verticalLine);
-        diagramPane.getChildren().remove(arrow);
-        diagramPane.getChildren().remove(startAnchor);
-        diagramPane.getChildren().remove(endAnchor);
-        diagramPane.getChildren().remove(intersectionAnchor);
-        diagramPane.getChildren().remove(relationshipLabel);
-    }
-
-
-    public Circle getStartAnchor() {
-        return startAnchor;
-    }
-
-    public Circle getEndAnchor() {
-        return endAnchor;
-    }
-
-    public Circle getIntersectionAnchor() {
-        return intersectionAnchor;
-    }
-
 
     private void addAnchorDragListener(Circle anchor, T packageBox) {
         anchor.setOnMouseDragged(event -> {
@@ -220,45 +310,6 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
         });
     }
 
-    private Point2D getClosestEdgePoint(Circle anchor, T packageBox) {
-        double boxLeft = packageBox.getLayoutX();
-        double boxRight = boxLeft + packageBox.getWidth();
-        double boxTop = packageBox.getLayoutY();
-        double boxBottom = boxTop + packageBox.getHeight();
-
-        double anchorX = anchor.getCenterX();
-        double anchorY = anchor.getCenterY();
-
-        // Find the closest edge point
-        double distanceToLeft = Math.abs(anchorX - boxLeft);
-        double distanceToRight = Math.abs(anchorX - boxRight);
-        double distanceToTop = Math.abs(anchorY - boxTop);
-        double distanceToBottom = Math.abs(anchorY - boxBottom);
-
-        if (distanceToLeft <= distanceToRight && distanceToLeft <= distanceToTop && distanceToLeft <= distanceToBottom) {
-            // Closest to the left edge
-            return new Point2D(boxLeft, Math.min(Math.max(anchorY, boxTop), boxBottom));
-        } else if (distanceToRight <= distanceToLeft && distanceToRight <= distanceToTop && distanceToRight <= distanceToBottom) {
-            // Closest to the right edge
-            return new Point2D(boxRight, Math.min(Math.max(anchorY, boxTop), boxBottom));
-        } else if (distanceToTop <= distanceToLeft && distanceToTop <= distanceToRight && distanceToTop <= distanceToBottom) {
-            // Closest to the top edge
-            return new Point2D(Math.min(Math.max(anchorX, boxLeft), boxRight), boxTop);
-        } else {
-            // Closest to the bottom edge
-            return new Point2D(Math.min(Math.max(anchorX, boxLeft), boxRight), boxBottom);
-        }
-    }
-
-    private void updateAnchorVisuals() {
-        startAnchor.setCenterX(startAnchorPosition.getX());
-        startAnchor.setCenterY(startAnchorPosition.getY());
-        endAnchor.setCenterX(endAnchorPosition.getX());
-        endAnchor.setCenterY(endAnchorPosition.getY());
-        intersectionAnchor.setCenterX(intersectionAnchorPosition.getX());
-        intersectionAnchor.setCenterY(intersectionAnchorPosition.getY());
-    }
-
     private void addIntersectionAnchorDragListener() {
         intersectionAnchor.setOnMouseDragged(event -> {
             double newX = snapToIncrement(event.getX());
@@ -270,27 +321,6 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
 
             updateLines();
         });
-    }
-
-    private double snapToIncrement(double value) {
-        return Math.round(value / SNAP_INCREMENT) * SNAP_INCREMENT;
-    }
-
-    private void updateAnchorsToPackageBoundaries() {
-        // Update start anchor
-        startAnchorPosition = getClosestEdgePoint(startAnchor, startPackage);
-
-        // Update end anchor
-        endAnchorPosition = getClosestEdgePoint(endAnchor, endPackage);
-
-        // Calculate intersection anchor position dynamically
-        intersectionAnchorPosition = calculateIntersectionAnchorPosition();
-
-        // Update anchor visuals
-        updateAnchorVisuals();
-
-        // Update lines and arrow
-        updateLines();
     }
 
     private void addAnchorDragListeners() {
@@ -305,50 +335,19 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
         endPackage.layoutYProperty().addListener((obs, oldVal, newVal) -> updateAnchorsToPackageBoundaries());
     }
 
-    private void updateLines() {
-        // Update horizontal line
-        horizontalLine.setStartX(startAnchorPosition.getX());
-        horizontalLine.setStartY(startAnchorPosition.getY());
-        horizontalLine.setEndX(endAnchorPosition.getX());
-        horizontalLine.setEndY(startAnchorPosition.getY());
-
-        // Update vertical line
-        verticalLine.setStartX(endAnchorPosition.getX());
-        verticalLine.setStartY(startAnchorPosition.getY());
-        verticalLine.setEndX(endAnchorPosition.getX());
-        verticalLine.setEndY(endAnchorPosition.getY());
-
-        // Calculate intersection point
-        double intersectionX = endAnchorPosition.getX();
-        double intersectionY = startAnchorPosition.getY();
-        intersectionAnchorPosition = new Point2D(intersectionX, intersectionY);
-
-        // Update intersection circle
-        intersectionAnchor.setCenterX(intersectionX);
-        intersectionAnchor.setCenterY(intersectionY);
-
-        // Update arrow position relative to intersection anchor
-        arrow.setLayoutX(endAnchorPosition.getX());
-        arrow.setLayoutY(endAnchorPosition.getY());
-        arrow.setRotate(calculateArrowAngle(intersectionAnchorPosition.getX(), intersectionAnchorPosition.getY(),
-                endAnchorPosition.getX(), endAnchorPosition.getY()));
-
-
-        // Update label position
-        relationshipLabel.setLayoutX(intersectionX + 10); // Offset slightly for readability
-        relationshipLabel.setLayoutY(intersectionY - 10); // Offset slightly for readability
+    // getters setters
+    public Circle getStartAnchor() {
+        return startAnchor;
     }
 
-    private Point2D calculateIntersectionAnchorPosition() {
-        // Midpoint between start and end anchors
-        double midX = (startAnchorPosition.getX() + endAnchorPosition.getX()) / 2;
-        double midY = (startAnchorPosition.getY() + endAnchorPosition.getY()) / 2;
-        return new Point2D(midX, midY);
+    public Circle getEndAnchor() {
+        return endAnchor;
     }
 
-    private double calculateArrowAngle(double startX, double startY, double endX, double endY) {
-        return Math.toDegrees(Math.atan2(endY - startY, endX - startX));
+    public Circle getIntersectionAnchor() {
+        return intersectionAnchor;
     }
+
 
     public T getStartPackage() {
         return startPackage;
@@ -357,6 +356,7 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
     public T getEndPackage() {
         return  endPackage;
     }
+
 
     public Line getHorizontalLine() {
         return horizontalLine;

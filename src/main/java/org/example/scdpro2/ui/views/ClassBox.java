@@ -17,12 +17,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ClassBox extends VBox {
+public class ClassBox extends BorderPane {
     private final MainController controller;
     public final BClassBox BClassBox;
-
-    private double offsetX, offsetY;
-    private final Rectangle resizeHandle = new Rectangle(10, 10); // Resize handle
 
     private final VBox attributesBox = new VBox(); // Container for attributes
     private final VBox operationsBox = new VBox(); // Container for operations
@@ -33,6 +30,11 @@ public class ClassBox extends VBox {
     private List<RelationshipLine> connectedRelationships = new ArrayList<>();
     private static double k=2;
 
+    private double offsetX, offsetY; // For dragging
+    private double initialWidth, initialHeight; // For resizing
+    private double initialMouseX, initialMouseY; // For resizing
+    private boolean isResizing = false; // Tracks resizing state
+    private String resizeDirection = ""; // Tracks the direction of resizing
 
     public ClassBox(BClassBox BClassBox, MainController controller, ClassDiagramPane diagramPane) {
         this.BClassBox = BClassBox;
@@ -41,27 +43,22 @@ public class ClassBox extends VBox {
         this.getStylesheets().add(getClass().getResource("/org/example/scdpro2/styles/classbox.css").toExternalForm());
 
         // Add CSS class for the entire ClassBox
-        getStyleClass().add("vbox");
+        getStyleClass().add("classbox");
 
         linesBySide.put("top", new ArrayList<>());
         linesBySide.put("bottom", new ArrayList<>());
         linesBySide.put("left", new ArrayList<>());
         linesBySide.put("right", new ArrayList<>());
 
-        setPadding(new Insets(10)); // Add padding inside the ClassBox
-        setSpacing(8); // Set spacing between child elements (class name, attributes, and operations)
+        setPadding(new Insets(10)); // Padding for the entire BorderPane
+        BorderPane.setMargin(attributesBox, new Insets(5)); // Margin around attributesBox
+
         setMinWidth(150);
         setMinHeight(100);
 
         // Set margin for the ClassBox itself to give some space outside
-        setMargin(resizeHandle, new Insets(5)); // Space around the resize handle
         setMargin(attributesBox, new Insets(5)); // Space around the attributes section
         setMargin(operationsBox, new Insets(5)); // Space around the operations section
-
-        // Resize handle styling
-        resizeHandle.setStyle("-fx-fill: grey;");
-        resizeHandle.setCursor(Cursor.SE_RESIZE);
-        resizeHandle.setOnMouseDragged(this::resize);
 
         // Context Menu for Deleting Class
         ContextMenu contextMenu = createContextMenu(diagramPane);
@@ -69,56 +66,51 @@ public class ClassBox extends VBox {
 
         // Class name section
         HBox nameBox = createNameBox(diagramPane);
-        nameBox.getStyleClass().add("hbox");
 
         // Attributes section
-        Label attributesLabel = new Label("Attributes:");
+//        Label attributesLabel = new Label("Attributes:");
         Button addAttributeButton = new Button("+");
         addAttributeButton.setOnAction(e -> addAttribute(attributesBox));
-        attributesBox.getChildren().addAll(attributesLabel, addAttributeButton);
+        attributesBox.getChildren().addAll( addAttributeButton);
         loadAttributes();
 
         // Operations section
-        Label operationsLabel = new Label("Operations:");
+//        Label operationsLabel = new Label("Operations:");
         Button addOperationButton = new Button("+");
         addOperationButton.setOnAction(e -> addOperation(operationsBox));
-        operationsBox.getChildren().addAll(operationsLabel, addOperationButton);
+        operationsBox.getChildren().addAll( addOperationButton);
         loadOperations();
 
         // Attributes and Operations sections
-        attributesBox.getStyleClass().add("vbox");
-        operationsBox.getStyleClass().add("vbox");
+//        attributesBox.getStyleClass().add("vbox");
+//        operationsBox.getStyleClass().add("vbox");
 
         // Add the update button
         updateClassNameButton.getStyleClass().add("button");
 
-        // Add components to the ClassBox
-        getChildren().addAll(nameBox, attributesBox, operationsBox, resizeHandle);
-        setAlignment(Pos.TOP_LEFT);
+        // Add CSS classes for buttons and text fields
+        addAttributeButton.getStyleClass().add("classbox-add-button");
+        addOperationButton.getStyleClass().add("classbox-add-button");
+        updateClassNameButton.getStyleClass().add("classbox-button");
+
+        // Add components to BorderPane regions
+        setTop(nameBox);
+        setCenter(attributesBox);
+        setBottom(operationsBox);
 
         // Enable dragging for repositioning
         setOnMousePressed(this::handleMousePressed);
         setOnMouseDragged(this::handleMouseDragged);
+
+        setOnMousePressed(this::handleMousePressed);
+        setOnMouseDragged(this::handleMouseDragged);
+        setOnMouseReleased(this::handleMouseReleased);
+
+        // Configure cursor changes for resizing regions
+        setOnMouseMoved(this::updateCursor);
     }
 
-    public List<AttributeComponent> getAttributes() {
-        return BClassBox.getAttributes();
-    }
-    public List<OperationComponent> getOperations() {
-        return BClassBox.getOperations();
-    }
-
-    public void setAttributes(List<AttributeComponent> attributes) {
-        BClassBox.setAttributes(attributes);
-    }
-    public void setOperations(List<OperationComponent> operations) {
-        BClassBox.setOperations(operations);
-    }
-
-
-    // creational functions
-
-    // Create the context menu for deleting the class
+    // UI functions
     private ContextMenu createContextMenu(ClassDiagramPane diagramPane) {
         ContextMenu contextMenu = new ContextMenu();
         MenuItem deleteItem = new MenuItem("Delete Class");
@@ -135,13 +127,12 @@ public class ClassBox extends VBox {
         return contextMenu;
     }
 
-    // Create the name section
     private HBox createNameBox(ClassDiagramPane diagramPane) {
         HBox nameBox = new HBox(10); // Spacing between class name and button
         nameBox.setAlignment(Pos.CENTER); // Center the class name
 
         TextField classNameField = new TextField(BClassBox.getTitle());
-        classNameField.getStyleClass().add("text-field");
+        classNameField.getStyleClass().add("classbox-input");
 
         classNameField.setPromptText("Class Name");
         classNameField.textProperty().addListener((obs, oldName, newName) -> {
@@ -207,6 +198,11 @@ public class ClassBox extends VBox {
             BClassBox.getOperations().remove(operation);     // Remove from model
         });
 
+        visibilityComboBox.getStyleClass().add("classbox-combobox");
+        operationNameField.getStyleClass().add("classbox-input");
+        returnTypeComboBox.getStyleClass().add("classbox-combobox");
+        deleteButton.getStyleClass().add("classbox-delete-button");
+
         operationBox.getChildren().addAll(visibilityComboBox, operationNameField, returnTypeComboBox, deleteButton);
         operationsBox.getChildren().add(operationBox);
     }
@@ -237,10 +233,15 @@ public class ClassBox extends VBox {
             BClassBox.removeAttribute(attribute);            // Remove from model
         });
 
+        visibilityComboBox.getStyleClass().add("classbox-combobox");
+        attributeNameField.getStyleClass().add("classbox-input");
+        dataTypeComboBox.getStyleClass().add("classbox-combobox");
+        deleteButton.getStyleClass().add("classbox-delete-button");
+
+
         attributeBox.getChildren().addAll(visibilityComboBox, attributeNameField, dataTypeComboBox, deleteButton);
         attributesBox.getChildren().add(attributeBox);
     }
-
 
     private void addAttribute(VBox attributesBox) {
         AttributeComponent attribute = new AttributeComponent("attribute", "+","int");
@@ -254,8 +255,137 @@ public class ClassBox extends VBox {
         addOperationToUI(operation);
     }
 
-    // non creational functions
+    // grabbing and resizing functions
+    private void handleMousePressed(MouseEvent event) {
+        if (isOnEdge(event)) {
+            // Start resizing
+            isResizing = true;
+            initialWidth = getPrefWidth();
+            initialHeight = getPrefHeight();
+            initialMouseX = event.getSceneX();
+            initialMouseY = event.getSceneY();
+        } else {
+            // Start dragging
+            isResizing = false;
+            offsetX = event.getSceneX() - getLayoutX();
+            offsetY = event.getSceneY() - getLayoutY();
+        }
+    }
 
+    private void handleMouseDragged(MouseEvent event) {
+        if (isResizing) {
+            resize(event);
+        } else {
+            // Dragging logic
+            double newX = event.getSceneX() - offsetX;
+            double newY = event.getSceneY() - offsetY;
+            setLayoutX(newX);
+            setLayoutY(newY);
+        }
+    }
+
+    private void handleMouseReleased(MouseEvent event) {
+        isResizing = false;
+        resizeDirection = "";
+    }
+
+    private void updateCursor(MouseEvent event) {
+        if (isOnEdge(event)) {
+            switch (resizeDirection) {
+                case "RIGHT":
+                    setCursor(Cursor.E_RESIZE);
+                    break;
+                case "BOTTOM":
+                    setCursor(Cursor.S_RESIZE);
+                    break;
+                case "BOTTOM_RIGHT":
+                    setCursor(Cursor.SE_RESIZE);
+                    break;
+                case "LEFT":
+                    setCursor(Cursor.W_RESIZE);
+                    break;
+                case "TOP":
+                    setCursor(Cursor.N_RESIZE);
+                    break;
+                case "TOP_LEFT":
+                    setCursor(Cursor.NW_RESIZE);
+                    break;
+                default:
+                    setCursor(Cursor.DEFAULT);
+                    break;
+            }
+        } else {
+            setCursor(Cursor.MOVE);
+        }
+    }
+
+    private void resize(MouseEvent event) {
+        double deltaX = event.getSceneX() - initialMouseX;
+        double deltaY = event.getSceneY() - initialMouseY;
+
+        if (resizeDirection.contains("RIGHT")) {
+            double newWidth = initialWidth + deltaX;
+            if (newWidth >= 100) {
+                setPrefWidth(newWidth);
+            }
+        }
+
+        if (resizeDirection.contains("BOTTOM")) {
+            double newHeight = initialHeight + deltaY;
+            if (newHeight >= 100) {
+                setPrefHeight(newHeight);
+            }
+        }
+
+        if (resizeDirection.contains("LEFT")) {
+            double newWidth = initialWidth - deltaX;
+            if (newWidth >= 100) {
+                setPrefWidth(newWidth);
+                setLayoutX(getLayoutX() + deltaX);
+            }
+        }
+
+        if (resizeDirection.contains("TOP")) {
+            double newHeight = initialHeight - deltaY;
+            if (newHeight >= 100) {
+                setPrefHeight(newHeight);
+                setLayoutY(getLayoutY() + deltaY);
+            }
+        }
+    }
+
+    private boolean isOnEdge(MouseEvent event) {
+        double mouseX = event.getX();
+        double mouseY = event.getY();
+        double width = getWidth();
+        double height = getHeight();
+        double edgeThreshold = 10;
+
+        if (mouseX <= edgeThreshold && mouseY <= edgeThreshold) {
+            resizeDirection = "TOP_LEFT";
+            return true;
+        } else if (mouseX >= width - edgeThreshold && mouseY >= height - edgeThreshold) {
+            resizeDirection = "BOTTOM_RIGHT";
+            return true;
+        } else if (mouseX >= width - edgeThreshold) {
+            resizeDirection = "RIGHT";
+            return true;
+        } else if (mouseY >= height - edgeThreshold) {
+            resizeDirection = "BOTTOM";
+            return true;
+        } else if (mouseX <= edgeThreshold) {
+            resizeDirection = "LEFT";
+            return true;
+        } else if (mouseY <= edgeThreshold) {
+            resizeDirection = "TOP";
+            return true;
+        } else {
+            resizeDirection = "";
+            return false;
+        }
+    }
+
+    // UI helper functions
     public void deleteConnectedRelationships(Pane parentPane) {
         for (RelationshipLine relationship : new ArrayList<>(connectedRelationships)) {
             parentPane.getChildren().remove(relationship); // Remove the relationship from the UI
@@ -274,45 +404,39 @@ public class ClassBox extends VBox {
         connectedRelationships.remove(relationship);
     }
 
-    public List<RelationshipLine> getConnectedRelationships() {
-        return connectedRelationships;
-    }
 
-    // Load attributes from the business model
+    //loading from/to business layer functions
     private void loadAttributes() {
         for (AttributeComponent attribute : BClassBox.getAttributes()) {
             addAttributeToUI(attribute);
         }
     }
 
-
-    // Load operations from the business model
     private void loadOperations() {
         for (OperationComponent operation : BClassBox.getOperations()) {
             addOperationToUI(operation);
         }
     }
 
-
-    private void handleMousePressed(MouseEvent event) {
-        offsetX = event.getSceneX() - getLayoutX();
-        offsetY = event.getSceneY() - getLayoutY();
+    // getter setters
+    public List<RelationshipLine> getConnectedRelationships() {
+        return connectedRelationships;
     }
 
-    private void handleMouseDragged(MouseEvent event) {
-        setLayoutX(event.getSceneX() - offsetX);
-        setLayoutY(event.getSceneY() - offsetY);
+    public List<AttributeComponent> getAttributes() {
+        return BClassBox.getAttributes();
     }
 
-    private void resize(MouseEvent event) {
-        double newWidth = event.getX();
-        double newHeight = event.getY();
-        if (newWidth > getMinWidth()) {
-            setPrefWidth(newWidth);
-        }
-        if (newHeight > getMinHeight()) {
-            setPrefHeight(newHeight);
-        }
+    public List<OperationComponent> getOperations() {
+        return BClassBox.getOperations();
+    }
+
+    public void setAttributes(List<AttributeComponent> attributes) {
+        BClassBox.setAttributes(attributes);
+    }
+
+    public void setOperations(List<OperationComponent> operations) {
+        BClassBox.setOperations(operations);
     }
 
     public BClassBox getClassDiagram() {

@@ -62,7 +62,7 @@ public class StartPageView extends BorderPane {
 
     private void showNewProjectDialog() {
         String projectName = "ClassDiagram";
-        String projectType = "Package Diagram";
+        String projectType = "Class Diagram";
 
         mainController.createNewProject(projectName);
         openMainView(projectType);
