@@ -1,8 +1,5 @@
 package org.example.scdpro2.ui.views;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -11,7 +8,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.Cursor;
 import javafx.geometry.Pos;
 import org.example.scdpro2.business.models.AttributeComponent;
-import org.example.scdpro2.business.models.ClassDiagram;
+import org.example.scdpro2.business.models.BClassBox;
 import org.example.scdpro2.business.models.OperationComponent;
 import org.example.scdpro2.ui.controllers.MainController;
 
@@ -22,7 +19,7 @@ import java.util.Map;
 
 public class ClassBox extends VBox {
     private final MainController controller;
-    private final ClassDiagram classDiagram;
+    public final BClassBox BClassBox;
 
     private double offsetX, offsetY;
     private final Rectangle resizeHandle = new Rectangle(10, 10); // Resize handle
@@ -37,8 +34,8 @@ public class ClassBox extends VBox {
     private static double k=2;
 
 
-    public ClassBox(ClassDiagram classDiagram, MainController controller, ClassDiagramPane diagramPane) {
-        this.classDiagram = classDiagram;
+    public ClassBox(BClassBox BClassBox, MainController controller, ClassDiagramPane diagramPane) {
+        this.BClassBox = BClassBox;
         this.controller = controller;
 
         this.getStylesheets().add(getClass().getResource("/org/example/scdpro2/styles/classbox.css").toExternalForm());
@@ -104,6 +101,21 @@ public class ClassBox extends VBox {
         setOnMouseDragged(this::handleMouseDragged);
     }
 
+    public List<AttributeComponent> getAttributes() {
+        return BClassBox.getAttributes();
+    }
+    public List<OperationComponent> getOperations() {
+        return BClassBox.getOperations();
+    }
+
+    public void setAttributes(List<AttributeComponent> attributes) {
+        BClassBox.setAttributes(attributes);
+    }
+    public void setOperations(List<OperationComponent> operations) {
+        BClassBox.setOperations(operations);
+    }
+
+
     // creational functions
 
     // Create the context menu for deleting the class
@@ -128,7 +140,7 @@ public class ClassBox extends VBox {
         HBox nameBox = new HBox(10); // Spacing between class name and button
         nameBox.setAlignment(Pos.CENTER); // Center the class name
 
-        TextField classNameField = new TextField(classDiagram.getTitle());
+        TextField classNameField = new TextField(BClassBox.getTitle());
         classNameField.getStyleClass().add("text-field");
 
         classNameField.setPromptText("Class Name");
@@ -148,12 +160,12 @@ public class ClassBox extends VBox {
             }
 
             // Update the model
-            String oldClassName = classDiagram.getTitle();
-            classDiagram.setTitle(newClassName);
+            String oldClassName = BClassBox.getTitle();
+            BClassBox.setTitle(newClassName);
             controller.getDiagramService().getCurrentProject().getDiagrams().stream()
-                    .filter(d -> d.equals(classDiagram))
+                    .filter(d -> d.equals(BClassBox))
                     .findFirst()
-                    .ifPresent(d -> ((ClassDiagram) d).setTitle(newClassName));
+                    .ifPresent(d -> ((BClassBox) d).setTitle(newClassName));
 
             // Update the classListView
             int index = diagramPane.getMainView().classListView.getItems().indexOf(oldClassName);
@@ -171,24 +183,28 @@ public class ClassBox extends VBox {
 
     private void addOperationToUI(OperationComponent operation) {
         HBox operationBox = new HBox();
+
         ComboBox<String> visibilityComboBox = new ComboBox<>();
         visibilityComboBox.getItems().addAll("+", "-", "#");
         visibilityComboBox.getSelectionModel().select(operation.getVisibility());
 
         TextField operationNameField = new TextField(operation.getName());
+
         ComboBox<String> returnTypeComboBox = new ComboBox<>();
         returnTypeComboBox.setEditable(true);
         returnTypeComboBox.getItems().addAll("void", "int", "String", "boolean", "double", "float", "char", "long", "short");
         returnTypeComboBox.setPromptText("Return Type");
+        returnTypeComboBox.getSelectionModel().select(operation.getReturnType());
 
+        // Add listeners for updates
         visibilityComboBox.valueProperty().addListener((obs, oldVal, newVal) -> operation.setVisibility(newVal));
         operationNameField.textProperty().addListener((obs, oldVal, newVal) -> operation.setName(newVal));
-        returnTypeComboBox.getEditor().textProperty().addListener((obs, oldVal, newVal) -> operation.setName(operationNameField.getText() + "(): " + newVal));
+        returnTypeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> operation.setReturnType(newVal));
 
         Button deleteButton = new Button("❌");
         deleteButton.setOnAction(e -> {
             operationsBox.getChildren().remove(operationBox); // Remove from UI
-            classDiagram.getOperations().remove(operation);   // Remove from the model
+            BClassBox.getOperations().remove(operation);     // Remove from model
         });
 
         operationBox.getChildren().addAll(visibilityComboBox, operationNameField, returnTypeComboBox, deleteButton);
@@ -197,30 +213,46 @@ public class ClassBox extends VBox {
 
     private void addAttributeToUI(AttributeComponent attribute) {
         HBox attributeBox = new HBox();
+
         ComboBox<String> visibilityComboBox = new ComboBox<>();
         visibilityComboBox.getItems().addAll("+", "-", "#");
         visibilityComboBox.getSelectionModel().select(attribute.getVisibility());
 
         TextField attributeNameField = new TextField(attribute.getName());
+
         ComboBox<String> dataTypeComboBox = new ComboBox<>();
         dataTypeComboBox.setEditable(true);
         dataTypeComboBox.getItems().addAll("int", "String", "boolean", "double", "float", "char", "long", "short");
         dataTypeComboBox.setPromptText("Data Type");
+        dataTypeComboBox.getSelectionModel().select(attribute.getDataType());
 
+        // Add listeners for updates
         visibilityComboBox.valueProperty().addListener((obs, oldVal, newVal) -> attribute.setVisibility(newVal));
         attributeNameField.textProperty().addListener((obs, oldVal, newVal) -> attribute.setName(newVal));
-        dataTypeComboBox.getEditor().textProperty().addListener((obs, oldVal, newVal) -> attribute.setName(attributeNameField.getText() + ": " + newVal));
+        dataTypeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> attribute.setDataType(newVal));
 
         Button deleteButton = new Button("❌");
         deleteButton.setOnAction(e -> {
             attributesBox.getChildren().remove(attributeBox); // Remove from UI
-            classDiagram.getAttributes().remove(attribute);   // Remove from the model
+            BClassBox.removeAttribute(attribute);            // Remove from model
         });
 
         attributeBox.getChildren().addAll(visibilityComboBox, attributeNameField, dataTypeComboBox, deleteButton);
         attributesBox.getChildren().add(attributeBox);
     }
 
+
+    private void addAttribute(VBox attributesBox) {
+        AttributeComponent attribute = new AttributeComponent("attribute", "+","int");
+        BClassBox.addAttribute(attribute); // Add to the business model
+        addAttributeToUI(attribute);
+    }
+
+    private void addOperation(VBox operationsBox) {
+        OperationComponent operation = new OperationComponent("operation", "+","void");
+        BClassBox.addOperation(operation); // Add to the business model
+        addOperationToUI(operation);
+    }
 
     // non creational functions
 
@@ -248,29 +280,19 @@ public class ClassBox extends VBox {
 
     // Load attributes from the business model
     private void loadAttributes() {
-        for (AttributeComponent attribute : classDiagram.getAttributes()) {
+        for (AttributeComponent attribute : BClassBox.getAttributes()) {
             addAttributeToUI(attribute);
         }
     }
 
-    private void addAttribute(VBox attributesBox) {
-        AttributeComponent attribute = new AttributeComponent("attribute", "+");
-        classDiagram.addAttribute(attribute); // Add to the business model
-        addAttributeToUI(attribute);
-    }
 
     // Load operations from the business model
     private void loadOperations() {
-        for (OperationComponent operation : classDiagram.getOperations()) {
+        for (OperationComponent operation : BClassBox.getOperations()) {
             addOperationToUI(operation);
         }
     }
 
-    private void addOperation(VBox operationsBox) {
-        OperationComponent operation = new OperationComponent("operation", "+");
-        classDiagram.addOperation(operation); // Add to the business model
-        addOperationToUI(operation);
-    }
 
     private void handleMousePressed(MouseEvent event) {
         offsetX = event.getSceneX() - getLayoutX();
@@ -293,23 +315,27 @@ public class ClassBox extends VBox {
         }
     }
 
-    public ClassDiagram getClassDiagram() {
-        return classDiagram;
+    public BClassBox getClassDiagram() {
+        return BClassBox;
     }
 
     public String getClassName() {
-        return classDiagram.getTitle();
+        return BClassBox.getTitle();
     }
 
     public String getTitle() {
-        return classDiagram.getTitle();
+        return BClassBox.getTitle();
     }
 
     public Object getAttributesBox() {
-        return classDiagram.getAttributes().toString();
+        return BClassBox.getAttributes().toString();
     }
 
     public Object getOperationsBox() {
-        return classDiagram.getOperations().toString();
+        return BClassBox.getOperations().toString();
+    }
+
+    public Object getDiagram() {
+        return BClassBox;
     }
 }

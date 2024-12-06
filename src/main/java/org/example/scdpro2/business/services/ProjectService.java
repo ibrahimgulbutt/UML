@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public class ProjectService {
     private final ProjectDAO projectDAO;
-    private Project currentProject;
+    public Project currentProject;
 
     public ProjectService(ProjectDAO projectDAO) {
         this.projectDAO = projectDAO;

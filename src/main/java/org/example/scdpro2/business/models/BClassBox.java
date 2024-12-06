@@ -4,15 +4,16 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClassDiagram extends Diagram implements Serializable {
+public class BClassBox extends Diagram implements Serializable {
     private static final long serialVersionUID = 1L;
     private List<AttributeComponent> attributes;
     private List<OperationComponent> operations;
     private final List<Relationship> relationships;
     private double x; // X-coordinate for UI placement
     private double y; // Y-coordinate for UI placement
+    public String Type;
 
-    public ClassDiagram() {
+    public BClassBox() {
         super("Untitled");
         this.attributes = new ArrayList<>();
         this.operations = new ArrayList<>();
@@ -21,7 +22,7 @@ public class ClassDiagram extends Diagram implements Serializable {
         this.y = 0;
     }
 
-    public ClassDiagram(String title) {
+    public BClassBox(String title) {
         super(title);
         this.attributes = new ArrayList<>();
         this.operations = new ArrayList<>();
@@ -30,12 +31,14 @@ public class ClassDiagram extends Diagram implements Serializable {
         this.y = 0;
     }
 
-    public void addAttribute(AttributeComponent attribute) {
-        attributes.add(attribute);
+
+    public void setAttributes(List<AttributeComponent> attributes) {
+        this.attributes = attributes;
     }
 
-    public void addOperation(OperationComponent operation) {
-        operations.add(operation);
+
+    public void setOperations(List<OperationComponent> operations) {
+        this.operations = operations;
     }
 
     public List<AttributeComponent> getAttributes() {
@@ -93,5 +96,41 @@ public class ClassDiagram extends Diagram implements Serializable {
     public DiagramType getType() {
         return DiagramType.CLASS; // Return INTERFACE type
     }
+
+    public void addAttribute(AttributeComponent attribute) {
+        if (attributes == null) {
+            attributes = new ArrayList<>();
+        }
+        attributes.add(attribute);
+        notifyChange(); // Notify listeners of the change
+    }
+
+    public void removeAttribute(AttributeComponent attribute) {
+        if (attributes != null) {
+            attributes.remove(attribute);
+            notifyChange(); // Notify listeners of the change
+        }
+    }
+
+    public void addOperation(OperationComponent operation) {
+        if (operations == null) {
+            operations = new ArrayList<>();
+        }
+        operations.add(operation);
+        notifyChange(); // Notify listeners of the change
+    }
+
+    public void removeOperation(OperationComponent operation) {
+        if (operations != null) {
+            operations.remove(operation);
+            notifyChange(); // Notify listeners of the change
+        }
+    }
+
+    // Example of notifying listeners (implement observer pattern)
+    private void notifyChange() {
+        // Trigger an event or listener update for UI synchronization
+    }
+
 }
 

@@ -1,6 +1,8 @@
 package org.example.scdpro2.ui.views;
 
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.Pane;
 import org.example.scdpro2.business.models.PackageComponent;
 import org.example.scdpro2.business.models.PackageDiagram;
@@ -18,11 +20,11 @@ public class PackageDiagramPane extends Pane {
     private final DiagramService diagramService;
     private final MainView mainView;
 
-    private final List<RelationshipLine> relationshipLines = new ArrayList<>();
-
     private PackageBox selectedPackageBox; // To track the selected package box
     private final Map<PackageComponent, Node> packageToUIMap = new HashMap<>();
     private PackageDiagram activePackageDiagram; // Current package diagram
+    private ToggleButton relationshipModeButton = new ToggleButton("Relationship Mode");
+    private PackageBox relationshipSourceBox = null;
 
     public PackageDiagramPane(MainView mainView, MainController controller, DiagramService diagramService) {
         System.out.println("PackageDiagramPane is initialized.");
@@ -31,6 +33,7 @@ public class PackageDiagramPane extends Pane {
         this.diagramService = diagramService;
 
         this.activePackageDiagram = initializePackageDiagram();
+        initializeRelationshipModeButton();
         loadPackagesFromDiagram();
     }
 
@@ -43,6 +46,15 @@ public class PackageDiagramPane extends Pane {
         return diagramService.getPackageDiagrams().get(0);
     }
 
+    private void initializeRelationshipModeButton() {
+        relationshipModeButton.setOnAction(event -> {
+            if (!relationshipModeButton.isSelected()) {
+                relationshipSourceBox = null; // Reset source box on disabling the mode
+            }
+        });
+        // Add the button to the UI, e.g., a toolbar or control area
+    }
+
     public void addPackageBox(PackageBox packageBox) {
         if (!getChildren().contains(packageBox)) {
             registerPackageBox(packageBox);
@@ -53,25 +65,89 @@ public class PackageDiagramPane extends Pane {
         }
     }
 
-    public void removePackageBox(PackageBox packageBox) {
-        getChildren().remove(packageBox);
-        packageToUIMap.remove(packageBox.getPackageComponent());
-        activePackageDiagram.removePackage(packageBox.getPackageComponent());
-        System.out.println("Removed package: " + packageBox.getPackageComponent().getName());
-    }
+    private Node relationshipSourceNode = null; // Source node for relationshipsregisterPackageBox
 
     public void registerPackageBox(PackageBox packageBox) {
-        packageBox.setOnMouseClicked(event -> {
-            System.out.println("PackageBox clicked: " + packageBox.getPackageComponent().getName());
-            if (selectedPackageBox == null) {
-                selectedPackageBox = packageBox;
-                packageBox.setStyle("-fx-border-color: blue;");
-            } else {
-                selectedPackageBox.setStyle("-fx-border-color: black;");
-                selectedPackageBox = null;
-            }
-        });
+        packageBox.setOnMouseClicked(event -> handleRelationshipMode(packageBox));
     }
+
+    public void registerPackageClassBox(PackageClassBox packageClassBox) {
+        packageClassBox.setOnMouseClicked(event -> handleRelationshipMode(packageClassBox));
+    }
+
+    private void handleRelationshipMode(Node selectedNode) {
+        if (relationshipModeButton.isSelected()) {
+            if (relationshipSourceNode == null) {
+                relationshipSourceNode = selectedNode;
+                selectedNode.setStyle("-fx-border-color: green;");
+            } else if (relationshipSourceNode != selectedNode) {
+                createRelationship(relationshipSourceNode, selectedNode);
+                relationshipSourceNode.setStyle("-fx-border-color: black;");
+                relationshipSourceNode = null;
+            }
+        }
+    }
+
+    private void createRelationship(Node source, Node target) {
+        if (source == target) {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "Cannot create a relationship with the same component.");
+            alert.show();
+            return;
+        }
+
+        if (source instanceof PackageBox && target instanceof PackageBox) {
+            createPackageRelationship((PackageBox) source, (PackageBox) target);
+        } else if (source instanceof PackageBox && target instanceof PackageClassBox) {
+            createPackageToClassRelationship((PackageBox) source, (PackageClassBox) target);
+        } else if (source instanceof PackageClassBox && target instanceof PackageClassBox) {
+            createClassToClassRelationship((PackageClassBox) source, (PackageClassBox) target);
+        }
+    }
+
+    private void createPackageToClassRelationship(PackageBox packageBox, PackageClassBox classBox) {
+        // Implement specific logic for PackageBox to PackageClassBox relationship
+        System.out.println("Relationship created between Package " + packageBox.getPackageComponent().getName() +
+                " and Class " + classBox.getNameField().getText());
+    }
+
+    private void createClassToClassRelationship(PackageClassBox sourceClass, PackageClassBox targetClass) {
+        // Implement specific logic for Class to Class relationship
+        System.out.println("Relationship created between Class " + sourceClass.getNameField().getText() +
+                " and Class " + targetClass.getNameField().getText());
+    }
+
+    private void createPackageRelationship(PackageBox source, PackageBox target) {
+        if (source == target) {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "Cannot create a relationship with the same package.");
+            alert.show();
+            return;
+        }
+
+        PackageRelationship relationship = new PackageRelationship(this, source, target);
+        this.addRelationship(relationship);
+        System.out.println("Relationship created between " + source.getPackageComponent().getName() + " and " + target.getPackageComponent().getName());
+    }
+
+    private final List<PackageRelationship> relationships = new ArrayList<>();
+
+    public void addRelationship(PackageRelationship relationship) {
+        relationships.add(relationship);
+    }
+
+    public void removeRelationship(PackageRelationship relationship) {
+        relationships.remove(relationship);
+        // Remove visual elements from the diagram pane (excluding Point2D objects)
+        getChildren().removeAll(
+                relationship.getHorizontalLine(),
+                relationship.getVerticalLine(),
+                relationship.getArrow(),
+                relationship.getRelationshipLabel(),
+                relationship.getStartAnchor(),
+                relationship.getEndAnchor(),
+                relationship.getIntersectionAnchor()
+        );
+    }
+
 
     public void clearSelectedPackage() {
         if (selectedPackageBox != null) {
@@ -108,43 +184,12 @@ public class PackageDiagramPane extends Pane {
     //     return packageToUIMap;
     //}
 
-
-    public void addRelationshipLine(PackageComponent source, PackageComponent target, String title) {
-        // Create the relationship line
-        PackageBox sourceBox = (PackageBox) lookup("#" + source.getId());
-        PackageBox targetBox = (PackageBox) lookup("#" + target.getId());
-
-        if (sourceBox != null && targetBox != null) {
-            double startX = sourceBox.getLayoutX() + sourceBox.getWidth() / 2;
-            double startY = sourceBox.getLayoutY() + sourceBox.getHeight() / 2;
-            double endX = targetBox.getLayoutX() + targetBox.getWidth() / 2;
-            double endY = targetBox.getLayoutY() + targetBox.getHeight() / 2;
-
-            RelationshipLine relationship = new RelationshipLine(source, target, startX, startY, endX, endY, title);
-
-            relationshipLines.add(relationship);
-            getChildren().addAll(relationship.getLine(), relationship.getRelationshipLabel());
-        }
+    public void setPackageModeEnabled(boolean isActive) {
+        relationshipModeButton.setSelected(isActive);
+        relationshipSourceBox = null; // Reset source when disabling
     }
 
-    public void removeRelationshipLine(RelationshipLine relationship) {
-        getChildren().removeAll(relationship.getLine(), relationship.getRelationshipLabel());
-        relationshipLines.remove(relationship);
-    }
-
-    public void updateAllRelationships() {
-        for (RelationshipLine relationship : relationshipLines) {
-            PackageBox sourceBox = (PackageBox) lookup("#" + relationship.getSourcePackage().getId());
-            PackageBox targetBox = (PackageBox) lookup("#" + relationship.getTargetPackage().getId());
-
-            if (sourceBox != null && targetBox != null) {
-                double startX = sourceBox.getLayoutX() + sourceBox.getWidth() / 2;
-                double startY = sourceBox.getLayoutY() + sourceBox.getHeight() / 2;
-                double endX = targetBox.getLayoutX() + targetBox.getWidth() / 2;
-                double endY = targetBox.getLayoutY() + targetBox.getHeight() / 2;
-
-                relationship.updatePosition(startX, startY, endX, endY);
-            }
-        }
+    public Iterable<? extends PackageRelationship> getRelationships() {
+        return relationships;
     }
 }

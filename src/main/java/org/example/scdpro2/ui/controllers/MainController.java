@@ -1,7 +1,5 @@
 package org.example.scdpro2.ui.controllers;
 
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.stage.FileChooser;
 import org.example.scdpro2.business.models.*;
 import org.example.scdpro2.business.services.DiagramService;
@@ -12,6 +10,8 @@ import org.example.scdpro2.ui.views.*;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.List;
 
@@ -21,7 +21,10 @@ public class MainController {
     private ProjectDAOImpl projectDAO;
     private final DiagramService diagramService;
     private MainView mainView;
-    private List<RelationshipLine> relationships = new ArrayList<>();
+    private List<RelationshipLine> relationshipLines = new ArrayList<>();
+    public List<Relationship> relationships = new ArrayList<>();
+
+    public Map<RelationshipLine, Relationship> relationshipMapping = new HashMap<>();
 
     private static int countclasses = 1;
     private static int countinterface = 1;
@@ -56,75 +59,150 @@ public class MainController {
                 return;
             }
 
-            // Save diagram positions
+            // Save UI-related data to business model
             for (Diagram diagram : currentProject.getDiagrams()) {
-                if (diagram instanceof ClassDiagram classDiagram) {
-                    ClassBox classBox = mainView.getClassDiagramPane().getClassBoxForDiagram(classDiagram);
-                    if (classBox != null) {
-                        classDiagram.setX(classBox.getLayoutX());
-                        classDiagram.setY(classBox.getLayoutY());
+                if (diagram instanceof BClassBox bClassBox) {
+                    if ("Class Box".equals(bClassBox.Type)) {
+                        ClassBox classBox = mainView.getClassDiagramPane().getClassBoxForDiagram(bClassBox);
+                        if (classBox != null) {
+                            bClassBox.setX(classBox.getLayoutX());
+                            bClassBox.setY(classBox.getLayoutY());
+                            bClassBox.setAttributes(classBox.getAttributes());
+                            bClassBox.setOperations(classBox.getOperations());
+                        }
+                    } else if ("Interface Box".equals(bClassBox.Type)) {
+                        InterfaceBox interfaceBox = mainView.getClassDiagramPane().getInterfaceBoxForDiagram(bClassBox);
+                        if (interfaceBox != null) {
+                            bClassBox.setX(interfaceBox.getLayoutX());
+                            bClassBox.setY(interfaceBox.getLayoutY());
+                            bClassBox.setOperations(interfaceBox.getOperations());
+                        }
                     }
                 }
             }
 
-            // Log relationships for debugging
-            System.out.println("Serializing relationships:");
-            if (currentProject.getRelationships().isEmpty()) {
-                System.out.println("No relationships to serialize.");
-            } else {
-                for (Relationship relationship : currentProject.getRelationships()) {
-                    System.out.println("Relationship: Source = " + relationship.getSource().getTitle() +
-                            ", Target = " + relationship.getTarget().getTitle() +
-                            ", Type = " + relationship.getType());
-                }
-            }
+            // Save project relationships
+            // Extract Relationships from relationshipMapping
+            List<Relationship> projectRelationships = new ArrayList<>(relationshipMapping.values());
+            currentProject.setRelationships(projectRelationships); // Replace or update relationships in the project
 
-
-            oos.writeObject(currentProject); // Serialize the entire project
+            // Serialize project
+            oos.writeObject(currentProject);
             System.out.println("Project saved successfully to: " + file.getPath());
         } catch (IOException e) {
             System.err.println("Error saving project: " + e.getMessage());
         }
     }
 
+
+    // Helper method to convert RelationshipLine to Relationship
+    private Relationship convertRelationshipLineToRelationship(RelationshipLine relationshipLine) {
+        BClassBox source = (BClassBox) relationshipLine.getSource().getDiagram();
+        BClassBox target = (BClassBox) relationshipLine.getTarget().getDiagram();
+        RelationshipLine.RelationshipType type = relationshipLine.getType();
+        return new Relationship(source, target, type,relationshipLine.getMultiplicityStart(),relationshipLine.getMultiplicityEnd(),relationshipLine.getRelationshipLabel());
+    }
+
+
+
     public void loadProjectFromFile(File file) {
+        System.out.println("LoadProject from filr is called ");
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
             Project loadedProject = (Project) ois.readObject();
             if (loadedProject != null) {
                 diagramService.setCurrentProject(loadedProject);
-                mainView.getClassDiagramPane().clearDiagrams(); // Clear existing UI
 
-                // Redraw diagrams (classes/interfaces)
+                // Clear UI components
+                mainView.getClassDiagramPane().clearDiagrams();
+
+                if(mainView.getClassDiagramPane()==null)
+                {System.out.println("Null class diagram pane");}
+                else{System.out.println("not null class diagram pane");}
+
+                // Restore diagrams (class boxes)
                 for (Diagram diagram : loadedProject.getDiagrams()) {
-                    if (diagram instanceof ClassDiagram classDiagram) {
-                        ClassBox classBox = new ClassBox(classDiagram, this, mainView.getClassDiagramPane());
-                        classBox.setLayoutX(classDiagram.getX());
-                        classBox.setLayoutY(classDiagram.getY());
-                        mainView.getClassDiagramPane().addClassBox(classBox);
+                    if (diagram instanceof BClassBox bClassBox) {
+                        if ("Class Box".equals(bClassBox.Type)) {
+                            ClassBox classBox = new ClassBox(bClassBox, this, mainView.getClassDiagramPane());
+                            classBox.setLayoutX(bClassBox.getX());
+                            classBox.setLayoutY(bClassBox.getY());
+                            classBox.setAttributes(bClassBox.getAttributes());
+                            classBox.setOperations(bClassBox.getOperations());
+                            mainView.getClassDiagramPane().addClassBox(classBox);
+                            countclasses++;
+                        } else if ("Interface Box".equals(bClassBox.Type)) {
+                            InterfaceBox interfaceBox = new InterfaceBox(bClassBox, this, mainView.getClassDiagramPane());
+                            interfaceBox.setLayoutX(bClassBox.getX());
+                            interfaceBox.setLayoutY(bClassBox.getY());
+                            interfaceBox.setOperations(bClassBox.getOperations());
+                            mainView.getClassDiagramPane().addInterfaceBox(interfaceBox);
+                            countinterface++;
+                        }
                     }
                 }
 
-                // Log relationships for debugging
-                System.out.println("Deserializing relationships:");
+                // Restore relationships
                 for (Relationship relationship : loadedProject.getRelationships()) {
-                    System.out.println("Relationship: Source = " + relationship.getSource().getTitle() +
-                            ", Target = " + relationship.getTarget().getTitle() +
-                            ", Type = " + relationship.getType());
+                    RelationshipLine.RelationshipType type = RelationshipLine.RelationshipType.valueOf(relationship.getTypee());
 
-                    ClassBox sourceBox = mainView.getClassDiagramPane().getClassBoxForDiagram((ClassDiagram) relationship.getSource());
-                    ClassBox targetBox = mainView.getClassDiagramPane().getClassBoxForDiagram((ClassDiagram) relationship.getTarget());
-                    if (sourceBox != null && targetBox != null) {
-                        mainView.getClassDiagramPane().addRelationship(sourceBox, targetBox, relationship.getType());
-                    } else {
-                        System.err.println("Error: Source or Target ClassBox not found for relationship.");
+                    if(relationship.source.Type.equals("Class Box") && relationship.target.Type.equals("Class Box")) {
+                        // Find source and target class boxes
+                        ClassBox source = mainView.getClassDiagramPane().getClassBoxByTitle(relationship.getSource().getTitle());
+                        ClassBox target = mainView.getClassDiagramPane().getClassBoxByTitle(relationship.getTarget().getTitle());
+
+                        if (source != null && target != null) {
+                            // Add relationship line
+                            System.err.println("trying to create a relationhsio");
+                            //mainView.getClassDiagramPane().addRelationship(source, target, type);
+                            createRelationship(mainView.classDiagramPane, source, "right", target, "left", relationship.type);
+                        } else {
+                            System.err.println("Error: Could not find source or target ClassBox for relationship.");
+                        }
+                    }
+                    else if(relationship.source.Type.equals("Class Box") && relationship.target.Type.equals("Interface Box")) {
+                        // Find source and target class boxes
+                        ClassBox source = mainView.getClassDiagramPane().getClassBoxByTitle(relationship.getSource().getTitle());
+                        InterfaceBox target = mainView.getClassDiagramPane().getInterfaceBoxByTitle(relationship.getTarget().getTitle());
+
+                        if (source != null && target != null) {
+                            // Add relationship line
+                            System.err.println("trying to create a relationhsio");
+                            //mainView.getClassDiagramPane().addRelationship(source, target, type);
+                            createRelationship(mainView.classDiagramPane, source, "right", target, "left", relationship.type);
+                        } else {
+                            System.err.println("Error: Could not find source or target ClassBox for relationship.");
+                        }
                     }
                 }
 
-                mainView.updateClassListView(); // Update class list
+                mainView.updateClassListView();
                 System.out.println("Project loaded successfully from: " + file.getPath());
             }
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Error loading project: " + e.getMessage());
+        }
+    }
+
+
+    public Relationship getRelationshipForLine(RelationshipLine line) {
+        return relationshipMapping.get(line);
+    }
+
+
+
+    public void saveProject() {
+        File file = new FileChooser().showSaveDialog(null);
+        if (file != null) {
+            saveProjectToFile(file);
+        }
+    }
+
+    public void loadProject() {
+        File file = new FileChooser().showOpenDialog(null);
+        if (file != null) {
+            mainView.classDiagramPane.clearDiagrams();
+            mainView.classListView.getItems().clear();
+            loadProjectFromFile(file);
         }
     }
 
@@ -163,7 +241,7 @@ public class MainController {
         Project currentProject = projectService.getCurrentProject();
         if (currentProject != null) {
             return currentProject.getDiagrams().stream()
-                    .filter(diagram -> diagram instanceof ClassDiagram)
+                    .filter(diagram -> diagram instanceof BClassBox)
                     .map(diagram -> diagram.getTitle())
                     .collect(Collectors.toList());
         }
@@ -178,16 +256,33 @@ public class MainController {
             }
 
             // Create a new ClassDiagram and add it to the business layer
-            ClassDiagram classDiagram = new ClassDiagram("Class "+countclasses);
-            diagramService.addDiagram(classDiagram);  // Add to the service
+            BClassBox BClassBox = new BClassBox("Class "+ countclasses);
+            BClassBox.Type="Class Box";
+            diagramService.addDiagram(BClassBox);  // Add to the service
 
 
             // Create a ClassBox and add it to the UI layer
-            ClassBox classBox = new ClassBox(classDiagram, this, diagramPane); // Pass available class names
+            ClassBox classBox = new ClassBox(BClassBox, this, diagramPane); // Pass available class names
             diagramPane.addClassBox(classBox); // Ensure click handler is registered
-            System.out.println("ClassBox added for: " + classDiagram.getTitle());
+            System.out.println("ClassBox added for: " + BClassBox.getTitle());
             countclasses++;
         }
+
+    public void addInterfaceBox(ClassDiagramPane diagramPane) {
+
+        if (projectService.getCurrentProject() == null) {
+            projectService.createProject("Untitled Project");
+        }
+
+        BClassBox interfaceDiagram = new BClassBox("Interface "+countinterface);
+        interfaceDiagram.Type="Interface Box";
+        diagramService.addDiagram(interfaceDiagram);
+
+
+        InterfaceBox interfaceBox = new InterfaceBox(interfaceDiagram, this ,diagramPane);
+        diagramPane.addInterfaceBox(interfaceBox);
+        countinterface++;
+    }
 
     public void deleteClassBox(ClassDiagramPane pane, ClassBox classBox) {
         if (classBox == null) {
@@ -221,8 +316,18 @@ public class MainController {
         System.out.println(relationshipIndex);
         RelationshipLine line = new RelationshipLine(source, sourceSide, target, targetSide, type, 0, 0, relationshipIndex);
 
+        // Create the Relationship (business layer)
+        Relationship relationship = new Relationship(source.BClassBox, target.BClassBox, type,line.getMultiplicityStart(),line.getMultiplicityEnd(),line.getRelationshipLabel());
+        relationships.add(relationship);  // Track the new Relationship object
+
+        source.BClassBox.addRelationship(relationship);
+
+        relationshipMapping.put(line, relationship);
+
+
+        System.out.println("Line is being created "+ relationshipIndex);
         line.setMainView(mainView);
-        relationships.add(line); // Track the new relationship
+        relationshipLines.add(line); // Track the new relationship
         pane.getChildren().add(line); // Add to UI
     }
 
@@ -230,7 +335,7 @@ public class MainController {
         //int relationshipIndex = countRelationshipsBetween(source, target);
         RelationshipLine line = new RelationshipLine(source, sourceSide, target, targetSide, type, 0, 0, 0);
 
-        relationships.add(line); // Track the new relationship
+        relationshipLines.add(line); // Track the new relationship
         pane.getChildren().add(line); // Add to UI
     }
 
@@ -238,42 +343,34 @@ public class MainController {
         //int relationshipIndex = countRelationshipsBetween(source, target);
         RelationshipLine line = new RelationshipLine(source, sourceSide, target, targetSide, type, 0, 0, 0);
 
-        relationships.add(line); // Track the new relationship
+        // Create the Relationship (business layer)
+        Relationship relationship = new Relationship(source.BClassBox, target.interfaceDiagram, type, line.getMultiplicityStart(),line.getMultiplicityEnd(),line.getRelationshipLabel());
+        relationships.add(relationship);  // Track the new Relationship object
+
+        relationshipMapping.put(line, relationship);
+
+
+        line.setMainView(mainView);
+        relationshipLines.add(line); // Track the new relationship
         pane.getChildren().add(line); // Add to UI
     }
 
-    private int countRelationshipsBetween(ClassBox source, ClassBox target) {
-        return (int) relationships.stream()
+    public int countRelationshipsBetween(ClassBox source, ClassBox target) {
+        return (int) relationshipLines.stream()
                 .filter(rel -> (rel.getSource() == source && rel.getTarget() == target) || (rel.getSource() == target && rel.getTarget() == source))
                 .count();
     }
 
-    public void addInterfaceBox(ClassDiagramPane diagramPane) {
 
-        if (projectService.getCurrentProject() == null) {
-            projectService.createProject("Untitled Project");
-        }
-
-        ClassDiagram interfaceDiagram = new ClassDiagram("Interface "+countinterface);
-        diagramService.addDiagram(interfaceDiagram);
-
-
-        InterfaceBox interfaceBox = new InterfaceBox(interfaceDiagram, this ,diagramPane);
-        diagramPane.addInterfaceBox(interfaceBox);
-        countinterface++;
-    }
 
     public Project getCurrentProject() {
         return projectService.getCurrentProject();
     }
 
     public void addClassDiagram() {
-        ClassDiagram classDiagram = new ClassDiagram("NewClassDiagram");
-        diagramService.addDiagram(classDiagram);
         if (mainView != null) {
             mainView.updateClassListView();
         }
-        System.out.println("Class Diagram added: " + classDiagram.getTitle());
     }
 
     public void addPackageDiagram() {
@@ -284,20 +381,6 @@ public class MainController {
         PackageDiagram packageDiagram = new PackageDiagram("New Package Diagram");
         diagramService.addPackageDiagram(packageDiagram);
         System.out.println("Package diagram added: " + packageDiagram.getTitle());
-    }
-
-    public void saveProject() {
-        File file = new FileChooser().showSaveDialog(null);
-        if (file != null) {
-            saveProjectToFile(file);
-        }
-    }
-
-    public void loadProject() {
-        File file = new FileChooser().showOpenDialog(null);
-        if (file != null) {
-            loadProjectFromFile(file);
-        }
     }
 
     public void addPackageBox(PackageDiagramPane diagramPane) {
@@ -317,11 +400,6 @@ public class MainController {
         System.out.println("Package added: " + packageName);
     }
 
-    public void createPackageRelationship(PackageComponent source, PackageComponent target, RelationshipLine.RelationshipType type) {
-        Relationship relationship = new Relationship(source, target, type);
-        diagramService.addRelationship(relationship);
-        System.out.println("Created relationship: " + relationship);
-    }
 
     public void deleteInterfaceBox(ClassDiagramPane pane, InterfaceBox interfaceBox) {
         if (interfaceBox == null) {

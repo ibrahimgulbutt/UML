@@ -48,13 +48,13 @@ public class DiagramService {
         }
         currentProject.addRelationship(relationship);
 
-        if (relationship.getSource() instanceof PackageComponent sourcePackage) {
-            sourcePackage.addRelationship(relationship);
-        }
+        //if (relationship.getSource() instanceof PackageComponent sourcePackage) {
+        //    sourcePackage.addRelationship(relationship);
+        //}
 
-        if (relationship.getTarget() instanceof PackageComponent targetPackage) {
-            targetPackage.addRelationship(relationship);
-        }
+        //if (relationship.getTarget() instanceof PackageComponent targetPackage) {
+        //    targetPackage.addRelationship(relationship);
+        //}
     }
 
     public void removeRelationship(Diagram source, Diagram target) {
@@ -65,7 +65,7 @@ public class DiagramService {
             targetPackage.getRelationships().removeIf(rel -> rel.getSource() == source);
         }
 
-        if (source instanceof ClassDiagram sourceClass && target instanceof ClassDiagram targetClass) {
+        if (source instanceof BClassBox sourceClass && target instanceof BClassBox targetClass) {
             sourceClass.getRelationships().removeIf(rel -> rel.getTargetDiagram().equals(target));
             targetClass.getRelationships().removeIf(rel -> rel.getSourceDiagram().equals(source));
         }

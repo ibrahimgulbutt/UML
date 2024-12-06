@@ -6,34 +6,43 @@ import java.io.Serializable;
 
 public class Relationship implements Serializable {
     private static final long serialVersionUID = 1L;
-    private final Diagram source;
-    private final Diagram target;
-    private final RelationshipType type;
+    public BClassBox source;
+    public BClassBox target;
+    public final RelationshipType type;
+    public String sourceMultiplicity;
+    public String targetMultiplicity;
+    public String relationshipLabel;
 
-    public Relationship(Diagram source, Diagram target, RelationshipType type) {
+    public Relationship(BClassBox source, BClassBox target, RelationshipType type,String sourceMultiplicity,String targetMultiplicity,String relationshipLabel) {
         this.source = source;
         this.target = target;
         this.type = type;
+        this.sourceMultiplicity=sourceMultiplicity;
+        this.targetMultiplicity=targetMultiplicity;
     }
 
-    public Diagram getSource() {
+    public BClassBox getSource() {
         return source;
     }
 
-    public Diagram getTarget() {
+    public BClassBox getTarget() {
         return target;
     }
 
     public RelationshipType getType() {
         return type;
     }
+    public String getTypee() {
+        return type.toString();
 
-    public ClassDiagram getSourceDiagram() {
-        return (ClassDiagram) source;
     }
 
-    public ClassDiagram getTargetDiagram() {
-        return (ClassDiagram) target;
+    public BClassBox getSourceDiagram() {
+        return (BClassBox) source;
+    }
+
+    public BClassBox getTargetDiagram() {
+        return (BClassBox) target;
     }
     @Override
     public String toString() {

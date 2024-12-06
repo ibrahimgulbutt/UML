@@ -15,6 +15,7 @@ import java.io.File;
 public class StartPageView extends BorderPane {
     private final Stage primaryStage;
     private final MainController mainController;
+    private MainView mainView;
 
     public StartPageView(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -61,22 +62,14 @@ public class StartPageView extends BorderPane {
 
     private void showNewProjectDialog() {
         String projectName = "ClassDiagram";
-        String projectType = "Class Diagram";
+        String projectType = "Package Diagram";
 
         mainController.createNewProject(projectName);
         openMainView(projectType);
     }
 
     private void openExistingProject() {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Open Existing Project");
-        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Project Files", "*.proj"));
-        File selectedFile = fileChooser.showOpenDialog(primaryStage);
-
-        if (selectedFile != null) {
-            mainController.loadProjectFromFile(selectedFile);
-            openMainView(null);
-        }
+        mainController.loadProject();
     }
 
     private void openMainView(String projectType) {

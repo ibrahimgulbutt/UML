@@ -23,7 +23,7 @@ public class PackageDiagram extends Diagram implements Serializable {
 
     public void removePackage(PackageComponent packageComponent) {
         packages.remove(packageComponent);
-        relationships.removeIf(rel -> rel.getSource() == packageComponent || rel.getTarget() == packageComponent);
+        //relationships.removeIf(rel -> rel.getSource() == packageComponent || rel.getTarget() == packageComponent);
     }
 
     public void addRelationship(Relationship relationship) {

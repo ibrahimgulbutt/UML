@@ -6,7 +6,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
-import org.example.scdpro2.business.models.ClassDiagram;
+import org.example.scdpro2.business.models.BClassBox;
 import org.example.scdpro2.business.models.OperationComponent;
 import org.example.scdpro2.ui.controllers.MainController;
 
@@ -17,16 +17,16 @@ import java.util.Map;
 
 public class InterfaceBox extends StackPane {
     private final Circle backgroundCircle; // Circular background
-    private final ClassDiagram interfaceDiagram; // Interface business model
+    public final BClassBox interfaceDiagram; // Interface business model
     private final VBox operationsBox = new VBox(); // Container for operations
     private double offsetX, offsetY; // Dragging offsets
     private final MainController controller;
     private final Button addOperationButton = new Button("+"); // Add operation button
-    private final List<OperationComponent> operations = new ArrayList<>();
+    private List<OperationComponent> operations = new ArrayList<>();
     private final Map<String, List<RelationshipLine>> linesBySide = new HashMap<>();
     private List<RelationshipLine> connectedRelationships = new ArrayList<>();
 
-    public InterfaceBox(ClassDiagram interfaceDiagram, MainController controller, ClassDiagramPane pane) {
+    public InterfaceBox(BClassBox interfaceDiagram, MainController controller, ClassDiagramPane pane) {
         this.interfaceDiagram = interfaceDiagram;
         this.controller = controller;
 
@@ -112,7 +112,8 @@ public class InterfaceBox extends StackPane {
 
     // Add a new operation
     private void addOperation() {
-        OperationComponent operation = new OperationComponent("operation", "+");
+        OperationComponent operation = new OperationComponent("operation", "+",
+                "void");
         interfaceDiagram.addOperation(operation); // Add to the business model
         addOperationToUI(operation);
     }
@@ -164,7 +165,7 @@ public class InterfaceBox extends StackPane {
     }
 
     // Get the associated business model
-    public ClassDiagram getInterfaceDiagram() {
+    public BClassBox getInterfaceDiagram() {
         return interfaceDiagram;
     }
 
@@ -173,5 +174,21 @@ public class InterfaceBox extends StackPane {
     }
     public void addRelationship(RelationshipLine relationship) {
         connectedRelationships.add(relationship);
+    }
+
+    public void setOperations(List<OperationComponent> operations) {
+        this.operations=operations;
+    }
+
+    public BClassBox getClassDiagram() {
+        return interfaceDiagram;
+    }
+
+    public Object getOperationsBox() {
+        return interfaceDiagram.getOperations().toString();
+    }
+
+    public List<OperationComponent> getOperations() {
+        return interfaceDiagram.getOperations();
     }
 }

@@ -17,6 +17,10 @@ public class Project implements Serializable {
         this.diagrams = new ArrayList<>();
         this.relationships = new ArrayList<>();
     }
+    public void setRelationships(List<Relationship> relationships) {
+        this.relationships = relationships;
+    }
+
 
     public void addDiagram(Diagram diagram) {
         diagrams.add(diagram);
@@ -28,6 +32,11 @@ public class Project implements Serializable {
 
     public void addRelationship(Relationship relationship) {
         relationships.add(relationship);
+    }
+
+    public void addRelationship(List<Relationship> rel)
+    {
+        this.relationships=rel;
     }
 
     public void removeRelationship(Relationship relationship) {

@@ -73,6 +73,7 @@ public class PackageClassBox extends BorderPane {
                 }
             }
         });
+
     }
 
     // Utility method for showing a confirmation dialog
@@ -188,5 +189,9 @@ public class PackageClassBox extends BorderPane {
             resizeDirection = "";
             return false;
         }
+    }
+
+    public TextField getNameField() {
+        return nameField;
     }
 }

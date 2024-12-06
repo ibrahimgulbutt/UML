@@ -2,6 +2,7 @@ package org.example.scdpro2.ui.views;
 
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -13,7 +14,10 @@ import org.example.scdpro2.business.models.PackageComponent;
 import org.example.scdpro2.ui.controllers.MainController;
 import org.example.scdpro2.ui.views.*;
 
-public class PackageBox extends BorderPane {
+import java.util.ArrayList;
+import java.util.List;
+
+public class PackageBox extends BorderPane  {
     private final PackageComponent packageComponent;
     private final MainController controller;
     private final PackageDiagramPane diagramPane;
@@ -86,28 +90,10 @@ public class PackageBox extends BorderPane {
 
     }
 
-    // Method to delete the entire package box
-    private void deletePackage() {
-        if (confirmAction("Delete Package Box", "Are you sure you want to delete this package box and all its class boxes?")) {
-            // Remove all associated class boxes
-            diagramPane.getChildren().removeIf(node -> node instanceof PackageClassBox classBox && classBox.getParentPackageBox() == this);
-            // Remove the package box itself
-            diagramPane.getChildren().remove(this);
-        }
-    }
-
-    // Utility method for showing a confirmation dialog
-    private boolean confirmAction(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message, ButtonType.YES, ButtonType.NO);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        return alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES;
-    }
 
     public PackageDiagramPane getDiagramPane() {
         return diagramPane;
     }
-
 
     public void moveClassBoxes(double deltaX, double deltaY) {
         for (var node : diagramPane.getChildren()) {
@@ -117,7 +103,6 @@ public class PackageBox extends BorderPane {
             }
         }
     }
-
 
     private void addClassBox() {
         // Create a new instance of PackageClassBox
@@ -146,26 +131,6 @@ public class PackageBox extends BorderPane {
 
         // Add the class box to the diagram pane
         diagramPane.getChildren().add(classBox);
-    }
-
-
-
-    private void setupNameEditing() {
-        nameLabel.setOnMouseClicked(event -> {
-            TextField nameField = new TextField(packageComponent.getName());
-            nameField.setOnAction(e -> {
-                String newName = nameField.getText().trim();
-                if (!newName.isEmpty()) {
-                    packageComponent.setName(newName);
-                    nameLabel.setText(newName);
-                    contentBox.getChildren().remove(nameField); // Remove TextField
-                    contentBox.getChildren().add(0, nameLabel); // Re-add Label
-                }
-            });
-            contentBox.getChildren().remove(nameLabel); // Remove Label
-            contentBox.getChildren().add(0, nameField); // Add TextField
-            nameField.requestFocus();
-        });
     }
 
     private void handleMousePressed(MouseEvent event) {
@@ -202,6 +167,63 @@ public class PackageBox extends BorderPane {
         }
     }
 
+    private boolean isOnEdge(MouseEvent event) {
+        double mouseX = event.getX();
+        double mouseY = event.getY();
+        double width = getWidth();
+        double height = getHeight();
+        double edgeThreshold = 10;
+
+        if (mouseX <= edgeThreshold && mouseY <= edgeThreshold) {
+            resizeDirection = "TOP_LEFT";
+            return true;
+        } else if (mouseX >= width - edgeThreshold && mouseY >= height - edgeThreshold) {
+            resizeDirection = "BOTTOM_RIGHT";
+            return true;
+        } else if (mouseX >= width - edgeThreshold) {
+            resizeDirection = "RIGHT";
+            return true;
+        } else if (mouseY >= height - edgeThreshold) {
+            resizeDirection = "BOTTOM";
+            return true;
+        } else if (mouseX <= edgeThreshold) {
+            resizeDirection = "LEFT";
+            return true;
+        } else if (mouseY <= edgeThreshold) {
+            resizeDirection = "TOP";
+            return true;
+        } else {
+            resizeDirection = "";
+            return false;
+        }
+    }
+
+
+    // Utility method for showing a confirmation dialog
+    private boolean confirmAction(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message, ButtonType.YES, ButtonType.NO);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        return alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES;
+    }
+
+    private void setupNameEditing() {
+        nameLabel.setOnMouseClicked(event -> {
+            TextField nameField = new TextField(packageComponent.getName());
+            nameField.setOnAction(e -> {
+                String newName = nameField.getText().trim();
+                if (!newName.isEmpty()) {
+                    packageComponent.setName(newName);
+                    nameLabel.setText(newName);
+                    contentBox.getChildren().remove(nameField); // Remove TextField
+                    contentBox.getChildren().add(0, nameLabel); // Re-add Label
+                }
+            });
+            contentBox.getChildren().remove(nameLabel); // Remove Label
+            contentBox.getChildren().add(0, nameField); // Add TextField
+            nameField.requestFocus();
+        });
+    }
 
     private void handleMouseReleased(MouseEvent event) {
         isResizing = false;
@@ -275,37 +297,6 @@ public class PackageBox extends BorderPane {
         }
     }
 
-    private boolean isOnEdge(MouseEvent event) {
-        double mouseX = event.getX();
-        double mouseY = event.getY();
-        double width = getWidth();
-        double height = getHeight();
-        double edgeThreshold = 10;
-
-        if (mouseX <= edgeThreshold && mouseY <= edgeThreshold) {
-            resizeDirection = "TOP_LEFT";
-            return true;
-        } else if (mouseX >= width - edgeThreshold && mouseY >= height - edgeThreshold) {
-            resizeDirection = "BOTTOM_RIGHT";
-            return true;
-        } else if (mouseX >= width - edgeThreshold) {
-            resizeDirection = "RIGHT";
-            return true;
-        } else if (mouseY >= height - edgeThreshold) {
-            resizeDirection = "BOTTOM";
-            return true;
-        } else if (mouseX <= edgeThreshold) {
-            resizeDirection = "LEFT";
-            return true;
-        } else if (mouseY <= edgeThreshold) {
-            resizeDirection = "TOP";
-            return true;
-        } else {
-            resizeDirection = "";
-            return false;
-        }
-    }
-
     public void addComponent(String componentName) {
         Label componentLabel = new Label(componentName);
         componentLabel.setStyle("-fx-background-color: #e6e6e6; -fx-padding: 3; -fx-border-color: black; -fx-border-width: 1;");
@@ -314,5 +305,26 @@ public class PackageBox extends BorderPane {
 
     public PackageComponent getPackageComponent() {
         return packageComponent;
+    }
+
+    private void deletePackage() {
+        if (confirmAction("Delete Package Box", "Are you sure you want to delete this package box and all its relationships?")) {
+            List<PackageRelationship> relationshipsToRemove = new ArrayList<>();
+
+            // Collect relationships involving this package
+            for (PackageRelationship relationship : diagramPane.getRelationships()) {
+                if (relationship.getStartPackage() == this || relationship.getEndPackage() == this) {
+                    relationshipsToRemove.add(relationship);
+                }
+            }
+
+            // Remove the collected relationships
+            for (PackageRelationship relationship : relationshipsToRemove) {
+                diagramPane.removeRelationship(relationship);
+            }
+
+            // Remove the package box itself
+            diagramPane.getChildren().remove(this);
+        }
     }
 }

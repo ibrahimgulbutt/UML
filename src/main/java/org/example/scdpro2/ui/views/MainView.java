@@ -1,6 +1,9 @@
 package org.example.scdpro2.ui.views;
 
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.WritableImage;
 import javafx.scene.layout.*;
 import javafx.geometry.Insets;
 import javafx.stage.FileChooser;
@@ -9,14 +12,27 @@ import org.example.scdpro2.ui.controllers.MainController;
 import org.example.scdpro2.business.services.DiagramService;
 import org.example.scdpro2.ui.views.RelationshipLine.RelationshipType;
 import org.kordamp.bootstrapfx.BootstrapFX;
+import org.example.scdpro2.business.models.Relationship;
 
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.SnapshotParameters;
+import javafx.scene.image.WritableImage;
+import javafx.stage.FileChooser;
+
+import javax.imageio.ImageIO;
 import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class MainView extends BorderPane {
     private final MainController controller;
 
-    private ClassDiagramPane classDiagramPane;
-    private PackageDiagramPane packageDiagramPane;
+    public ClassDiagramPane classDiagramPane;
+    public PackageDiagramPane packageDiagramPane;
 
     private ToggleButton relationshipModeToggle;
     private RelationshipType selectedRelationshipType; // Current selected relationship type
@@ -204,10 +220,15 @@ public class MainView extends BorderPane {
             Button generateButton = new Button("Generate Code");
             generateButton.setOnAction(event -> controller.generateCode());
             codeGenerationPanel.getChildren().addAll(codeGenerationLabel, generateButton);
+            Button saveAsImageButton = new Button("Save as JPEG");
+            saveAsImageButton.getStyleClass().addAll("btn", "btn-info"); // Optional styling
+
+            saveAsImageButton.setOnAction(event -> saveDiagramAsImage());
 
             toolbar.getItems().addAll(
                     addClassButton, addInterfaceButton, relationshipModeToggle,
-                    new Separator(), associationBtn, aggregationBtn, compositionBtn, inheritanceBtn,zoomInButton,zoomOutButton,codeGenerationPanel
+                    new Separator(), associationBtn, aggregationBtn, compositionBtn, inheritanceBtn,zoomInButton,zoomOutButton,
+                    codeGenerationPanel, saveAsImageButton
             );
 
         }
@@ -218,17 +239,67 @@ public class MainView extends BorderPane {
                 controller.addPackageBox(packageDiagramPane);
             });
 
-            Button removePackageButton = new Button("Remove Package");
-            removePackageButton.getStyleClass().addAll("btn", "btn-danger"); // Bootstrap Danger Button
-            removePackageButton.setOnAction(event -> {
-                // Example action
+            relationshipModeToggle = new ToggleButton("Relationship Mode");
+            relationshipModeToggle.getStyleClass().addAll("btn", "btn-warning"); // Bootstrap Warning Button
+
+            relationshipModeToggle.setOnAction(event -> {
+                boolean isActive = relationshipModeToggle.isSelected();
+                packageDiagramPane.setPackageModeEnabled(isActive);
+                relationshipModeToggle.setText(isActive ? "Exit Relationship Mode" : "Relationship Mode");
             });
 
-            toolbar.getItems().addAll(addPackageButton, removePackageButton);
+            toolbar.getItems().addAll(addPackageButton,relationshipModeToggle);
         }
 
         return toolbar;
     }
+
+
+    public void saveDiagramAsImage() {
+        // Determine which pane to capture: ClassDiagramPane or PackageDiagramPane
+        WritableImage snapshot = null;
+
+        if (classDiagramPane != null) {
+            snapshot = classDiagramPane.snapshot(new SnapshotParameters(), null);
+        } else if (packageDiagramPane != null) {
+            snapshot = packageDiagramPane.snapshot(new SnapshotParameters(), null);
+        } else {
+            System.out.println("No diagram pane available for saving as an image.");
+            return;
+        }
+
+        // Open a file chooser to save the image
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save Diagram as Image");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG Files", "*.png"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("JPEG Files", "*.jpg"));
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("BMP Files", "*.bmp"));
+
+        File file = fileChooser.showSaveDialog(this.getScene().getWindow());
+        if (file != null) {
+            try {
+                String extension = getFileExtension(file.getName());
+                if (extension == null) {
+                    // Default to PNG if no extension is specified
+                    extension = "png";
+                    file = new File(file.getAbsolutePath() + ".png");
+                }
+
+                ImageIO.write(SwingFXUtils.fromFXImage(snapshot, null), extension, file);
+                System.out.println("Diagram saved as: " + file.getAbsolutePath());
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                System.out.println("Failed to save the diagram as an image.");
+            }
+        }
+    }
+
+    // Helper method to get the file extension
+    private String getFileExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex > 0 && dotIndex < fileName.length() - 1) ? fileName.substring(dotIndex + 1) : null;
+    }
+
 
     private VBox createClassListPanel() {
         VBox panel = new VBox();
@@ -331,19 +402,37 @@ public class MainView extends BorderPane {
 
         }
         else if (selectedItem instanceof RelationshipLine) {
-            RelationshipLine relationship = (RelationshipLine) selectedItem;
+            RelationshipLine relationshipLine = (RelationshipLine) selectedItem;
+            Relationship relationship = controller.relationshipMapping.get(relationshipLine);
 
-            TextField titleField = new TextField(relationship.getTitle());
+            System.out.println(relationship.relationshipLabel+relationship.targetMultiplicity);
+
+            TextField titleField = new TextField(relationshipLine.getTitle());
             titleField.setPromptText("Enter Relationship Title");
-            titleField.setOnAction(e -> relationship.setTitle(titleField.getText()));
+            titleField.setOnAction(e -> {
+                String newTitle = titleField.getText();
+                relationshipLine.setTitle(newTitle);
+                relationship.relationshipLabel = newTitle; // Update model
+                controller.relationshipMapping.put(relationshipLine, relationship); // Update map
+            });
 
-            TextField startMultiplicityField = new TextField(relationship.getMultiplicityStart());
+            TextField startMultiplicityField = new TextField(relationshipLine.getMultiplicityStart());
             startMultiplicityField.setPromptText("Start Multiplicity");
-            startMultiplicityField.setOnAction(e -> relationship.setMultiplicityStart(startMultiplicityField.getText()));
+            startMultiplicityField.setOnAction(e -> {
+                String newStartMultiplicity = startMultiplicityField.getText();
+                relationshipLine.setMultiplicityStart(newStartMultiplicity);
+                relationship.sourceMultiplicity = newStartMultiplicity; // Update model
+                controller.relationshipMapping.put(relationshipLine, relationship); // Update map
+            });
 
-            TextField endMultiplicityField = new TextField(relationship.getMultiplicityEnd());
+            TextField endMultiplicityField = new TextField(relationshipLine.getMultiplicityEnd());
             endMultiplicityField.setPromptText("End Multiplicity");
-            endMultiplicityField.setOnAction(e -> relationship.setMultiplicityEnd(endMultiplicityField.getText()));
+            endMultiplicityField.setOnAction(e -> {
+                String newEndMultiplicity = endMultiplicityField.getText();
+                relationshipLine.setMultiplicityEnd(newEndMultiplicity);
+                relationship.targetMultiplicity = newEndMultiplicity; // Update model
+                controller.relationshipMapping.put(relationshipLine, relationship); // Update map
+            });
 
             rightSideToolbar.getChildren().addAll(
                     new Label("Relationship Details"),
@@ -351,7 +440,11 @@ public class MainView extends BorderPane {
                     new Label("Start Multiplicity:"), startMultiplicityField,
                     new Label("End Multiplicity:"), endMultiplicityField
             );
+
+            System.out.println(relationship.relationshipLabel+relationship.targetMultiplicity);
         }
+
+
     }
 
     public void handleSelection(Object selectedItem) {
@@ -377,19 +470,6 @@ public class MainView extends BorderPane {
         this.relationshipMode = enabled;
         if (!enabled) {
             packageDiagramPane.clearSelectedPackage(); // Clear selection when exiting relationship mode
-        }
-    }
-
-    public void handlePackageBoxClick(PackageBox clickedPackageBox) {
-        if (!relationshipMode) return;
-
-        if (sourcePackageBox == null) {
-            sourcePackageBox = clickedPackageBox;
-            sourcePackageBox.setStyle("-fx-border-color: blue;");
-        } else {
-            packageDiagramPane.addRelationshipLine(sourcePackageBox.getPackageComponent(), clickedPackageBox.getPackageComponent(), "Dependency");
-            sourcePackageBox.setStyle("-fx-border-color: black;");
-            sourcePackageBox = null;
         }
     }
 
@@ -429,20 +509,21 @@ public class MainView extends BorderPane {
         }
 
         if (sourceClassBox == null && sourceInterfaceBox == null) {
+            // No source selected, set the clicked InterfaceBox as the source
             sourceInterfaceBox = clickedInterfaceBox;
             clickedInterfaceBox.setStyle("-fx-border-color: blue;"); // Highlight the source
             System.out.println("Source interface box is selected: " + clickedInterfaceBox.getInterfaceDiagram().getTitle());
-        } else {
-            if (sourceClassBox != null) {
-                controller.createRelationship(classDiagramPane, sourceClassBox, "right", clickedInterfaceBox, "left", selectedRelationshipType);
-                sourceClassBox.setStyle("-fx-border-color: blue; -fx-padding: 5; -fx-background-color: #e0e0e0;"); // Reset style
-                sourceClassBox = null;
-            } else if (sourceInterfaceBox != null) {
-                //controller.createRelationship(classDiagramPane, sourceInterfaceBox, "right", clickedInterfaceBox, "left", selectedRelationshipType);
-                sourceInterfaceBox.setStyle(""); // Reset style
-                sourceInterfaceBox = null;
-            }
+        } else if (sourceClassBox != null) {
+            // If a ClassBox is selected as source, create relationship with InterfaceBox as target
+            controller.createRelationship(classDiagramPane, sourceClassBox, "right", clickedInterfaceBox, "left", selectedRelationshipType);
+            sourceClassBox.setStyle("-fx-border-color: blue; -fx-padding: 5; -fx-background-color: #e0e0e0;"); // Reset style
+            sourceClassBox = null; // Clear source selection
             System.out.println("Relationship created with interface box as target.");
+        } else {
+            // If clicked InterfaceBox is the same as sourceInterfaceBox, clear selection
+            sourceInterfaceBox.setStyle(""); // Reset style
+            sourceInterfaceBox = null;
+            System.out.println("Source interface selection cleared.");
         }
     }
 

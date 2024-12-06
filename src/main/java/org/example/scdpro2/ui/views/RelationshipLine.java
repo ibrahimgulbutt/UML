@@ -4,17 +4,20 @@ import javafx.scene.Group;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Shape;
-import org.example.scdpro2.business.models.ClassDiagram;
+import org.example.scdpro2.business.models.BClassBox;
 import org.example.scdpro2.business.models.PackageComponent;
 
 public class RelationshipLine extends Group {
+
+    public enum RelationshipType {
+        ASSOCIATION, AGGREGATION, COMPOSITION, INHERITANCE
+    }
     private ClassBox target;
     private ClassBox source;
     private InterfaceBox targetinterface;
@@ -27,55 +30,13 @@ public class RelationshipLine extends Group {
     private Label targetMultiplicity; // Multiplicity for target end
     private MainView mainView;
 
-    public ClassBox getSource() {
-        return source;
-    }
-
-    public ClassBox getTarget() {
-        return target;
-    }
-
-    public Polyline getPolyline() {
-        return polyline;
-    }
-
-    public String getMultiplicityStart() {
-        return sourceMultiplicity.getText();
-    }
-
-    public void setMultiplicityStart(String text) {
-        sourceMultiplicity.setText(text);
-    }
-
-    public String getMultiplicityEnd() {
-        return targetMultiplicity.getText();
-    }
-
-    public void setMultiplicityEnd(String text) {
-        targetMultiplicity.setText(text);
-    }
-
-    public void setTitle(String text) {
-        relationshipLabel.setText(text);
-    }
-
-    public String getTitle() {
-        return relationshipLabel.getText();
-    }
-
-    public enum RelationshipType {
-        ASSOCIATION, AGGREGATION, COMPOSITION, INHERITANCE
-    }
-
     private Line line;
     private Shape endIndicator;
     private RelationshipType type;
 
-    private ClassDiagram sourceDiagram; // Source class diagram
-    private ClassDiagram targetDiagram; // Target class diagram
+    private BClassBox sourceDiagram; // Source class diagram
+    private BClassBox targetDiagram; // Target class diagram
 
-    private PackageComponent sourcePackage;
-    private PackageComponent targetPackage;
 
     private Polyline polyline;
     private int relationshipIndex;
@@ -131,7 +92,6 @@ public class RelationshipLine extends Group {
         updateRightAnglePath();
     }
 
-
     public RelationshipLine(InterfaceBox source, String sourceSide, ClassBox target, String targetSide, RelationshipType type, int sourceOffsetIndex, int targetOffsetIndex, int relationshipIndex) {
         this.sourceinterface = source;
         this.target = target;
@@ -160,17 +120,24 @@ public class RelationshipLine extends Group {
         target.layoutXProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
         target.layoutYProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
 
-        // Calculate initial path and position
-        updateRightAnglePath();
+        this.relationshipLabel = new Label("Line "+linenumber);
+        linenumber++;
 
-        // Add components to the Group
-        this.getChildren().addAll(clickOverlay, polyline, line);
+        // Initialize multiplicity labels
+        this.sourceMultiplicity = new Label("1");
+        this.targetMultiplicity = new Label("2");
+
+        // Add multiplicity labels and components to the group
+        this.getChildren().addAll(clickOverlay, polyline, line, sourceMultiplicity, targetMultiplicity,relationshipLabel);
         if (endIndicator != null) {
             this.getChildren().add(endIndicator); // Add the shape to the UI
         }
 
         // Enable mouse events for selection and deletion
         setupMouseEvents();
+
+        // Calculate initial path and position
+        updateRightAnglePath();
     }
 
     public RelationshipLine(ClassBox source, String sourceSide, InterfaceBox target, String targetSide, RelationshipType type, int sourceOffsetIndex, int targetOffsetIndex, int relationshipIndex) {
@@ -201,17 +168,64 @@ public class RelationshipLine extends Group {
         target.layoutXProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
         target.layoutYProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
 
-        // Calculate initial path and position
-        updateRightAnglePath();
+        this.relationshipLabel = new Label("Line "+linenumber);
+        linenumber++;
 
-        // Add components to the Group
-        this.getChildren().addAll(clickOverlay, polyline, line);
+        // Initialize multiplicity labels
+        this.sourceMultiplicity = new Label("1");
+        this.targetMultiplicity = new Label("2");
+
+        // Add multiplicity labels and components to the group
+        this.getChildren().addAll(clickOverlay, polyline, line, sourceMultiplicity, targetMultiplicity,relationshipLabel);
         if (endIndicator != null) {
             this.getChildren().add(endIndicator); // Add the shape to the UI
         }
 
         // Enable mouse events for selection and deletion
         setupMouseEvents();
+
+        // Calculate initial path and position
+        updateRightAnglePath();
+    }
+
+    public String getRelationshipLabel() {
+        return relationshipLabel.getText();
+    }
+
+    public ClassBox getSource() {
+        return source;
+    }
+
+    public ClassBox getTarget() {
+        return target;
+    }
+
+    public Polyline getPolyline() {
+        return polyline;
+    }
+
+    public String getMultiplicityStart() {
+        return sourceMultiplicity.getText();
+    }
+
+    public void setMultiplicityStart(String text) {
+        sourceMultiplicity.setText(text);
+    }
+
+    public String getMultiplicityEnd() {
+        return targetMultiplicity.getText();
+    }
+
+    public void setMultiplicityEnd(String text) {
+        targetMultiplicity.setText(text);
+    }
+
+    public void setTitle(String text) {
+        relationshipLabel.setText(text);
+    }
+
+    public String getTitle() {
+        return relationshipLabel.getText();
     }
 
     public void setMainView(MainView mainView) {
@@ -219,41 +233,44 @@ public class RelationshipLine extends Group {
     }
 
     private void updateRightAnglePath() {
+        // Ensure neither source nor target are null, and polyline is initialized
         if ((source == null && sourceinterface == null) || (target == null && targetinterface == null) || polyline == null)
             return;
 
         double offset = 20 * relationshipIndex; // Offset for multiple relationships
 
-        // Determine source and target coordinates based on type
+        // Initialize coordinates
         double sourceX, sourceY, sourceWidth, sourceHeight;
         double targetX, targetY, targetWidth, targetHeight;
 
-        double startX, startY, endX, endY;
-
+        // Use source or sourceinterface depending on availability
         if (source != null) {
             sourceX = source.getLayoutX();
             sourceY = source.getLayoutY();
             sourceWidth = source.getWidth();
             sourceHeight = source.getHeight();
-        } else {
+        } else {  // If source is an InterfaceBox
             sourceX = sourceinterface.getLayoutX();
             sourceY = sourceinterface.getLayoutY();
             sourceWidth = sourceinterface.getWidth();
             sourceHeight = sourceinterface.getHeight();
         }
 
+        // Use target or targetinterface depending on availability
         if (target != null) {
             targetX = target.getLayoutX();
             targetY = target.getLayoutY();
             targetWidth = target.getWidth();
             targetHeight = target.getHeight();
-        } else {
+        } else {  // If target is an InterfaceBox
             targetX = targetinterface.getLayoutX();
             targetY = targetinterface.getLayoutY();
             targetWidth = targetinterface.getWidth();
             targetHeight = targetinterface.getHeight();
         }
 
+        // Determine connection direction (horizontal or vertical)
+        double startX, startY, endX, endY;
 
         if (Math.abs(targetX - sourceX) > Math.abs(targetY - sourceY)) {
             // Horizontal connection
@@ -287,7 +304,6 @@ public class RelationshipLine extends Group {
         line.setEndX(endX);
         line.setEndY(endY);
 
-
         double midX = startX;
         double midY = endY;
 
@@ -299,13 +315,30 @@ public class RelationshipLine extends Group {
         clickOverlay.setStroke(Color.TRANSPARENT);
         line.setStroke(Color.TRANSPARENT);
 
-        // Update the position of multiplicity labels
-        sourceMultiplicity.setLayoutX(startX - 15); // Adjust X offset for better placement
-        sourceMultiplicity.setLayoutY(startY - 10); // Adjust Y offset for better placement
+        // Update relationship label position
+        if (relationshipLabel != null) {
+            relationshipLabel.setLayoutX(midX - relationshipLabel.getWidth() / 2); // Center horizontally
+            relationshipLabel.setLayoutY(midY - 15); // Place slightly above the line
+        }
 
-        targetMultiplicity.setLayoutX(endX + 5); // Adjust X offset for better placement
-        targetMultiplicity.setLayoutY(endY - 10); // Adjust Y offset for better placement
+        // Update the position of multiplicity labels
+        if (sourceMultiplicity != null) {
+            sourceMultiplicity.setLayoutX(startX - 15);  // Adjust X offset for better placement
+            sourceMultiplicity.setLayoutY(startY - 10);  // Adjust Y offset for better placement
+            System.out.println("Source is not null");
+        } else {
+            System.out.println("Source is null");
+        }
+
+        if (targetMultiplicity != null) {
+            targetMultiplicity.setLayoutX(endX + 5);  // Adjust X offset for better placement
+            targetMultiplicity.setLayoutY(endY - 10);  // Adjust Y offset for better placement
+            System.out.println("Target is not null");
+        } else {
+            System.out.println("Target is null");
+        }
     }
+
 
     private double[] centerEndIndicator(double endX, double endY, double startX, double startY) {
         double angle = Math.atan2(endY - startY, endX - startX);
@@ -372,62 +405,6 @@ public class RelationshipLine extends Group {
         }
     }
 
-    public void updateStartCoordinates(double startX, double startY) {
-        line.setStartX(startX);
-        line.setStartY(startY);
-    }
-
-    public void updateEndCoordinates(double endX, double endY) {
-        line.setEndX(endX);
-        line.setEndY(endY);
-
-        if (endIndicator instanceof Polygon polygon) {
-            double[] offset = calculateOffset(line.getStartX(), line.getStartY(), endX, endY, 20);
-            polygon.setLayoutX(offset[0]);
-            polygon.setLayoutY(offset[1]);
-            polygon.setRotate(calculateRotationAngle(line.getStartX(), line.getStartY(), endX, endY));
-        }
-    }
-
-    public void updatepackPosition(double startX, double startY, double endX, double endY) {
-        line.setStartX(startX);
-        line.setStartY(startY);
-        line.setEndX(endX);
-        line.setEndY(endY);
-
-        // Position the label at the midpoint of the line
-        double midX = (startX + endX) / 2;
-        double midY = (startY + endY) / 2 - 15; // Slightly above the line
-        relationshipLabel.setLayoutX(midX - relationshipLabel.getWidth() / 2);
-        relationshipLabel.setLayoutY(midY - relationshipLabel.getHeight() / 2);
-    }
-
-    public void updatePosition(double startX, double startY, double endX, double endY) {
-        line.setStartX(startX);
-        line.setStartY(startY);
-        line.setEndX(endX);
-        line.setEndY(endY);
-
-        if (endIndicator instanceof Polygon polygon) {
-            double[] offset = calculateOffset(startX, startY, endX, endY, 20); // Adjust as needed
-            polygon.setLayoutX(offset[0]);
-            polygon.setLayoutY(offset[1]);
-            polygon.setRotate(calculateRotationAngle(startX, startY, endX, endY));
-        }
-    }
-
-    public Label getRelationshipLabel() {
-        return relationshipLabel;
-    }
-
-    public PackageComponent getSourcePackage() {
-        return sourcePackage;
-    }
-
-    public PackageComponent getTargetPackage() {
-        return targetPackage;
-    }
-
     private Shape createEndIndicator(RelationshipType type) {
         switch (type) {
             case INHERITANCE: // Triangle arrowhead
@@ -469,13 +446,6 @@ public class RelationshipLine extends Group {
         }
     }
 
-
-
-    private double[] calculateOffset(double startX, double startY, double endX, double endY, double distance) {
-        double angle = Math.atan2(endY - startY, endX - startX);
-        return new double[]{endX - distance * Math.cos(angle), endY - distance * Math.sin(angle)};
-    }
-
     private double calculateRotationAngle(double startX, double startY, double endX, double endY) {
         return Math.toDegrees(Math.atan2(endY - startY, endX - startX));
     }
@@ -488,44 +458,16 @@ public class RelationshipLine extends Group {
         return endIndicator;
     }
 
-    public ClassDiagram getSourceDiagram() {
+    public BClassBox getSourceDiagram() {
         return sourceDiagram;
     }
 
-    public ClassDiagram getTargetDiagram() {
+    public BClassBox getTargetDiagram() {
         return targetDiagram;
     }
 
     public RelationshipType getType() {
         return type;
-    }
-
-    public void enableSelectionAndDeletion(ClassDiagramPane parentPane) {
-        line.setOnMouseClicked(event -> {
-            highlightLine(true);
-            showDeleteConfirmation(parentPane);
-        });
-
-        if (endIndicator != null) {
-            endIndicator.setOnMouseClicked(event -> {
-                highlightLine(true);
-                showDeleteConfirmation(parentPane);
-            });
-        }
-    }
-
-    private void highlightLine(boolean highlight) {
-        line.setStroke(highlight ? Color.RED : Color.BLACK);
-    }
-
-    private void showDeleteConfirmation(ClassDiagramPane parentPane) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete this relationship?", ButtonType.YES, ButtonType.NO);
-        alert.showAndWait();
-        if (alert.getResult() == ButtonType.YES) {
-            parentPane.removeRelationshipLine(this);
-        } else {
-            highlightLine(false);
-        }
     }
 
     public boolean isConnectedTo(ClassBox classBox) {
@@ -534,50 +476,6 @@ public class RelationshipLine extends Group {
 
     public boolean isConnectedTo(InterfaceBox interfaceBox) {
         return sourceDiagram.equals(interfaceBox.getInterfaceDiagram()) || targetDiagram.equals(interfaceBox.getInterfaceDiagram());
-    }
-
-    public void setType(RelationshipType type) {
-        this.type = type;
-    }
-
-    public RelationshipLine(ClassDiagram sourceDiagram, ClassDiagram targetDiagram,
-                            RelationshipType type, double startX, double startY,
-                            double endX, double endY) {
-        this.sourceDiagram = sourceDiagram;
-        this.targetDiagram = targetDiagram;
-        this.type = type;
-
-
-        this.polyline = new Polyline();
-
-        this.line = new Line(startX, startY, endX, endY);
-        this.line.setStrokeWidth(2);
-        this.line.setStroke(Color.BLACK);
-        this.endIndicator = createEndIndicator(type);
-
-
-        updatePosition(startX, startY, endX, endY);
-
-        this.getChildren().add(line); // Add the line to the Group
-        System.out.println("Start: (" + startX + ", " + startY + "), End: (" + endX + ", " + endY + ")");
-
-    }
-
-    public RelationshipLine(PackageComponent sourcePackage, PackageComponent targetPackage,
-                            double startX, double startY, double endX, double endY, String title) {
-        this.sourcePackage = sourcePackage;
-        this.targetPackage = targetPackage;
-
-        // Create the line
-        this.line = new Line(startX, startY, endX, endY);
-        this.line.setStrokeWidth(2);
-        this.line.setStroke(Color.BLACK);
-
-        updateRightAnglePath();
-        // Create the label for the title above the line
-        this.relationshipLabel = new Label(title);
-        this.relationshipLabel.setStyle("-fx-font-size: 12; -fx-background-color: white;");
-        updatepackPosition(startX, startY, endX, endY);
     }
 
 }

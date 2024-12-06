@@ -4,12 +4,11 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.business.models.Project;
 import org.example.scdpro2.ui.controllers.MainController;
-import org.example.scdpro2.business.models.ClassDiagram;
+import org.example.scdpro2.business.models.BClassBox;
 import org.example.scdpro2.business.services.DiagramService;
 import org.example.scdpro2.ui.views.RelationshipLine.RelationshipType;
 
@@ -25,7 +24,7 @@ public class ClassDiagramPane extends Pane {
     private DiagramService diagramService;
     private RelationshipType currentRelationshipType; // Added variable for relationship type
     private final List<RelationshipLine> relationships = new ArrayList<>();
-    private final Map<ClassDiagram, Node> diagramToUIMap = new HashMap<>();
+    private final Map<BClassBox, Node> diagramToUIMap = new HashMap<>();
 
     private final MainView mainView;
     public double zoomFactor = 1.0; // Default zoom level
@@ -74,6 +73,11 @@ public class ClassDiagramPane extends Pane {
         getChildren().add(zoomControls);
     }
 
+    public List<RelationshipLine> getRelationships() {
+        return relationships;
+    }
+
+
 
     public void highlightClassBox(String className) {
         ClassBox classBox = getClassBoxByTitle(className);
@@ -104,6 +108,18 @@ public class ClassDiagramPane extends Pane {
         return null;
     }
 
+    public InterfaceBox getInterfaceBoxByTitle(String className) {
+        for (Node node : getChildren()) {
+            if (node instanceof InterfaceBox) {
+                InterfaceBox classBox = (InterfaceBox) node;
+                if (classBox.getClassName().equals(className)) {
+                    return classBox;
+                }
+            }
+        }
+        System.out.println("Error: No ClassBox found with the name \"" + className + "\".");
+        return null;
+    }
 
     public void handleClassBoxClick(ClassBox clickedClassBox, MouseEvent event) {
         mainView.handleClassBoxClick(clickedClassBox);
@@ -142,6 +158,20 @@ public class ClassDiagramPane extends Pane {
             }
         });
     }
+    public void registerInterfaceBox(InterfaceBox interfaceBox) {
+        interfaceBox.setOnMouseClicked(event -> {
+            System.out.println("InterfaceBox clicked: " + interfaceBox.getInterfaceDiagram().getTitle());
+            if (relationshipModeEnabled) {
+                if (mainView != null) {
+                    mainView.handleInterfaceBoxClick(interfaceBox);
+                } else {
+                    System.out.println("Error: MainView reference is null.");
+                }
+            } else {
+                System.out.println("Relationship mode is not enabled.");
+            }
+        });
+    }
 
     public void addClassBox(ClassBox classBox) {
         if (!getChildren().contains(classBox)) { // Prevent duplicate addition
@@ -156,6 +186,19 @@ public class ClassDiagramPane extends Pane {
             System.out.println("Warning: ClassBox already exists in diagramPane.");
         }
     }
+    public void addInterfaceBox(InterfaceBox interfaceBox) {
+        if (!getChildren().contains(interfaceBox)) { // Prevent duplicate addition
+            registerInterfaceBox(interfaceBox);
+            getChildren().add(interfaceBox);
+            diagramToUIMap.put(interfaceBox.getInterfaceDiagram(), interfaceBox); // Map ClassDiagram to InterfaceBox
+            if (mainView != null) {
+                mainView.addClassToList(interfaceBox.getClassName());
+            }
+        } else {
+            System.out.println("Warning: InterfaceBox already exists in diagramPane.");
+        }
+    }
+
 
     // Retrieve all relationship lines connected to a given ClassBox or InterfaceBox
     public List<RelationshipLine> getRelationshipLinesConnectedTo(Object box) {
@@ -181,137 +224,23 @@ public class ClassDiagramPane extends Pane {
     }
 
 
-
-    public void addRelationship(ClassBox source, ClassBox target, RelationshipLine.RelationshipType type) {
-        System.out.println("Creating relationship: Source = " + source.getClassDiagram().getTitle() +
-                ", Target = " + target.getClassDiagram().getTitle() + ", Type = " + type);
-
-        addRelationshipCommon(source.getLayoutX(), source.getLayoutY(), source.getWidth(), source.getHeight(),
-                target.getLayoutX(), target.getLayoutY(), target.getWidth(), target.getHeight(),
-                source.getClassDiagram(), target.getClassDiagram(), type);
-    }
-
-
-    public void addRelationship(ClassBox source, InterfaceBox target, RelationshipType type) {
-        addRelationshipCommon(source.getLayoutX(), source.getLayoutY(), source.getWidth(), source.getHeight(),
-                target.getLayoutX(), target.getLayoutY(), target.getWidth(), target.getHeight(),
-                source.getClassDiagram(), target.getInterfaceDiagram(), type);
-    }
-
-    public void addRelationship(InterfaceBox source, ClassBox target, RelationshipType type) {
-        addRelationshipCommon(source.getLayoutX(), source.getLayoutY(), source.getWidth(), source.getHeight(),
-                target.getLayoutX(), target.getLayoutY(), target.getWidth(), target.getHeight(),
-                source.getInterfaceDiagram(), target.getClassDiagram(), type);
-    }
-    public void addRelationship(InterfaceBox source, InterfaceBox target, RelationshipType type) {
-        addRelationshipCommon(source.getLayoutX(), source.getLayoutY(), source.getWidth(), source.getHeight(),
-                target.getLayoutX(), target.getLayoutY(), target.getWidth(), target.getHeight(),
-                source.getInterfaceDiagram(), target.getInterfaceDiagram(), type);
-    }
-
-    // Common logic for creating a relationship
-    private void addRelationshipCommon(double startX, double startY, double sourceWidth, double sourceHeight,
-                                       double endX, double endY, double targetWidth, double targetHeight,
-                                       ClassDiagram sourceDiagram, ClassDiagram targetDiagram,
-                                       RelationshipType type) {
-        Node sourceNode = diagramToUIMap.get(sourceDiagram);
-        Node targetNode = diagramToUIMap.get(targetDiagram);
-
-        if (sourceNode == null || targetNode == null) {
-            System.out.println("Error: Unable to find UI component for source or target diagram.");
-            return;
-        }
-
-        double lineStartX = startX + sourceWidth / 2;
-        double lineStartY = startY + sourceHeight / 2;
-        double lineEndX = endX + targetWidth / 2;
-        double lineEndY = endY + targetHeight / 2;
-
-        RelationshipLine relationship = new RelationshipLine(sourceDiagram, targetDiagram, type, lineStartX, lineStartY, lineEndX, lineEndY);
-        relationship.enableSelectionAndDeletion(this);
-        relationships.add(relationship);
-        getChildren().addAll(relationship.getLine());
-        if (relationship.getEndIndicator() != null) {
-            getChildren().add(relationship.getEndIndicator());
-        }
-
-        // Attach listeners for dynamic updates
-        attachDynamicListeners(sourceNode, targetNode, relationship, sourceWidth, sourceHeight, targetWidth, targetHeight);
-    }
-
-    private void attachDynamicListeners(Node sourceNode, Node targetNode, RelationshipLine relationship,
-                                        double sourceWidth, double sourceHeight,
-                                        double targetWidth, double targetHeight) {
-        sourceNode.layoutXProperty().addListener((observable, oldValue, newValue) -> {
-            relationship.updateStartCoordinates(
-                    sourceNode.getLayoutX() + sourceWidth / 2,
-                    sourceNode.getLayoutY() + sourceHeight / 2);
-        });
-        sourceNode.layoutYProperty().addListener((observable, oldValue, newValue) -> {
-            relationship.updateStartCoordinates(
-                    sourceNode.getLayoutX() + sourceWidth / 2,
-                    sourceNode.getLayoutY() + sourceHeight / 2);
-        });
-        targetNode.layoutXProperty().addListener((observable, oldValue, newValue) -> {
-            relationship.updateEndCoordinates(
-                    targetNode.getLayoutX() + targetWidth / 2,
-                    targetNode.getLayoutY() + targetHeight / 2);
-        });
-        targetNode.layoutYProperty().addListener((observable, oldValue, newValue) -> {
-            relationship.updateEndCoordinates(
-                    targetNode.getLayoutX() + targetWidth / 2,
-                    targetNode.getLayoutY() + targetHeight / 2);
-        });
-    }
-
-
-    public boolean isRelationshipModeEnabled() {
-        return relationshipModeEnabled;
-    }
-    public void registerInterfaceBox(InterfaceBox interfaceBox) {
-        interfaceBox.setOnMouseClicked(event -> {
-            System.out.println("InterfaceBox clicked: " + interfaceBox.getInterfaceDiagram().getTitle());
-            if (relationshipModeEnabled) {
-                if (mainView != null) {
-                    mainView.handleInterfaceBoxClick(interfaceBox);
-                } else {
-                    System.out.println("Error: MainView reference is null.");
-                }
-            } else {
-                System.out.println("Relationship mode is not enabled.");
-            }
-        });
-    }
-
-
-    public void addInterfaceBox(InterfaceBox interfaceBox) {
-        if (!getChildren().contains(interfaceBox)) { // Prevent duplicate addition
-            registerInterfaceBox(interfaceBox);
-            getChildren().add(interfaceBox);
-            diagramToUIMap.put(interfaceBox.getInterfaceDiagram(), interfaceBox); // Map ClassDiagram to InterfaceBox
-        } else {
-            System.out.println("Warning: InterfaceBox already exists in diagramPane.");
-        }
-    }
-
     public void clearDiagrams() {
         getChildren().clear();
     }
 
-    public void loadDiagramsFromProject(Project project) {
-        clearDiagrams();
-        for (Diagram diagram : project.getDiagrams()) {
-            if (diagram instanceof ClassDiagram classDiagram) {
-                ClassBox classBox = new ClassBox(classDiagram, controller, this);
-                addClassBox(classBox);
-                getChildren().add(classBox);
-            }
-        }
-    }
 
-    public ClassBox getClassBoxForDiagram(ClassDiagram diagram) {
+    public ClassBox getClassBoxForDiagram(BClassBox diagram) {
         for (Node node : getChildren()) {
             if (node instanceof ClassBox classBox && classBox.getClassDiagram().equals(diagram)) {
+                return classBox;
+            }
+        }
+        return null;
+    }
+
+    public InterfaceBox getInterfaceBoxForDiagram(BClassBox diagram) {
+        for (Node node : getChildren()) {
+            if (node instanceof InterfaceBox classBox && classBox.getClassDiagram().equals(diagram)) {
                 return classBox;
             }
         }
