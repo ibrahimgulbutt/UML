@@ -2,11 +2,20 @@ package org.example.scdpro2.ui.controllers;
 
 import javafx.stage.FileChooser;
 import org.example.scdpro2.business.models.*;
+import org.example.scdpro2.business.models.BClassDiagarm.BClassBox;
+import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
+import org.example.scdpro2.business.models.BPackageDiagarm.PackageComponent;
+import org.example.scdpro2.business.models.BPackageDiagarm.PackageDiagram;
 import org.example.scdpro2.business.services.DiagramService;
 import org.example.scdpro2.data.dao.ProjectDAOImpl;
 import org.example.scdpro2.business.services.ProjectService;
 import org.example.scdpro2.business.services.CodeGenerationService;
 import org.example.scdpro2.ui.views.*;
+import org.example.scdpro2.ui.views.ClassDiagram.ClassBox;
+import org.example.scdpro2.ui.views.ClassDiagram.ClassDiagramPane;
+import org.example.scdpro2.ui.views.ClassDiagram.RelationshipLine;
+import org.example.scdpro2.ui.views.PackageDiagram.PackageBox;
+import org.example.scdpro2.ui.views.PackageDiagram.PackageDiagramPane;
 
 import java.io.*;
 import java.util.ArrayList;

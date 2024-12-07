@@ -1,16 +1,15 @@
-package org.example.scdpro2.ui.views;
+package org.example.scdpro2.ui.views.ClassDiagram;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import org.example.scdpro2.business.models.Diagram;
-import org.example.scdpro2.business.models.Project;
 import org.example.scdpro2.ui.controllers.MainController;
-import org.example.scdpro2.business.models.BClassBox;
+import org.example.scdpro2.business.models.BClassDiagarm.BClassBox;
 import org.example.scdpro2.business.services.DiagramService;
-import org.example.scdpro2.ui.views.RelationshipLine.RelationshipType;
+import org.example.scdpro2.ui.views.MainView;
+import org.example.scdpro2.ui.views.ClassDiagram.RelationshipLine.RelationshipType;
 
 import java.util.ArrayList;
 import java.util.HashMap;

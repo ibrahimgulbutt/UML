@@ -1,15 +1,14 @@
-package org.example.scdpro2.ui.views;
+package org.example.scdpro2.ui.views.ClassDiagram;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.Cursor;
 import javafx.geometry.Pos;
-import org.example.scdpro2.business.models.AttributeComponent;
-import org.example.scdpro2.business.models.BClassBox;
-import org.example.scdpro2.business.models.OperationComponent;
+import org.example.scdpro2.business.models.BClassDiagarm.AttributeComponent;
+import org.example.scdpro2.business.models.BClassDiagarm.BClassBox;
+import org.example.scdpro2.business.models.BClassDiagarm.OperationComponent;
 import org.example.scdpro2.ui.controllers.MainController;
 
 import java.util.ArrayList;
@@ -36,7 +35,7 @@ public class ClassBox extends BorderPane {
     private String resizeDirection = ""; // Tracks the direction of resizing
     private String Type;
 
-    public ClassBox(BClassBox BClassBox, MainController controller, ClassDiagramPane diagramPane,String Type) {
+    public ClassBox(BClassBox BClassBox, MainController controller, ClassDiagramPane diagramPane, String Type) {
         this.BClassBox = BClassBox;
         this.controller = controller;
         this.Type=Type;

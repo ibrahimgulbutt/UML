@@ -1,6 +1,4 @@
-package org.example.scdpro2.business.models;
-
-import org.example.scdpro2.business.models.ModelComponent;
+package org.example.scdpro2.business.models.BClassDiagarm;
 
 import java.io.Serializable;
 

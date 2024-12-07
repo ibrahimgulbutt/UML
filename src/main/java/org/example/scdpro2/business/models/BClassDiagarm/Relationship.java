@@ -1,6 +1,6 @@
-package org.example.scdpro2.business.models;
+package org.example.scdpro2.business.models.BClassDiagarm;
 
-import org.example.scdpro2.ui.views.RelationshipLine.RelationshipType;
+import org.example.scdpro2.ui.views.ClassDiagram.RelationshipLine.RelationshipType;
 
 import java.io.Serializable;
 

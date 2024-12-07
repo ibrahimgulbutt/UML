@@ -1,5 +1,7 @@
-package org.example.scdpro2.business.models;
+package org.example.scdpro2.business.models.BPackageDiagarm;
 
+import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
+import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.business.models.DiagramType;
 
 import java.io.Serializable;

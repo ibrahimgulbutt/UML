@@ -1,7 +1,6 @@
 package org.example.scdpro2.business.models;
 
-import org.example.scdpro2.business.models.Diagram;
-import org.example.scdpro2.business.models.Relationship;
+import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
 
 import java.io.Serializable;
 import java.util.ArrayList;

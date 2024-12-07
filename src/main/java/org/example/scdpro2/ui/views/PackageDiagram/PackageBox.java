@@ -1,18 +1,14 @@
-package org.example.scdpro2.ui.views;
+package org.example.scdpro2.ui.views.PackageDiagram;
 
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import org.example.scdpro2.business.models.PackageComponent;
+import org.example.scdpro2.business.models.BPackageDiagarm.PackageComponent;
 import org.example.scdpro2.ui.controllers.MainController;
-import org.example.scdpro2.ui.views.*;
 
 import java.util.ArrayList;
 import java.util.List;

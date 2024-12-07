@@ -1,7 +1,11 @@
 package org.example.scdpro2.business.services;
 
 import org.example.scdpro2.business.models.*;
-import org.example.scdpro2.ui.views.RelationshipLine;
+import org.example.scdpro2.business.models.BClassDiagarm.AttributeComponent;
+import org.example.scdpro2.business.models.BClassDiagarm.BClassBox;
+import org.example.scdpro2.business.models.BClassDiagarm.OperationComponent;
+import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
+import org.example.scdpro2.ui.views.ClassDiagram.RelationshipLine;
 
 import java.util.ArrayList;
 import java.util.List;

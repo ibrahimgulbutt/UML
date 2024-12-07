@@ -1,4 +1,4 @@
-package org.example.scdpro2.ui.views;
+package org.example.scdpro2.ui.views.PackageDiagram;
 
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -11,8 +11,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 
 public class PackageClassBox extends BorderPane {
     private double offsetX, offsetY;

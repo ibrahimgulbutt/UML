@@ -1,14 +1,15 @@
-package org.example.scdpro2.ui.views;
+package org.example.scdpro2.ui.views.PackageDiagram;
 
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.Pane;
-import org.example.scdpro2.business.models.PackageComponent;
-import org.example.scdpro2.business.models.PackageDiagram;
+import org.example.scdpro2.business.models.BPackageDiagarm.PackageComponent;
+import org.example.scdpro2.business.models.BPackageDiagarm.PackageDiagram;
 import org.example.scdpro2.business.models.Project;
 import org.example.scdpro2.business.services.DiagramService;
 import org.example.scdpro2.ui.controllers.MainController;
+import org.example.scdpro2.ui.views.MainView;
 
 import java.util.ArrayList;
 import java.util.HashMap;

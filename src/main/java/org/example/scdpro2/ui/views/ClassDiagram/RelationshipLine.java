@@ -1,4 +1,4 @@
-package org.example.scdpro2.ui.views;
+package org.example.scdpro2.ui.views.ClassDiagram;
 
 import javafx.scene.Group;
 import javafx.scene.control.Alert;
@@ -10,8 +10,8 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
 import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Shape;
-import org.example.scdpro2.business.models.BClassBox;
-import org.example.scdpro2.business.models.PackageComponent;
+import org.example.scdpro2.business.models.BClassDiagarm.BClassBox;
+import org.example.scdpro2.ui.views.MainView;
 
 public class RelationshipLine extends Group {
 

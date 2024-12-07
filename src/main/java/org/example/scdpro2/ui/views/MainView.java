@@ -2,7 +2,6 @@ package org.example.scdpro2.ui.views;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.*;
@@ -13,21 +12,18 @@ import javafx.stage.FileChooser;
 import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.ui.controllers.MainController;
 import org.example.scdpro2.business.services.DiagramService;
-import org.example.scdpro2.ui.views.RelationshipLine.RelationshipType;
+import org.example.scdpro2.ui.views.ClassDiagram.ClassBox;
+import org.example.scdpro2.ui.views.ClassDiagram.ClassDiagramPane;
+import org.example.scdpro2.ui.views.ClassDiagram.RelationshipLine;
+import org.example.scdpro2.ui.views.ClassDiagram.RelationshipLine.RelationshipType;
+import org.example.scdpro2.ui.views.PackageDiagram.PackageBox;
+import org.example.scdpro2.ui.views.PackageDiagram.PackageDiagramPane;
 import org.kordamp.bootstrapfx.BootstrapFX;
-import org.example.scdpro2.business.models.Relationship;
+import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
 
-import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.SnapshotParameters;
-import javafx.scene.image.WritableImage;
-import javafx.stage.FileChooser;
 
 import javax.imageio.ImageIO;
-import java.io.File;
-import java.io.IOException;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
@@ -70,6 +66,7 @@ public class MainView extends BorderPane {
 
         classListView = new ListView<>(); // Initialize dynamic list
         classListView.setPrefWidth(200); // Optional: Set a preferred width
+        classListView.setPrefHeight(1000);
 
         // Initialize the projectExplorer
         this.projectExplorer = createProjectExplorer();
@@ -98,6 +95,11 @@ public class MainView extends BorderPane {
         toolbar.setSpacing(10);
         toolbar.setStyle("-fx-background-color: #f8f9fa;"); // Light grey background similar to Bootstrap
 
+        // Set a fixed width for the toolbar
+        toolbar.setPrefWidth(200); // Adjust width as needed
+        toolbar.setMinWidth(200);
+        toolbar.setMaxWidth(200);
+
         // Title with enhanced styling
         Label title = new Label("Details");
         title.getStyleClass().add("h4"); // Bootstrap's heading class for a larger, bold title
@@ -106,10 +108,10 @@ public class MainView extends BorderPane {
         // Adding the title to the toolbar
         toolbar.getChildren().add(title);
 
-        // Optionally, you can add more content here (buttons, text fields, etc.)
-
         return toolbar;
     }
+
+
     public void updateRightSideToolbar(Object selectedItem) {
         // Clear previous content
         rightSideToolbar.getChildren().clear();
@@ -125,9 +127,19 @@ public class MainView extends BorderPane {
             scrollPane.setFitToWidth(true);
             scrollPane.setStyle("-fx-background: #f8f9fa; -fx-padding: 10;");
 
+            // Set fixed width for the scroll pane
+            scrollPane.setPrefWidth(280); // Slightly less than the toolbar width
+            scrollPane.setMinWidth(280);
+            scrollPane.setMaxWidth(280);
+
+
             // Create a TextFlow for syntax-highlighted code
             TextFlow codeFlow = new TextFlow();
             codeFlow.setStyle("-fx-font-family: 'Courier New', monospace; -fx-font-size: 14px; -fx-line-spacing: 1.2;");
+
+            // Optional: Ensure the TextFlow does not expand beyond the toolbar width
+            codeFlow.setPrefWidth(280); // Match ScrollPane width
+
 
             // Add each line of the code with syntax styling
             for (String line : code.split("\n")) {
@@ -217,9 +229,19 @@ public class MainView extends BorderPane {
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background: #f8f9fa; -fx-padding: 10;");
 
+        // Set fixed width for the scroll pane
+        scrollPane.setPrefWidth(280); // Slightly less than the toolbar width
+        scrollPane.setMinWidth(280);
+        scrollPane.setMaxWidth(280);
+
+
         // Create a TextFlow for better text styling
         TextFlow codeFlow = new TextFlow();
         codeFlow.setStyle("-fx-font-family: 'Courier New', monospace; -fx-font-size: 14px; -fx-line-spacing: 1.2;");
+
+        // Optional: Ensure the TextFlow does not expand beyond the toolbar width
+        codeFlow.setPrefWidth(280); // Match ScrollPane width
+
 
         // Add each line of the code with optional styling for syntax
         for (String line : code.split("\n")) {

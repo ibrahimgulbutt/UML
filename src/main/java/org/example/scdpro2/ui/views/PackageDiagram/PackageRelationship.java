@@ -1,4 +1,4 @@
-package org.example.scdpro2.ui.views;
+package org.example.scdpro2.ui.views.PackageDiagram;
 
 import javafx.geometry.Point2D;
 import javafx.scene.control.*;
