@@ -71,11 +71,11 @@ public class RelationshipLine extends Group {
         target.layoutXProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
         target.layoutYProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
 
-        this.relationshipLabel = new Label("Line "+linenumber);
+        this.relationshipLabel = new Label(" ");
         linenumber++;
         // Initialize multiplicity labels
-        this.sourceMultiplicity = new Label("1");
-        this.targetMultiplicity = new Label("2");
+        this.sourceMultiplicity = new Label(" ");
+        this.targetMultiplicity = new Label(" ");
 
         // Add multiplicity labels and components to the group
         this.getChildren().addAll(clickOverlay, polyline, line, sourceMultiplicity, targetMultiplicity,relationshipLabel);

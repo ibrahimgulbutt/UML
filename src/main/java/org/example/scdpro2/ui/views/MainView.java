@@ -7,6 +7,8 @@ import javafx.scene.control.*;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.*;
 import javafx.geometry.Insets;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.ui.controllers.MainController;
@@ -90,33 +92,188 @@ public class MainView extends BorderPane {
 
     }
 
-    // UI functions
-    private MenuBar createMenuBar() {
-        MenuBar menuBar = new MenuBar();
-        menuBar.getStyleClass().addAll("navbar", "navbar-light", "bg-light");
+    private VBox createRightSideToolbar() {
+        VBox toolbar = new VBox();
+        toolbar.setPadding(new Insets(10));
+        toolbar.setSpacing(10);
+        toolbar.setStyle("-fx-background-color: #f8f9fa;"); // Light grey background similar to Bootstrap
 
-        Menu projectMenu = new Menu("Project");
-        MenuItem saveProjectItem = new MenuItem("Save Project");
-        saveProjectItem.setOnAction(e -> controller.saveProject());
-        MenuItem loadProjectItem = new MenuItem("Load Project");
-        loadProjectItem.setOnAction(e -> controller.loadProject());
-        projectMenu.getItems().addAll(saveProjectItem, loadProjectItem);
+        // Title with enhanced styling
+        Label title = new Label("Details");
+        title.getStyleClass().add("h4"); // Bootstrap's heading class for a larger, bold title
+        title.setStyle("-fx-font-weight: bold; -fx-text-fill: #343a40;"); // Dark color for contrast
 
-        Menu diagramMenu = new Menu("Diagrams");
-        MenuItem addClassDiagramItem = new MenuItem("New Class Diagram");
-        addClassDiagramItem.setOnAction(e -> controller.addClassDiagram());
-        MenuItem addPackageDiagramItem = new MenuItem("New Package Diagram");
-        addPackageDiagramItem.setOnAction(e -> controller.addPackageDiagram());
-        diagramMenu.getItems().addAll(addClassDiagramItem, addPackageDiagramItem);
+        // Adding the title to the toolbar
+        toolbar.getChildren().add(title);
 
-        menuBar.getMenus().addAll(projectMenu, diagramMenu);
-        return menuBar;
+        // Optionally, you can add more content here (buttons, text fields, etc.)
+
+        return toolbar;
+    }
+    public void updateRightSideToolbar(Object selectedItem) {
+        // Clear previous content
+        rightSideToolbar.getChildren().clear();
+
+        if (selectedItem instanceof ClassBox) {
+            ClassBox classBox = (ClassBox) selectedItem;
+
+            // Generate the class code with syntax highlighting
+            String code = classBox.BClassBox.toCode();
+
+            // Create a ScrollPane for the code
+            ScrollPane scrollPane = new ScrollPane();
+            scrollPane.setFitToWidth(true);
+            scrollPane.setStyle("-fx-background: #f8f9fa; -fx-padding: 10;");
+
+            // Create a TextFlow for syntax-highlighted code
+            TextFlow codeFlow = new TextFlow();
+            codeFlow.setStyle("-fx-font-family: 'Courier New', monospace; -fx-font-size: 14px; -fx-line-spacing: 1.2;");
+
+            // Add each line of the code with syntax styling
+            for (String line : code.split("\n")) {
+                Text text = new Text(line + "\n");
+
+                if (line.trim().startsWith("class")) {
+                    text.setStyle("-fx-fill: #007bff;"); // Highlight class declaration
+                } else if (line.contains("{") || line.contains("}")) {
+                    text.setStyle("-fx-fill: #6c757d;"); // Braces in gray
+                } else {
+                    text.setStyle("-fx-fill: #343a40;"); // Regular text
+                }
+
+                codeFlow.getChildren().add(text);
+            }
+
+            // Set the codeFlow in the scrollPane
+            scrollPane.setContent(codeFlow);
+
+            // Add to the right-side toolbar
+            rightSideToolbar.getChildren().add(scrollPane);
+
+        } else if (selectedItem instanceof RelationshipLine) {
+            RelationshipLine relationshipLine = (RelationshipLine) selectedItem;
+            Relationship relationship = controller.relationshipMapping.get(relationshipLine);
+
+            // Adding a relationship details section with labels and input fields
+            Label relationshipDetailsLabel = new Label("Relationship Details");
+            relationshipDetailsLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #495057;");
+
+            Label titleLabel = new Label("Title:");
+            titleLabel.setStyle("-fx-text-fill: #6c757d;");
+
+            TextField titleField = new TextField(relationshipLine.getTitle());
+            titleField.setPromptText("Enter Relationship Title");
+            titleField.setStyle("-fx-padding: 5; -fx-border-color: #ced4da; -fx-border-radius: 4; -fx-background-radius: 4;");
+            titleField.setOnAction(e -> {
+                String newTitle = titleField.getText();
+                relationshipLine.setTitle(newTitle);
+                relationship.relationshipLabel = newTitle;
+                controller.relationshipMapping.put(relationshipLine, relationship);
+            });
+
+            Label startMultiplicityLabel = new Label("Start Multiplicity:");
+            startMultiplicityLabel.setStyle("-fx-text-fill: #6c757d;");
+
+            TextField startMultiplicityField = new TextField(relationshipLine.getMultiplicityStart());
+            startMultiplicityField.setPromptText("Start Multiplicity");
+            startMultiplicityField.setStyle("-fx-padding: 5; -fx-border-color: #ced4da; -fx-border-radius: 4; -fx-background-radius: 4;");
+            startMultiplicityField.setOnAction(e -> {
+                String newStartMultiplicity = startMultiplicityField.getText();
+                relationshipLine.setMultiplicityStart(newStartMultiplicity);
+                relationship.sourceMultiplicity = newStartMultiplicity;
+                controller.relationshipMapping.put(relationshipLine, relationship);
+            });
+
+            Label endMultiplicityLabel = new Label("End Multiplicity:");
+            endMultiplicityLabel.setStyle("-fx-text-fill: #6c757d;");
+
+            TextField endMultiplicityField = new TextField(relationshipLine.getMultiplicityEnd());
+            endMultiplicityField.setPromptText("End Multiplicity");
+            endMultiplicityField.setStyle("-fx-padding: 5; -fx-border-color: #ced4da; -fx-border-radius: 4; -fx-background-radius: 4;");
+            endMultiplicityField.setOnAction(e -> {
+                String newEndMultiplicity = endMultiplicityField.getText();
+                relationshipLine.setMultiplicityEnd(newEndMultiplicity);
+                relationship.targetMultiplicity = newEndMultiplicity;
+                controller.relationshipMapping.put(relationshipLine, relationship);
+            });
+
+            // Add components to the right-side toolbar
+            rightSideToolbar.getChildren().addAll(
+                    relationshipDetailsLabel,
+                    titleLabel, titleField,
+                    startMultiplicityLabel, startMultiplicityField,
+                    endMultiplicityLabel, endMultiplicityField
+            );
+        }
     }
 
-    private TreeView<String> createProjectExplorer() {
-        TreeItem<String> rootItem = new TreeItem<>("Project Explorer");
-        rootItem.setExpanded(true);
-        return new TreeView<>(rootItem);
+
+    public void updateRightSideToolbarForFullcode(String code) {
+        // Clear the previous content from the toolbar
+        rightSideToolbar.getChildren().clear();
+
+        // Create a ScrollPane to make the code view scrollable
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background: #f8f9fa; -fx-padding: 10;");
+
+        // Create a TextFlow for better text styling
+        TextFlow codeFlow = new TextFlow();
+        codeFlow.setStyle("-fx-font-family: 'Courier New', monospace; -fx-font-size: 14px; -fx-line-spacing: 1.2;");
+
+        // Add each line of the code with optional styling for syntax
+        for (String line : code.split("\n")) {
+            Text text = new Text(line + "\n");
+
+            if (line.trim().startsWith("public") || line.trim().startsWith("private") || line.trim().startsWith("protected")) {
+                text.setStyle("-fx-fill: #007bff;"); // Highlight keywords
+            } else if (line.contains("class") || line.contains("extends")) {
+                text.setStyle("-fx-fill: #28a745;"); // Highlight class declarations
+            } else if (line.contains("{") || line.contains("}")) {
+                text.setStyle("-fx-fill: #6c757d;"); // Braces in gray
+            }
+
+            codeFlow.getChildren().add(text);
+        }
+
+        // Set the TextFlow as the content of the ScrollPane
+        scrollPane.setContent(codeFlow);
+
+        // Add the scrollable view to the right-side toolbar
+        rightSideToolbar.getChildren().add(scrollPane);
+    }
+
+    public void handleSelection(Object selectedItem) {
+        this.updateRightSideToolbar(selectedItem);
+    }
+
+
+    public void handleClassBoxClick(ClassBox clickedClassBox) {
+        System.out.println("handleClassBoxClick called for " + clickedClassBox.getClassDiagram().getTitle());
+        handleSelection(clickedClassBox);
+
+        if (!relationshipModeToggle.isSelected() || selectedRelationshipType == null) {
+            System.out.println("Relationship mode not active or no type selected.");
+            handleSelection(clickedClassBox);
+            return;
+        }
+        if(!relationshipModeToggle.isSelected())
+        {handleSelection(clickedClassBox);}
+
+        if (sourceClassBox == null) {
+            sourceClassBox = clickedClassBox;
+            sourceClassBox.setStyle("-fx-padding: 5;-fx-border-color: blue;-fx-background-color: #e0e0e0;"); // Highlight the source
+            System.out.println("Source class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
+        } else if (!sourceClassBox.equals(clickedClassBox)) {
+            controller.createRelationship(classDiagramPane, sourceClassBox, "right", clickedClassBox, "left", selectedRelationshipType);
+            sourceClassBox.setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;"); // Reset source style
+            sourceClassBox = null; // Clear source selection
+            System.out.println("Target class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
+        } else {
+            sourceClassBox.setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
+            sourceClassBox = null;
+            System.out.println("Source selection cleared.");
+        }
     }
 
     private ToolBar createToolbar() {
@@ -238,7 +395,20 @@ public class MainView extends BorderPane {
             // Generate Code Button (Metallic style)
             Button generateButton = new Button("Generate Code");
             generateButton.getStyleClass().addAll("btn", "btn-outline-secondary");
-            generateButton.setOnAction(event -> controller.generateCode());
+
+            generateButton.setOnAction(event -> {
+                // Call the controller's generateCode method and retrieve the generated code
+                String code = controller.generateCode();
+
+                // Update the right-side toolbar with the generated code or display a message
+                if (code != null) {
+                    updateRightSideToolbarForFullcode(code);
+                } else {
+                    System.out.println("No code generated.");
+                }
+            });
+
+
 
             Button saveAsImageButton = new Button("Save as JPEG");
             saveAsImageButton.getStyleClass().addAll("btn", "save-image-button");
@@ -272,6 +442,34 @@ public class MainView extends BorderPane {
 
         return toolbar;
     }
+    // UI functions
+    private MenuBar createMenuBar() {
+        MenuBar menuBar = new MenuBar();
+        menuBar.getStyleClass().addAll("navbar", "navbar-light", "bg-light");
+
+        Menu projectMenu = new Menu("Project");
+        MenuItem saveProjectItem = new MenuItem("Save Project");
+        saveProjectItem.setOnAction(e -> controller.saveProject());
+        MenuItem loadProjectItem = new MenuItem("Load Project");
+        loadProjectItem.setOnAction(e -> controller.loadProject());
+        projectMenu.getItems().addAll(saveProjectItem, loadProjectItem);
+
+        Menu diagramMenu = new Menu("Diagrams");
+        MenuItem addClassDiagramItem = new MenuItem("New Class Diagram");
+        addClassDiagramItem.setOnAction(e -> controller.addClassDiagram());
+        MenuItem addPackageDiagramItem = new MenuItem("New Package Diagram");
+        addPackageDiagramItem.setOnAction(e -> controller.addPackageDiagram());
+        diagramMenu.getItems().addAll(addClassDiagramItem, addPackageDiagramItem);
+
+        menuBar.getMenus().addAll(projectMenu, diagramMenu);
+        return menuBar;
+    }
+
+    private TreeView<String> createProjectExplorer() {
+        TreeItem<String> rootItem = new TreeItem<>("Project Explorer");
+        rootItem.setExpanded(true);
+        return new TreeView<>(rootItem);
+    }
 
     private RadioButton createRadioButton(String text, ToggleGroup group, RelationshipType type) {
         RadioButton button = new RadioButton(text);
@@ -279,26 +477,6 @@ public class MainView extends BorderPane {
         button.setUserData(type);
         button.getStyleClass().add("btn-toggle");
         return button;
-    }
-
-
-    private VBox createRightSideToolbar() {
-        VBox toolbar = new VBox();
-        toolbar.setPadding(new Insets(10));
-        toolbar.setSpacing(10);
-        toolbar.setStyle("-fx-background-color: #f8f9fa;"); // Light grey background similar to Bootstrap
-
-        // Title with enhanced styling
-        Label title = new Label("Details");
-        title.getStyleClass().add("h4"); // Bootstrap's heading class for a larger, bold title
-        title.setStyle("-fx-font-weight: bold; -fx-text-fill: #343a40;"); // Dark color for contrast
-
-        // Adding the title to the toolbar
-        toolbar.getChildren().add(title);
-
-        // Optionally, you can add more content here (buttons, text fields, etc.)
-
-        return toolbar;
     }
 
     private VBox createClassListPanel() {
@@ -384,83 +562,6 @@ public class MainView extends BorderPane {
         return codeGenerationPanel;
     }
 
-    public void updateRightSideToolbar(Object selectedItem) {
-        rightSideToolbar.getChildren().clear();
-
-        if (selectedItem instanceof ClassBox) {
-            ClassBox classBox = (ClassBox) selectedItem;
-
-            // Label for Class title
-            Label nameLabel = new Label("Class: " + classBox.getTitle());
-            nameLabel.getStyleClass().add("h5"); // Bootstrap-like heading
-
-            // Labels for Attributes and Operations
-            Label attributesLabel = new Label("Attributes: " + classBox.getAttributesBox().toString());
-            attributesLabel.getStyleClass().add("text-muted"); // Muted color for description
-            Label operationLabel = new Label("Operations: " + classBox.getOperationsBox().toString());
-            operationLabel.getStyleClass().add("text-muted");
-
-            // Add to the right-side toolbar
-            rightSideToolbar.getChildren().addAll(nameLabel, attributesLabel, operationLabel);
-        } else if (selectedItem instanceof RelationshipLine) {
-            RelationshipLine relationshipLine = (RelationshipLine) selectedItem;
-            Relationship relationship = controller.relationshipMapping.get(relationshipLine);
-
-            TextField titleField = new TextField(relationshipLine.getTitle());
-            titleField.setPromptText("Enter Relationship Title");
-            titleField.getStyleClass().add("form-control"); // Bootstrap form control style
-            titleField.setOnAction(e -> {
-                String newTitle = titleField.getText();
-                relationshipLine.setTitle(newTitle);
-                relationship.relationshipLabel = newTitle; // Update model
-                controller.relationshipMapping.put(relationshipLine, relationship); // Update map
-            });
-
-            TextField startMultiplicityField = new TextField(relationshipLine.getMultiplicityStart());
-            startMultiplicityField.setPromptText("Start Multiplicity");
-            startMultiplicityField.getStyleClass().add("form-control"); // Bootstrap form control style
-            startMultiplicityField.setOnAction(e -> {
-                String newStartMultiplicity = startMultiplicityField.getText();
-                relationshipLine.setMultiplicityStart(newStartMultiplicity);
-                relationship.sourceMultiplicity = newStartMultiplicity; // Update model
-                controller.relationshipMapping.put(relationshipLine, relationship); // Update map
-            });
-
-            TextField endMultiplicityField = new TextField(relationshipLine.getMultiplicityEnd());
-            endMultiplicityField.setPromptText("End Multiplicity");
-            endMultiplicityField.getStyleClass().add("form-control"); // Bootstrap form control style
-            endMultiplicityField.setOnAction(e -> {
-                String newEndMultiplicity = endMultiplicityField.getText();
-                relationshipLine.setMultiplicityEnd(newEndMultiplicity);
-                relationship.targetMultiplicity = newEndMultiplicity; // Update model
-                controller.relationshipMapping.put(relationshipLine, relationship); // Update map
-            });
-
-            // Add labels and fields to the toolbar
-            // Adding Relationship Details Label with a style class
-            Label relationshipDetailsLabel = new Label("Relationship Details");
-            relationshipDetailsLabel.getStyleClass().add("h5");
-
-            // Adding labels with text-muted class
-            Label titleLabel = new Label("Title:");
-            titleLabel.getStyleClass().add("text-muted");
-
-            Label startMultiplicityLabel = new Label("Start Multiplicity:");
-            startMultiplicityLabel.getStyleClass().add("text-muted");
-
-            Label endMultiplicityLabel = new Label("End Multiplicity:");
-            endMultiplicityLabel.getStyleClass().add("text-muted");
-
-            // Add to the right side toolbar
-            rightSideToolbar.getChildren().addAll(
-                    relationshipDetailsLabel,
-                    titleLabel, titleField,
-                    startMultiplicityLabel, startMultiplicityField,
-                    endMultiplicityLabel, endMultiplicityField
-            );
-        }
-    }
-
 
     public void updateClassListView() {
         projectExplorer.setRoot(new TreeItem<>("Class Diagrams"));
@@ -477,30 +578,6 @@ public class MainView extends BorderPane {
         classListView.getItems().add(className);
     }
 
-    public void handleClassBoxClick(ClassBox clickedClassBox) {
-        System.out.println("handleClassBoxClick called for " + clickedClassBox.getClassDiagram().getTitle());
-        handleSelection(clickedClassBox);
-
-        if (!relationshipModeToggle.isSelected() || selectedRelationshipType == null) {
-            System.out.println("Relationship mode not active or no type selected.");
-            return;
-        }
-
-        if (sourceClassBox == null) {
-            sourceClassBox = clickedClassBox;
-            sourceClassBox.setStyle("-fx-padding: 5;-fx-border-color: blue;-fx-background-color: #e0e0e0;"); // Highlight the source
-            System.out.println("Source class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
-        } else if (!sourceClassBox.equals(clickedClassBox)) {
-            controller.createRelationship(classDiagramPane, sourceClassBox, "right", clickedClassBox, "left", selectedRelationshipType);
-            sourceClassBox.setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;"); // Reset source style
-            sourceClassBox = null; // Clear source selection
-            System.out.println("Target class box is selected: " + clickedClassBox.getClassDiagram().getTitle());
-        } else {
-            sourceClassBox.setStyle("-fx-border-color: black; -fx-padding: 5; -fx-background-color: #e0e0e0;");
-            sourceClassBox = null;
-            System.out.println("Source selection cleared.");
-        }
-    }
 
     // UI helper functions
     public void saveDiagramAsImage() {
@@ -541,11 +618,6 @@ public class MainView extends BorderPane {
             }
         }
     }
-
-    public void handleSelection(Object selectedItem) {
-        this.updateRightSideToolbar(selectedItem);
-    }
-
 
     // setter getters
     public void setRelationshipModeEnabled(boolean enabled) {

@@ -204,6 +204,7 @@ public class ClassDiagramPane extends Pane {
                     System.out.println("Error: MainView reference is null.");
                 }
             } else {
+                mainView.handleSelection(classBox);
                 System.out.println("Relationship mode is not enabled.");
             }
         });

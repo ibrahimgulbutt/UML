@@ -221,15 +221,17 @@ public class MainController {
                 .collect(Collectors.toList());
     }
 
-    public void generateCode() {
+    public String generateCode() {
         Project project = projectService.getCurrentProject();
         if (project != null && !project.getDiagrams().isEmpty()) {
-            String generatedCode = codeGenerationService.generateCode(project);
-            System.out.println("Generated Code:\n" + generatedCode);
+            // Call the code generation service to generate the code
+            return codeGenerationService.generateCode(project); // Return the generated code as a string
         } else {
             System.out.println("No diagrams available for code generation.");
+            return null; // Return null if no diagrams are available
         }
     }
+
 
     public List<String> getAvailableClassNames() {
         Project currentProject = projectService.getCurrentProject();
