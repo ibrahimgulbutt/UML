@@ -19,22 +19,6 @@ public class ProjectService {
         return currentProject;
     }
 
-    public void saveCurrentProject(File file) throws Exception {
-        if (currentProject == null) {
-            throw new IllegalStateException("No project to save.");
-        }
-        projectDAO.saveProject(currentProject, file);
-    }
-
-    public Project loadProject(File file) throws Exception {
-        currentProject = projectDAO.loadProject(file);
-        return currentProject;
-    }
-
-    public Optional<Project> loadProjectFromFile(File file) throws Exception {
-        currentProject = projectDAO.loadProject(file);
-        return Optional.ofNullable(currentProject);
-    }
 
     public Project getCurrentProject() {
         return currentProject;

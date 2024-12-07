@@ -1,8 +1,8 @@
 package org.example.scdpro2.business.models.BPackageDiagarm;
 
-import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
 import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.business.models.DiagramType;
+import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -12,7 +12,7 @@ public class PackageDiagram extends Diagram implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private List<PackageComponent> packages;
-    private List<Relationship> relationships;
+    private List<BPackageRelationShip> relationships;
 
     public PackageDiagram(String title) {
         super(title);
@@ -30,11 +30,11 @@ public class PackageDiagram extends Diagram implements Serializable {
         //relationships.removeIf(rel -> rel.getSource() == packageComponent || rel.getTarget() == packageComponent);
     }
 
-    public void addRelationship(Relationship relationship) {
+    public void addRelationship(BPackageRelationShip relationship) {
         relationships.add(relationship);
     }
 
-    public void removeRelationship(Relationship relationship) {
+    public void removeRelationship(BPackageRelationShip relationship) {
         relationships.remove(relationship);
     }
 
@@ -42,7 +42,7 @@ public class PackageDiagram extends Diagram implements Serializable {
         return packages;
     }
 
-    public List<Relationship> getRelationships() {
+    public List<BPackageRelationShip> getRelationships() {
         return relationships;
     }
 
@@ -57,7 +57,7 @@ public class PackageDiagram extends Diagram implements Serializable {
         for (PackageComponent pkg : packages) {
             codeBuilder.append(pkg.toCode()).append("\n");
         }
-        for (Relationship rel : relationships) {
+        for (BPackageRelationShip rel : relationships) {
             codeBuilder.append("// Relationship: ").append(rel).append("\n");
         }
         return codeBuilder.toString();

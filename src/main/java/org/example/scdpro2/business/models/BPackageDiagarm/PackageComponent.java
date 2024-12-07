@@ -1,8 +1,8 @@
 package org.example.scdpro2.business.models.BPackageDiagarm;
 
-import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
 import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.business.models.DiagramType;
+import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -15,6 +15,7 @@ public class PackageComponent extends Diagram implements Serializable {
     private final String id; // Unique ID
     private String name;
     private final List<Relationship> relationships;
+    private ArrayList<PackageClassComponent> packageClassComponents;
 
     public PackageComponent(String name) {
         super(name);
@@ -22,6 +23,7 @@ public class PackageComponent extends Diagram implements Serializable {
         this.name = name;
         this.relationships = new ArrayList<>();
     }
+
 
     public String getId() {
         return id; // Return the unique ID
@@ -69,5 +71,9 @@ public class PackageComponent extends Diagram implements Serializable {
     @Override
     public DiagramType getType() {
         return DiagramType.PACKAGE;
+    }
+
+    public void addClassBox(PackageClassComponent newPackage) {
+        this.packageClassComponents.add(newPackage);
     }
 }

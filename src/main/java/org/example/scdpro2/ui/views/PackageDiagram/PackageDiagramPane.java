@@ -3,7 +3,9 @@ package org.example.scdpro2.ui.views.PackageDiagram;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.Pane;
+import org.example.scdpro2.business.models.BPackageDiagarm.BPackageRelationShip;
 import org.example.scdpro2.business.models.BPackageDiagarm.PackageComponent;
 import org.example.scdpro2.business.models.BPackageDiagarm.PackageDiagram;
 import org.example.scdpro2.business.models.Project;
@@ -24,6 +26,7 @@ public class PackageDiagramPane extends Pane {
     private PackageBox selectedPackageBox; // To track the selected package box
 
     private final Map<PackageComponent, Node> packageToUIMap = new HashMap<>();
+    private final Map<PackageBox, Node> classToUIMap = new HashMap<>();
     private PackageDiagram activePackageDiagram; // Current package diagram
 
     private ToggleButton relationshipModeButton = new ToggleButton("Relationship Mode");
@@ -31,6 +34,11 @@ public class PackageDiagramPane extends Pane {
 
     private PackageBox relationshipSourceBox = null;
     private Node relationshipSourceNode = null; // Source node for relationshipsregisterPackageBox
+    private PackageDiagram packageDiagram;
+
+    private List<BPackageRelationShip> bPackageRelationShips = new ArrayList<>();
+
+
 
 
     public PackageDiagramPane(MainView mainView, MainController controller, DiagramService diagramService) {
@@ -43,6 +51,19 @@ public class PackageDiagramPane extends Pane {
         initializeRelationshipModeButton();
         loadPackagesFromDiagram();
     }
+
+    public PackageComponent getPackageComponentById(String id) {
+        // Iterate over the packages in the active package diagram
+        for (PackageComponent packageComponent : activePackageDiagram.getPackages()) {
+            // Check if the ID of the package component matches the provided ID
+            if (packageComponent.getId().equals(id)) {
+                return packageComponent; // Return the matching package component
+            }
+        }
+        // If no match is found, return null
+        return null;
+    }
+
 
     // UI Functions
     private PackageDiagram initializePackageDiagram() {
@@ -63,6 +84,16 @@ public class PackageDiagramPane extends Pane {
         // Add the button to the UI, e.g., a toolbar or control area
     }
 
+    public void removePackageComponent(PackageComponent packageComponent) {
+        if (packageToUIMap.containsKey(packageComponent)) {
+            packageToUIMap.remove(packageComponent);
+            packageDiagram=controller.getPackagediagram();
+            packageDiagram.removePackage(packageComponent);
+            System.out.println("Package " + packageComponent.getName() + " removed from diagram.");
+        }
+    }
+
+
     public void addPackageBox(PackageBox packageBox) {
         if (!getChildren().contains(packageBox)) {
             registerPackageBox(packageBox);
@@ -73,11 +104,14 @@ public class PackageDiagramPane extends Pane {
         }
     }
 
-    public void addNewPackage(String name) {
-        PackageComponent newPackage = new PackageComponent(name);
-        activePackageDiagram.addPackage(newPackage);
-        PackageBox packageBox = new PackageBox(newPackage, controller, this);
-        addPackageBox(packageBox);
+    public void addClassBox(PackageClassBox classBox,PackageBox packageBox) {
+        if (!getChildren().contains(classBox)) {
+            registerPackageClassBox(classBox);
+            getChildren().add(classBox);
+            classToUIMap.put(packageBox, classBox);
+        } else {
+            System.out.println("Warning: PackageBox already exists in the pane.");
+        }
     }
 
     public void clearSelectedPackage() {
@@ -86,7 +120,6 @@ public class PackageDiagramPane extends Pane {
             selectedPackageBox = null;
         }
     }
-
 
     public void registerPackageBox(PackageBox packageBox) {
         packageBox.setOnMouseClicked(event -> handleRelationshipMode(packageBox));
@@ -140,20 +173,23 @@ public class PackageDiagramPane extends Pane {
     }
 
     private void createPackageToClassRelationship(PackageBox packageBox, PackageClassBox classBox) {
-        // Implement specific logic for PackageBox to PackageClassBox relationship
+        PackageRelationship relationship = new PackageRelationship(this, packageBox, classBox);
+        this.addRelationship(relationship);
         System.out.println("Relationship created between Package " + packageBox.getPackageComponent().getName() +
                 " and Class " + classBox.getNameField().getText());
     }
 
     private void createClassToClassRelationship(PackageClassBox sourceClass, PackageClassBox targetClass) {
-        // Implement specific logic for Class to Class relationship
+
+        PackageRelationship relationship = new PackageRelationship(this, sourceClass, targetClass);
+        this.addRelationship(relationship);
         System.out.println("Relationship created between Class " + sourceClass.getNameField().getText() +
                 " and Class " + targetClass.getNameField().getText());
     }
 
-
     public void addRelationship(PackageRelationship relationship) {
         relationships.add(relationship);
+        bPackageRelationShips.add(relationship.getBPackageRelationShip());
     }
 
     public void removeRelationship(PackageRelationship relationship) {
@@ -170,7 +206,6 @@ public class PackageDiagramPane extends Pane {
         );
     }
 
-
     // Business layer functions
     public void loadPackagesFromDiagram() {
         getChildren().clear();
@@ -179,27 +214,16 @@ public class PackageDiagramPane extends Pane {
             addPackageBox(packageBox);
         }
     }
-
-    public void loadPackagesFromProject(Project project) {
+    public void clearDiagrams() {
         getChildren().clear();
-        //for (PackageDiagram diagram : project.getPackageDiagrams()) {
-        //    this.activePackageDiagram = diagram; // Load one diagram at a time
-        //    loadPackagesFromDiagram();
-        //    break; // Load only the first diagram for now
-        // }
     }
-
-    // public Map<PackageComponent, Node> getPackageToUIMap() {
-    //     return packageToUIMap;
-    //}
-
     // Setter Getters
     public void setPackageModeEnabled(boolean isActive) {
         relationshipModeButton.setSelected(isActive);
         relationshipSourceBox = null; // Reset source when disabling
     }
 
-    public Iterable<? extends PackageRelationship> getRelationships() {
+    public List<PackageRelationship> getRelationships() {
         return relationships;
     }
 }

@@ -28,12 +28,14 @@ public class PackageBox extends BorderPane  {
     private final VBox contentBox = new VBox(); // Holds the package's content
     private final Label nameLabel = new Label(); // Displays package name
     private final Rectangle topRectangle = new Rectangle(); // Small rectangle on top
+    private ArrayList<PackageClassBox> packageClassBoxes;
 
     public PackageBox(PackageComponent packageComponent, MainController controller, PackageDiagramPane diagramPane) {
         this.packageComponent = packageComponent;
         this.controller = controller;
         this.diagramPane = diagramPane;
 
+        packageClassBoxes=new ArrayList<>();
         // Set up the content area
         contentBox.setStyle("-fx-border-color: black; -fx-padding: 10; -fx-background-color: #cce5ff;");
         contentBox.setAlignment(Pos.TOP_CENTER);
@@ -93,17 +95,19 @@ public class PackageBox extends BorderPane  {
             nameField.setOnAction(e -> {
                 String newName = nameField.getText().trim();
                 if (!newName.isEmpty()) {
+                    // Update model and UI
                     packageComponent.setName(newName);
                     nameLabel.setText(newName);
-                    contentBox.getChildren().remove(nameField); // Remove TextField
-                    contentBox.getChildren().add(0, nameLabel); // Re-add Label
+                    contentBox.getChildren().remove(nameField);
+                    contentBox.getChildren().add(0, nameLabel);
                 }
             });
-            contentBox.getChildren().remove(nameLabel); // Remove Label
-            contentBox.getChildren().add(0, nameField); // Add TextField
+            contentBox.getChildren().remove(nameLabel);
+            contentBox.getChildren().add(0, nameField);
             nameField.requestFocus();
         });
     }
+
 
     private boolean confirmAction(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message, ButtonType.YES, ButtonType.NO);
@@ -123,7 +127,7 @@ public class PackageBox extends BorderPane  {
 
     private void addClassBox() {
         // Create a new instance of PackageClassBox
-        PackageClassBox classBox = new PackageClassBox(this);
+        PackageClassBox classBox = controller.addPackageClassBox(diagramPane,this,packageComponent);
 
         // Set the default size of the class box
         classBox.setPrefWidth(100); // Set width to 100 pixels (default size)
@@ -146,8 +150,9 @@ public class PackageBox extends BorderPane  {
         classBox.setLayoutX(newLayoutX);
         classBox.setLayoutY(newLayoutY);
 
+        packageClassBoxes.add(classBox);
         // Add the class box to the diagram pane
-        diagramPane.getChildren().add(classBox);
+        diagramPane.addClassBox(classBox,this);
     }
 
     private void deletePackage() {
@@ -166,16 +171,20 @@ public class PackageBox extends BorderPane  {
                 diagramPane.removeRelationship(relationship);
             }
 
-            // Remove the package box itself
+            // Remove all associated PackageClassBoxes from the diagram pane
+            for (PackageClassBox classBox : packageClassBoxes) {
+                diagramPane.getChildren().remove(classBox); // Remove the class box from the diagram pane
+            }
+
+            // Remove the PackageComponent from the business layer (activePackageDiagram)
+            PackageComponent packageComponent = this.getPackageComponent();
+            diagramPane.removePackageComponent(packageComponent);
+
+            // Finally, remove the PackageBox itself from the diagram pane
             diagramPane.getChildren().remove(this);
         }
     }
 
-    public void addComponent(String componentName) {
-        Label componentLabel = new Label(componentName);
-        componentLabel.setStyle("-fx-background-color: #e6e6e6; -fx-padding: 3; -fx-border-color: black; -fx-border-width: 1;");
-        contentBox.getChildren().add(componentLabel);
-    }
 
 
     // drag and resize functions
@@ -253,6 +262,7 @@ public class PackageBox extends BorderPane  {
             if (newWidth >= 100) {
                 setPrefWidth(newWidth);
                 topRectangle.setWidth(newWidth * 0.45); // Update top rectangle width as well
+                //packageComponent.setWidth(newWidth);
             }
         }
 
@@ -260,6 +270,7 @@ public class PackageBox extends BorderPane  {
             double newHeight = initialHeight + deltaY;
             if (newHeight >= 100) {
                 setPrefHeight(newHeight);
+
             }
         }
 

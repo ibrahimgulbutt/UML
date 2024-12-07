@@ -9,6 +9,7 @@ import javafx.geometry.Insets;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
+import org.example.scdpro2.business.models.BPackageDiagarm.PackageComponent;
 import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.ui.controllers.MainController;
 import org.example.scdpro2.business.services.DiagramService;
@@ -663,4 +664,7 @@ public class MainView extends BorderPane {
     }
 
 
+    public PackageDiagramPane getPackageDiagramPane() {
+        return packageDiagramPane;
+    }
 }

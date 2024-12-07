@@ -11,6 +11,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import org.example.scdpro2.business.models.BPackageDiagarm.PackageClassComponent;
 
 public class PackageClassBox extends BorderPane {
     private double offsetX, offsetY;
@@ -23,9 +24,11 @@ public class PackageClassBox extends BorderPane {
     private final TextField nameField = new TextField();
     private final ComboBox<String> visibilityDropdown = new ComboBox<>();
     private PackageBox parentPackageBox; // Reference to parent PackageBox
+    private PackageClassComponent packageClassComponent; // Reference to the associated model
 
-    public PackageClassBox(PackageBox parentPackageBox) {
+    public PackageClassBox(PackageBox parentPackageBox, PackageClassComponent packageClassComponent) {
         this.parentPackageBox = parentPackageBox;
+        this.packageClassComponent = packageClassComponent;
 
         // Set up the VBox for the class name and visibility dropdown
         classNameBox.setAlignment(Pos.CENTER);
@@ -34,14 +37,14 @@ public class PackageClassBox extends BorderPane {
         setTop(classNameBox);
 
         // Set up the editable text field for the class name
-        nameField.setText("Class");
+        nameField.setText(packageClassComponent.getName()); // Initialize with model name
         nameField.setPromptText("Enter class name");
         nameField.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
         nameField.setPrefWidth(100);
 
         // Set up the visibility dropdown
         visibilityDropdown.getItems().addAll("+", "-", "#"); // Options for visibility
-        visibilityDropdown.setValue("+"); // Default value
+        visibilityDropdown.setValue(packageClassComponent.getVisibility()); // Initialize with model visibility
         visibilityDropdown.setPrefWidth(50);
 
         // Combine the name field and dropdown in an HBox
@@ -72,6 +75,14 @@ public class PackageClassBox extends BorderPane {
             }
         });
 
+        // Listen for changes in the nameField and visibilityDropdown and update the model
+        nameField.textProperty().addListener((observable, oldValue, newValue) -> {
+            packageClassComponent.setName(newValue); // Update the model's name
+        });
+
+        visibilityDropdown.valueProperty().addListener((observable, oldValue, newValue) -> {
+            packageClassComponent.setVisibility(newValue); // Update the model's visibility
+        });
     }
 
     // Utility method for showing a confirmation dialog
@@ -193,5 +204,9 @@ public class PackageClassBox extends BorderPane {
 
     public TextField getNameField() {
         return nameField;
+    }
+
+    public PackageClassComponent getPackageClassComponent() {
+        return packageClassComponent;
     }
 }

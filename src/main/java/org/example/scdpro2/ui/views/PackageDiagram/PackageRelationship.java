@@ -8,6 +8,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Polygon;
+import org.example.scdpro2.business.models.BPackageDiagarm.BPackageRelationShip;
 
 public class PackageRelationship<T extends javafx.scene.layout.BorderPane> extends javafx.scene.Node {
     private final Line horizontalLine;
@@ -32,10 +33,19 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
 
     private static final int SNAP_INCREMENT = 5;
 
+    private BPackageRelationShip bPackageRelationShip;
+
+    public void setRelationshipLabel(String text)
+    {
+        relationshipLabel.setText(text);
+    }
+
     public PackageRelationship(Pane diagramPane, T startPackage, T endPackage) {
         this.diagramPane = diagramPane;
         this.startPackage = startPackage;
         this.endPackage = endPackage;
+
+        // Create an instance of BPackageRelationship
 
         // Create lines
         horizontalLine = new Line();
@@ -75,6 +85,7 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
         // Update line positions
         updateLines();
 
+
         // Listeners to adjust dynamically when packages are moved
         startPackage.layoutXProperty().addListener((obs, oldVal, newVal) -> updateAnchorsToPackageBoundaries());
         startPackage.layoutYProperty().addListener((obs, oldVal, newVal) -> updateAnchorsToPackageBoundaries());
@@ -90,6 +101,8 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
         addClickListeners();
         addRightClickListeners();
     }
+
+    // Synchronize changes with the BPackageRelationship model
 
     private void handleLineClick(MouseEvent event, Line line) {
         if (event.getClickCount() == 1) {  // Single click
@@ -192,6 +205,11 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
         // Update label position
         relationshipLabel.setLayoutX(intersectionX + 10); // Offset slightly for readability
         relationshipLabel.setLayoutY(intersectionY - 10); // Offset slightly for readability
+
+    }
+
+    public BPackageRelationShip getBPackageRelationShip() {
+        return bPackageRelationShip;
     }
 
     // Helper Functions

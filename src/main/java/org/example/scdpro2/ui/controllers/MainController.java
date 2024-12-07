@@ -1,9 +1,12 @@
 package org.example.scdpro2.ui.controllers;
 
+import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import org.example.scdpro2.business.models.*;
 import org.example.scdpro2.business.models.BClassDiagarm.BClassBox;
 import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
+import org.example.scdpro2.business.models.BPackageDiagarm.BPackageRelationShip;
+import org.example.scdpro2.business.models.BPackageDiagarm.PackageClassComponent;
 import org.example.scdpro2.business.models.BPackageDiagarm.PackageComponent;
 import org.example.scdpro2.business.models.BPackageDiagarm.PackageDiagram;
 import org.example.scdpro2.business.services.DiagramService;
@@ -15,7 +18,9 @@ import org.example.scdpro2.ui.views.ClassDiagram.ClassBox;
 import org.example.scdpro2.ui.views.ClassDiagram.ClassDiagramPane;
 import org.example.scdpro2.ui.views.ClassDiagram.RelationshipLine;
 import org.example.scdpro2.ui.views.PackageDiagram.PackageBox;
+import org.example.scdpro2.ui.views.PackageDiagram.PackageClassBox;
 import org.example.scdpro2.ui.views.PackageDiagram.PackageDiagramPane;
+import org.example.scdpro2.ui.views.PackageDiagram.PackageRelationship;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -62,7 +67,7 @@ public class MainController {
         return diagramService;
     }
 
-    public void saveProjectToFile(File file) {
+    public void saveClassProjectToFile(File file) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
             Project currentProject = diagramService.getCurrentProject();
             if (currentProject == null) {
@@ -105,14 +110,7 @@ public class MainController {
         }
     }
 
-    private Relationship convertRelationshipLineToRelationship(RelationshipLine relationshipLine) {
-        BClassBox source = (BClassBox) relationshipLine.getSource().getDiagram();
-        BClassBox target = (BClassBox) relationshipLine.getTarget().getDiagram();
-        RelationshipLine.RelationshipType type = relationshipLine.getType();
-        return new Relationship(source, target, type,relationshipLine.getMultiplicityStart(),relationshipLine.getMultiplicityEnd(),relationshipLine.getRelationshipLabel());
-    }
-
-    public void loadProjectFromFile(File file) {
+    public void loadClassProjectFromFile(File file) {
         System.out.println("LoadProject from filr is called ");
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
             Project loadedProject = (Project) ois.readObject();
@@ -190,14 +188,10 @@ public class MainController {
         }
     }
 
-    public Relationship getRelationshipForLine(RelationshipLine line) {
-        return relationshipMapping.get(line);
-    }
-
     public void saveProject() {
         File file = new FileChooser().showSaveDialog(null);
         if (file != null) {
-            saveProjectToFile(file);
+            saveClassProjectToFile(file);
         }
     }
 
@@ -206,7 +200,7 @@ public class MainController {
         if (file != null) {
             mainView.classDiagramPane.clearDiagrams();
             mainView.classListView.getItems().clear();
-            loadProjectFromFile(file);
+            loadClassProjectFromFile(file);
         }
     }
 
@@ -222,12 +216,6 @@ public class MainController {
         } else {
             System.err.println("MainView is not set in MainController.");
         }
-    }
-
-    public List<String> getClassNames() {
-        return diagramService.getCurrentProject().getDiagrams().stream()
-                .map(Diagram::getTitle)
-                .collect(Collectors.toList());
     }
 
     public String generateCode() {
@@ -254,23 +242,23 @@ public class MainController {
     }
 
     public void addClassBox(ClassDiagramPane diagramPane) {
-            // Ensure a project is initialized
-            if (projectService.getCurrentProject() == null) {
-                projectService.createProject("Untitled Project");
-            }
-
-            // Create a new ClassDiagram and add it to the business layer
-            BClassBox BClassBox = new BClassBox("Class "+ countclasses);
-            BClassBox.Type="Class Box";
-            diagramService.addDiagram(BClassBox);  // Add to the service
-
-
-            // Create a ClassBox and add it to the UI layer
-            ClassBox classBox = new ClassBox(BClassBox, this, diagramPane, BClassBox.Type); // Pass available class names
-            diagramPane.addClassBox(classBox); // Ensure click handler is registered
-            System.out.println("ClassBox added for: " + BClassBox.getTitle());
-            countclasses++;
+        // Ensure a project is initialized
+        if (projectService.getCurrentProject() == null) {
+            projectService.createProject("Untitled Project");
         }
+
+        // Create a new ClassDiagram and add it to the business layer
+        BClassBox BClassBox = new BClassBox("Class "+ countclasses);
+        BClassBox.Type="Class Box";
+        diagramService.addDiagram(BClassBox);  // Add to the service
+
+
+        // Create a ClassBox and add it to the UI layer
+        ClassBox classBox = new ClassBox(BClassBox, this, diagramPane, BClassBox.Type); // Pass available class names
+        diagramPane.addClassBox(classBox); // Ensure click handler is registered
+        System.out.println("ClassBox added for: " + BClassBox.getTitle());
+        countclasses++;
+    }
 
     public void addInterfaceBox(ClassDiagramPane diagramPane) {
 
@@ -362,6 +350,7 @@ public class MainController {
         System.out.println("Package diagram added: " + packageDiagram.getTitle());
     }
 
+
     public void addPackageBox(PackageDiagramPane diagramPane) {
         if (projectService.getCurrentProject() == null) {
             projectService.createProject("Untitled Project");
@@ -377,6 +366,26 @@ public class MainController {
         diagramPane.addPackageBox(packageBox);
 
         System.out.println("Package added: " + packageName);
+    }
+
+    public PackageDiagram getPackagediagram()
+    {
+        return diagramService.getOrCreateActivePackageDiagram();
+    }
+
+    public PackageClassBox addPackageClassBox(PackageDiagramPane diagramPane, PackageBox packageBox,PackageComponent packageComponent) {
+        if (projectService.getCurrentProject() == null) {
+            projectService.createProject("Untitled Project");
+        }
+
+        String packageName = "NewCLass";
+        PackageClassComponent newPackage = new PackageClassComponent(packageComponent,packageName,"+");
+        //packageComponent.addClassBox(newPackage);
+
+        PackageClassBox classBox = new PackageClassBox(packageBox,newPackage);
+
+        System.out.println("Package added: " + packageName);
+        return classBox;
     }
 
     public MainView getmainview() {

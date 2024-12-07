@@ -65,8 +65,8 @@ public class DiagramService {
         if (source == null || target == null) return;
 
         if (source instanceof PackageComponent sourcePackage && target instanceof PackageComponent targetPackage) {
-            sourcePackage.getRelationships().removeIf(rel -> rel.getTarget() == target);
-            targetPackage.getRelationships().removeIf(rel -> rel.getSource() == source);
+            //sourcePackage.getRelationships().removeIf(rel -> rel.getTarget() == target);
+            //targetPackage.getRelationships().removeIf(rel -> rel.getSource() == source);
         }
 
         if (source instanceof BClassBox sourceClass && target instanceof BClassBox targetClass) {
