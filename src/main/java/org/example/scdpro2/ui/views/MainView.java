@@ -39,7 +39,6 @@ public class MainView extends BorderPane {
     private RelationshipType selectedRelationshipType; // Current selected relationship type
 
     private ClassBox sourceClassBox; // Temporarily holds the source ClassBox for relationship
-    private InterfaceBox sourceInterfaceBox;
     private boolean relationshipMode = false;
 
     private PackageBox sourcePackageBox; // To track the source for relationships
@@ -502,35 +501,6 @@ public class MainView extends BorderPane {
             System.out.println("Source selection cleared.");
         }
     }
-
-    public void handleInterfaceBoxClick(InterfaceBox clickedInterfaceBox) {
-        System.out.println("handleInterfaceBoxClick called for " + clickedInterfaceBox.getInterfaceDiagram().getTitle());
-        handleSelection(clickedInterfaceBox);
-
-        if (!relationshipModeToggle.isSelected() || selectedRelationshipType == null) {
-            System.out.println("Relationship mode not active or no type selected.");
-            return;
-        }
-
-        if (sourceClassBox == null && sourceInterfaceBox == null) {
-            // No source selected, set the clicked InterfaceBox as the source
-            sourceInterfaceBox = clickedInterfaceBox;
-            clickedInterfaceBox.setStyle("-fx-border-color: blue;"); // Highlight the source
-            System.out.println("Source interface box is selected: " + clickedInterfaceBox.getInterfaceDiagram().getTitle());
-        } else if (sourceClassBox != null) {
-            // If a ClassBox is selected as source, create relationship with InterfaceBox as target
-            controller.createRelationship(classDiagramPane, sourceClassBox, "right", clickedInterfaceBox, "left", selectedRelationshipType);
-            sourceClassBox.setStyle("-fx-border-color: blue; -fx-padding: 5; -fx-background-color: #e0e0e0;"); // Reset style
-            sourceClassBox = null; // Clear source selection
-            System.out.println("Relationship created with interface box as target.");
-        } else {
-            // If clicked InterfaceBox is the same as sourceInterfaceBox, clear selection
-            sourceInterfaceBox.setStyle(""); // Reset style
-            sourceInterfaceBox = null;
-            System.out.println("Source interface selection cleared.");
-        }
-    }
-
 
     // UI helper functions
     public void saveDiagramAsImage() {

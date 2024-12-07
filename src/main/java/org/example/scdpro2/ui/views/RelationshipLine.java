@@ -20,8 +20,6 @@ public class RelationshipLine extends Group {
     }
     private ClassBox target;
     private ClassBox source;
-    private InterfaceBox targetinterface;
-    private InterfaceBox sourceinterface;
     private boolean isSelected;
     private static int linenumber=1;
 
@@ -92,102 +90,6 @@ public class RelationshipLine extends Group {
         updateRightAnglePath();
     }
 
-    public RelationshipLine(InterfaceBox source, String sourceSide, ClassBox target, String targetSide, RelationshipType type, int sourceOffsetIndex, int targetOffsetIndex, int relationshipIndex) {
-        this.sourceinterface = source;
-        this.target = target;
-        this.type = type;
-        this.relationshipIndex = relationshipIndex;
-
-        this.line = new Line();
-        this.polyline = new Polyline();
-        this.endIndicator = createEndIndicator(type); // Create the relationship indicator
-
-        // Style the line (visible part)
-        this.line.setStrokeWidth(2); // Keep visible line width consistent
-        this.line.setStroke(Color.BLACK);
-
-        // Add an overlay for mouse interactions
-        this.clickOverlay = new Polyline();
-        this.clickOverlay.setStrokeWidth(15); // Larger hit area for easier selection
-        this.clickOverlay.setStroke(Color.TRANSPARENT); // Invisible but interactive
-        this.clickOverlay.setMouseTransparent(false); // Enable mouse events
-
-        // Add listeners to update position dynamically
-        source.addRelationship(this);
-        target.addRelationship(this);
-        source.layoutXProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
-        source.layoutYProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
-        target.layoutXProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
-        target.layoutYProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
-
-        this.relationshipLabel = new Label("Line "+linenumber);
-        linenumber++;
-
-        // Initialize multiplicity labels
-        this.sourceMultiplicity = new Label("1");
-        this.targetMultiplicity = new Label("2");
-
-        // Add multiplicity labels and components to the group
-        this.getChildren().addAll(clickOverlay, polyline, line, sourceMultiplicity, targetMultiplicity,relationshipLabel);
-        if (endIndicator != null) {
-            this.getChildren().add(endIndicator); // Add the shape to the UI
-        }
-
-        // Enable mouse events for selection and deletion
-        setupMouseEvents();
-
-        // Calculate initial path and position
-        updateRightAnglePath();
-    }
-
-    public RelationshipLine(ClassBox source, String sourceSide, InterfaceBox target, String targetSide, RelationshipType type, int sourceOffsetIndex, int targetOffsetIndex, int relationshipIndex) {
-        this.source = source;
-        this.targetinterface = target;
-        this.type = type;
-        this.relationshipIndex = relationshipIndex;
-
-        this.line = new Line();
-        this.polyline = new Polyline();
-        this.endIndicator = createEndIndicator(type); // Create the relationship indicator
-
-        // Style the line (visible part)
-        this.line.setStrokeWidth(2); // Keep visible line width consistent
-        this.line.setStroke(Color.BLACK);
-
-        // Add an overlay for mouse interactions
-        this.clickOverlay = new Polyline();
-        this.clickOverlay.setStrokeWidth(15); // Larger hit area for easier selection
-        this.clickOverlay.setStroke(Color.TRANSPARENT); // Invisible but interactive
-        this.clickOverlay.setMouseTransparent(false); // Enable mouse events
-
-        // Add listeners to update position dynamically
-        source.addRelationship(this);
-        target.addRelationship(this);
-        source.layoutXProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
-        source.layoutYProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
-        target.layoutXProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
-        target.layoutYProperty().addListener((obs, oldVal, newVal) -> updateRightAnglePath());
-
-        this.relationshipLabel = new Label("Line "+linenumber);
-        linenumber++;
-
-        // Initialize multiplicity labels
-        this.sourceMultiplicity = new Label("1");
-        this.targetMultiplicity = new Label("2");
-
-        // Add multiplicity labels and components to the group
-        this.getChildren().addAll(clickOverlay, polyline, line, sourceMultiplicity, targetMultiplicity,relationshipLabel);
-        if (endIndicator != null) {
-            this.getChildren().add(endIndicator); // Add the shape to the UI
-        }
-
-        // Enable mouse events for selection and deletion
-        setupMouseEvents();
-
-        // Calculate initial path and position
-        updateRightAnglePath();
-    }
-
     public String getRelationshipLabel() {
         return relationshipLabel.getText();
     }
@@ -234,7 +136,7 @@ public class RelationshipLine extends Group {
 
     private void updateRightAnglePath() {
         // Ensure neither source nor target are null, and polyline is initialized
-        if ((source == null && sourceinterface == null) || (target == null && targetinterface == null) || polyline == null)
+        if ((source == null ) || (target == null) || polyline == null)
             return;
 
         double offset = 20 * relationshipIndex; // Offset for multiple relationships
@@ -244,30 +146,16 @@ public class RelationshipLine extends Group {
         double targetX, targetY, targetWidth, targetHeight;
 
         // Use source or sourceinterface depending on availability
-        if (source != null) {
             sourceX = source.getLayoutX();
             sourceY = source.getLayoutY();
             sourceWidth = source.getWidth();
             sourceHeight = source.getHeight();
-        } else {  // If source is an InterfaceBox
-            sourceX = sourceinterface.getLayoutX();
-            sourceY = sourceinterface.getLayoutY();
-            sourceWidth = sourceinterface.getWidth();
-            sourceHeight = sourceinterface.getHeight();
-        }
 
         // Use target or targetinterface depending on availability
-        if (target != null) {
             targetX = target.getLayoutX();
             targetY = target.getLayoutY();
             targetWidth = target.getWidth();
             targetHeight = target.getHeight();
-        } else {  // If target is an InterfaceBox
-            targetX = targetinterface.getLayoutX();
-            targetY = targetinterface.getLayoutY();
-            targetWidth = targetinterface.getWidth();
-            targetHeight = targetinterface.getHeight();
-        }
 
         // Determine connection direction (horizontal or vertical)
         double startX, startY, endX, endY;
@@ -472,10 +360,6 @@ public class RelationshipLine extends Group {
 
     public boolean isConnectedTo(ClassBox classBox) {
         return sourceDiagram.equals(classBox.getClassDiagram()) || targetDiagram.equals(classBox.getClassDiagram());
-    }
-
-    public boolean isConnectedTo(InterfaceBox interfaceBox) {
-        return sourceDiagram.equals(interfaceBox.getInterfaceDiagram()) || targetDiagram.equals(interfaceBox.getInterfaceDiagram());
     }
 
 }

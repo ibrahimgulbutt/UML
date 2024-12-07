@@ -177,20 +177,6 @@ public class ClassDiagramPane extends Pane {
         }
     }
 
-    public void addInterfaceBox(InterfaceBox interfaceBox) {
-        if (!getChildren().contains(interfaceBox)) { // Prevent duplicate addition
-            registerInterfaceBox(interfaceBox);
-            getChildren().add(interfaceBox);
-            diagramToUIMap.put(interfaceBox.getInterfaceDiagram(), interfaceBox); // Map ClassDiagram to InterfaceBox
-            if (mainView != null) {
-                mainView.addClassToList(interfaceBox.getClassName());
-            }
-        } else {
-            System.out.println("Warning: InterfaceBox already exists in diagramPane.");
-        }
-    }
-
-
     // UI helper functions
     public ClassBox getClassBoxByTitle(String className) {
         for (Node node : getChildren()) {
@@ -204,20 +190,6 @@ public class ClassDiagramPane extends Pane {
         System.out.println("Error: No ClassBox found with the name \"" + className + "\".");
         return null;
     }
-
-    public InterfaceBox getInterfaceBoxByTitle(String className) {
-        for (Node node : getChildren()) {
-            if (node instanceof InterfaceBox) {
-                InterfaceBox classBox = (InterfaceBox) node;
-                if (classBox.getClassName().equals(className)) {
-                    return classBox;
-                }
-            }
-        }
-        System.out.println("Error: No ClassBox found with the name \"" + className + "\".");
-        return null;
-    }
-
     public void setCurrentRelationshipType(RelationshipType type) {
         this.currentRelationshipType = type;
     }
@@ -236,31 +208,11 @@ public class ClassDiagramPane extends Pane {
             }
         });
     }
-
-    public void registerInterfaceBox(InterfaceBox interfaceBox) {
-        interfaceBox.setOnMouseClicked(event -> {
-            System.out.println("InterfaceBox clicked: " + interfaceBox.getInterfaceDiagram().getTitle());
-            if (relationshipModeEnabled) {
-                if (mainView != null) {
-                    mainView.handleInterfaceBoxClick(interfaceBox);
-                } else {
-                    System.out.println("Error: MainView reference is null.");
-                }
-            } else {
-                System.out.println("Relationship mode is not enabled.");
-            }
-        });
-    }
-
-
-
     // Retrieve all relationship lines connected to a given ClassBox or InterfaceBox
     public List<RelationshipLine> getRelationshipLinesConnectedTo(Object box) {
         List<RelationshipLine> connectedLines = new ArrayList<>();
         for (RelationshipLine line : relationships) {
             if (box instanceof ClassBox && line.isConnectedTo((ClassBox) box)) {
-                connectedLines.add(line);
-            } else if (box instanceof InterfaceBox && line.isConnectedTo((InterfaceBox) box)) {
                 connectedLines.add(line);
             }
         }
@@ -291,15 +243,6 @@ public class ClassDiagramPane extends Pane {
     public ClassBox getClassBoxForDiagram(BClassBox diagram) {
         for (Node node : getChildren()) {
             if (node instanceof ClassBox classBox && classBox.getClassDiagram().equals(diagram)) {
-                return classBox;
-            }
-        }
-        return null;
-    }
-
-    public InterfaceBox getInterfaceBoxForDiagram(BClassBox diagram) {
-        for (Node node : getChildren()) {
-            if (node instanceof InterfaceBox classBox && classBox.getClassDiagram().equals(diagram)) {
                 return classBox;
             }
         }

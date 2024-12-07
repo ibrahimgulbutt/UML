@@ -28,17 +28,18 @@ public class ClassBox extends BorderPane {
 
     private final Map<String, List<RelationshipLine>> linesBySide = new HashMap<>();
     private List<RelationshipLine> connectedRelationships = new ArrayList<>();
-    private static double k=2;
 
     private double offsetX, offsetY; // For dragging
     private double initialWidth, initialHeight; // For resizing
     private double initialMouseX, initialMouseY; // For resizing
     private boolean isResizing = false; // Tracks resizing state
     private String resizeDirection = ""; // Tracks the direction of resizing
+    private String Type;
 
-    public ClassBox(BClassBox BClassBox, MainController controller, ClassDiagramPane diagramPane) {
+    public ClassBox(BClassBox BClassBox, MainController controller, ClassDiagramPane diagramPane,String Type) {
         this.BClassBox = BClassBox;
         this.controller = controller;
+        this.Type=Type;
 
         this.getStylesheets().add(getClass().getResource("/org/example/scdpro2/styles/classbox.css").toExternalForm());
 
@@ -61,18 +62,30 @@ public class ClassBox extends BorderPane {
         setMargin(operationsBox, new Insets(5)); // Space around the operations section
 
         // Context Menu for Deleting Class
+
         ContextMenu contextMenu = createContextMenu(diagramPane);
         this.setOnContextMenuRequested(event -> contextMenu.show(this, event.getScreenX(), event.getScreenY()));
 
+        HBox nameBox= new HBox();
         // Class name section
-        HBox nameBox = createNameBox(diagramPane);
+        if(Type.equals("Class Box"))
+        {
+            nameBox = createNameBox(diagramPane);
+        } else if (Type.equals("Interface Box"))
+        {
+            nameBox = createInterfaceNameBox(diagramPane);
+        }
 
-        // Attributes section
+        Button addAttributeButton = new Button();
+        if(Type.equals("Class Box"))
+        {
+            // Attributes section
 //        Label attributesLabel = new Label("Attributes:");
-        Button addAttributeButton = new Button("+");
-        addAttributeButton.setOnAction(e -> addAttribute(attributesBox));
-        attributesBox.getChildren().addAll( addAttributeButton);
-        loadAttributes();
+            addAttributeButton = new Button("+");
+            addAttributeButton.setOnAction(e -> addAttribute(attributesBox));
+            attributesBox.getChildren().addAll( addAttributeButton);
+            loadAttributes();
+        }
 
         // Operations section
 //        Label operationsLabel = new Label("Operations:");
@@ -127,6 +140,59 @@ public class ClassBox extends BorderPane {
         return contextMenu;
     }
 
+    private HBox createInterfaceNameBox(ClassDiagramPane diagramPane) {
+        VBox titleBox = new VBox(5); // Container for the title and name box
+        titleBox.setAlignment(Pos.CENTER); // Center align
+
+        // Add the permanent title
+        Label interfaceTitle = new Label("<<Interface>>");
+        interfaceTitle.getStyleClass().add("interface-title"); // Add a CSS class for custom styling
+
+        HBox nameBox = new HBox(10); // Spacing between class name and button
+        nameBox.setAlignment(Pos.CENTER); // Center the class name
+
+        TextField classNameField = new TextField(BClassBox.getTitle());
+        classNameField.getStyleClass().add("classbox-input");
+
+        classNameField.setPromptText("Interface Name");
+        classNameField.textProperty().addListener((obs, oldName, newName) -> {
+            if (!newName.equals(oldName)) {
+                updateClassNameButton.setVisible(true);
+            }
+        });
+
+        updateClassNameButton.setVisible(false);
+        updateClassNameButton.setOnAction(e -> {
+            String newClassName = classNameField.getText().trim();
+            if (newClassName.isEmpty()) {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Class name cannot be empty.", ButtonType.OK);
+                alert.showAndWait();
+                return;
+            }
+
+            // Update the model
+            String oldClassName = BClassBox.getTitle();
+            BClassBox.setTitle(newClassName);
+            controller.getDiagramService().getCurrentProject().getDiagrams().stream()
+                    .filter(d -> d.equals(BClassBox))
+                    .findFirst()
+                    .ifPresent(d -> ((BClassBox) d).setTitle(newClassName));
+
+            // Update the classListView
+            int index = diagramPane.getMainView().classListView.getItems().indexOf(oldClassName);
+            if (index != -1) {
+                diagramPane.getMainView().classListView.getItems().set(index, newClassName);
+            }
+
+            updateClassNameButton.setVisible(false);
+            System.out.println("Class name updated to: " + newClassName);
+        });
+
+        nameBox.getChildren().addAll(classNameField, updateClassNameButton);
+        titleBox.getChildren().addAll(interfaceTitle, nameBox);
+        return new HBox(titleBox); // Return as HBox for BorderPane integration
+    }
+
     private HBox createNameBox(ClassDiagramPane diagramPane) {
         HBox nameBox = new HBox(10); // Spacing between class name and button
         nameBox.setAlignment(Pos.CENTER); // Center the class name
@@ -179,13 +245,23 @@ public class ClassBox extends BorderPane {
         visibilityComboBox.getItems().addAll("+", "-", "#");
         visibilityComboBox.getSelectionModel().select(operation.getVisibility());
 
+        visibilityComboBox.setPrefWidth(10);
+        visibilityComboBox.setPrefHeight(20);
+        visibilityComboBox.setMinWidth(50);
+
         TextField operationNameField = new TextField(operation.getName());
+
+        operationNameField.setPrefWidth(70);
+        operationNameField.setPrefHeight(20);
 
         ComboBox<String> returnTypeComboBox = new ComboBox<>();
         returnTypeComboBox.setEditable(true);
         returnTypeComboBox.getItems().addAll("void", "int", "String", "boolean", "double", "float", "char", "long", "short");
         returnTypeComboBox.setPromptText("Return Type");
         returnTypeComboBox.getSelectionModel().select(operation.getReturnType());
+
+        returnTypeComboBox.setPrefWidth(50);
+        returnTypeComboBox.setPrefHeight(20);
 
         // Add listeners for updates
         visibilityComboBox.valueProperty().addListener((obs, oldVal, newVal) -> operation.setVisibility(newVal));
@@ -214,13 +290,28 @@ public class ClassBox extends BorderPane {
         visibilityComboBox.getItems().addAll("+", "-", "#");
         visibilityComboBox.getSelectionModel().select(attribute.getVisibility());
 
+        visibilityComboBox.setPrefWidth(10);  // Example width
+        visibilityComboBox.setPrefHeight(20);  // Example height
+        visibilityComboBox.setMinWidth(50);
+        visibilityComboBox.setMaxWidth(100);
+
         TextField attributeNameField = new TextField(attribute.getName());
+
+        // Set preferred width and height of attributeNameField
+        attributeNameField.setPrefWidth(70);  // Example width
+        attributeNameField.setPrefHeight(20);  // Example height
+        attributeNameField.setMaxWidth(200);
 
         ComboBox<String> dataTypeComboBox = new ComboBox<>();
         dataTypeComboBox.setEditable(true);
         dataTypeComboBox.getItems().addAll("int", "String", "boolean", "double", "float", "char", "long", "short");
         dataTypeComboBox.setPromptText("Data Type");
         dataTypeComboBox.getSelectionModel().select(attribute.getDataType());
+
+        dataTypeComboBox.setMinWidth(50);
+        dataTypeComboBox.setMaxWidth(200);
+        dataTypeComboBox.setPrefWidth(50);
+        dataTypeComboBox.setPrefHeight(20);
 
         // Add listeners for updates
         visibilityComboBox.valueProperty().addListener((obs, oldVal, newVal) -> attribute.setVisibility(newVal));
@@ -232,6 +323,7 @@ public class ClassBox extends BorderPane {
             attributesBox.getChildren().remove(attributeBox); // Remove from UI
             BClassBox.removeAttribute(attribute);            // Remove from model
         });
+        deleteButton.setMaxWidth(200);
 
         visibilityComboBox.getStyleClass().add("classbox-combobox");
         attributeNameField.getStyleClass().add("classbox-input");
@@ -258,25 +350,37 @@ public class ClassBox extends BorderPane {
     // grabbing and resizing functions
     private void handleMousePressed(MouseEvent event) {
         if (isOnEdge(event)) {
-            // Start resizing
             isResizing = true;
-            initialWidth = getPrefWidth();
-            initialHeight = getPrefHeight();
             initialMouseX = event.getSceneX();
             initialMouseY = event.getSceneY();
+            initialWidth = getWidth();
+            initialHeight = getHeight();
+            event.consume();
         } else {
-            // Start dragging
-            isResizing = false;
+            isResizing = false; // Reset resizing state if not on edge
             offsetX = event.getSceneX() - getLayoutX();
             offsetY = event.getSceneY() - getLayoutY();
         }
     }
 
+    private void handleMouseReleased(MouseEvent event) {
+        isResizing = false; // End resizing
+    }
+
+
     private void handleMouseDragged(MouseEvent event) {
         if (isResizing) {
-            resize(event);
+            double deltaX = event.getSceneX() - initialMouseX;
+            double deltaY = event.getSceneY() - initialMouseY;
+
+            if (resizeDirection.contains("right")) setPrefWidth(Math.max(initialWidth + deltaX, getMinWidth()));
+            if (resizeDirection.contains("left")) setPrefWidth(Math.max(initialWidth - deltaX, getMinWidth()));
+            if (resizeDirection.contains("bottom")) setPrefHeight(Math.max(initialHeight + deltaY, getMinHeight()));
+            if (resizeDirection.contains("top")) setPrefHeight(Math.max(initialHeight - deltaY, getMinHeight()));
+
+            event.consume();
         } else {
-            // Dragging logic
+            // Handle dragging
             double newX = event.getSceneX() - offsetX;
             double newY = event.getSceneY() - offsetY;
             setLayoutX(newX);
@@ -284,105 +388,54 @@ public class ClassBox extends BorderPane {
         }
     }
 
-    private void handleMouseReleased(MouseEvent event) {
-        isResizing = false;
-        resizeDirection = "";
-    }
 
     private void updateCursor(MouseEvent event) {
         if (isOnEdge(event)) {
             switch (resizeDirection) {
-                case "RIGHT":
-                    setCursor(Cursor.E_RESIZE);
-                    break;
-                case "BOTTOM":
-                    setCursor(Cursor.S_RESIZE);
-                    break;
-                case "BOTTOM_RIGHT":
-                    setCursor(Cursor.SE_RESIZE);
-                    break;
-                case "LEFT":
-                    setCursor(Cursor.W_RESIZE);
-                    break;
-                case "TOP":
-                    setCursor(Cursor.N_RESIZE);
-                    break;
-                case "TOP_LEFT":
+                case "top-left":
+                case "bottom-right":
                     setCursor(Cursor.NW_RESIZE);
                     break;
-                default:
-                    setCursor(Cursor.DEFAULT);
+                case "top-right":
+                case "bottom-left":
+                    setCursor(Cursor.NE_RESIZE);
+                    break;
+                case "top":
+                case "bottom":
+                    setCursor(Cursor.V_RESIZE);
+                    break;
+                case "left":
+                case "right":
+                    setCursor(Cursor.H_RESIZE);
                     break;
             }
         } else {
-            setCursor(Cursor.MOVE);
-        }
-    }
-
-    private void resize(MouseEvent event) {
-        double deltaX = event.getSceneX() - initialMouseX;
-        double deltaY = event.getSceneY() - initialMouseY;
-
-        if (resizeDirection.contains("RIGHT")) {
-            double newWidth = initialWidth + deltaX;
-            if (newWidth >= 100) {
-                setPrefWidth(newWidth);
-            }
-        }
-
-        if (resizeDirection.contains("BOTTOM")) {
-            double newHeight = initialHeight + deltaY;
-            if (newHeight >= 100) {
-                setPrefHeight(newHeight);
-            }
-        }
-
-        if (resizeDirection.contains("LEFT")) {
-            double newWidth = initialWidth - deltaX;
-            if (newWidth >= 100) {
-                setPrefWidth(newWidth);
-                setLayoutX(getLayoutX() + deltaX);
-            }
-        }
-
-        if (resizeDirection.contains("TOP")) {
-            double newHeight = initialHeight - deltaY;
-            if (newHeight >= 100) {
-                setPrefHeight(newHeight);
-                setLayoutY(getLayoutY() + deltaY);
-            }
+            setCursor(Cursor.DEFAULT);
         }
     }
 
     private boolean isOnEdge(MouseEvent event) {
+        double edgeThreshold = 5.0; // Buffer zone for detecting edges
         double mouseX = event.getX();
         double mouseY = event.getY();
-        double width = getWidth();
-        double height = getHeight();
-        double edgeThreshold = 10;
 
-        if (mouseX <= edgeThreshold && mouseY <= edgeThreshold) {
-            resizeDirection = "TOP_LEFT";
-            return true;
-        } else if (mouseX >= width - edgeThreshold && mouseY >= height - edgeThreshold) {
-            resizeDirection = "BOTTOM_RIGHT";
-            return true;
-        } else if (mouseX >= width - edgeThreshold) {
-            resizeDirection = "RIGHT";
-            return true;
-        } else if (mouseY >= height - edgeThreshold) {
-            resizeDirection = "BOTTOM";
-            return true;
-        } else if (mouseX <= edgeThreshold) {
-            resizeDirection = "LEFT";
-            return true;
-        } else if (mouseY <= edgeThreshold) {
-            resizeDirection = "TOP";
-            return true;
-        } else {
-            resizeDirection = "";
-            return false;
-        }
+        boolean onLeftEdge = mouseX >= 0 && mouseX <= edgeThreshold;
+        boolean onRightEdge = mouseX >= getWidth() - edgeThreshold && mouseX <= getWidth();
+        boolean onTopEdge = mouseY >= 0 && mouseY <= edgeThreshold;
+        boolean onBottomEdge = mouseY >= getHeight() - edgeThreshold && mouseY <= getHeight();
+
+        // Set resize direction
+        if (onLeftEdge && onTopEdge) resizeDirection = "top-left";
+        else if (onLeftEdge && onBottomEdge) resizeDirection = "bottom-left";
+        else if (onRightEdge && onTopEdge) resizeDirection = "top-right";
+        else if (onRightEdge && onBottomEdge) resizeDirection = "bottom-right";
+        else if (onLeftEdge) resizeDirection = "left";
+        else if (onRightEdge) resizeDirection = "right";
+        else if (onTopEdge) resizeDirection = "top";
+        else if (onBottomEdge) resizeDirection = "bottom";
+        else resizeDirection = "";
+
+        return !resizeDirection.isEmpty();
     }
 
     // UI helper functions
@@ -403,7 +456,6 @@ public class ClassBox extends BorderPane {
     public void removeRelationship(RelationshipLine relationship) {
         connectedRelationships.remove(relationship);
     }
-
 
     //loading from/to business layer functions
     private void loadAttributes() {

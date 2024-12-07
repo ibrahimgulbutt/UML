@@ -73,7 +73,7 @@ public class MainController {
                             bClassBox.setOperations(classBox.getOperations());
                         }
                     } else if ("Interface Box".equals(bClassBox.Type)) {
-                        InterfaceBox interfaceBox = mainView.getClassDiagramPane().getInterfaceBoxForDiagram(bClassBox);
+                        ClassBox interfaceBox = mainView.getClassDiagramPane().getClassBoxForDiagram(bClassBox);
                         if (interfaceBox != null) {
                             bClassBox.setX(interfaceBox.getLayoutX());
                             bClassBox.setY(interfaceBox.getLayoutY());
@@ -121,7 +121,7 @@ public class MainController {
                 for (Diagram diagram : loadedProject.getDiagrams()) {
                     if (diagram instanceof BClassBox bClassBox) {
                         if ("Class Box".equals(bClassBox.Type)) {
-                            ClassBox classBox = new ClassBox(bClassBox, this, mainView.getClassDiagramPane());
+                            ClassBox classBox = new ClassBox(bClassBox, this, mainView.getClassDiagramPane(), bClassBox.Type);
                             classBox.setLayoutX(bClassBox.getX());
                             classBox.setLayoutY(bClassBox.getY());
                             classBox.setAttributes(bClassBox.getAttributes());
@@ -129,11 +129,11 @@ public class MainController {
                             mainView.getClassDiagramPane().addClassBox(classBox);
                             countclasses++;
                         } else if ("Interface Box".equals(bClassBox.Type)) {
-                            InterfaceBox interfaceBox = new InterfaceBox(bClassBox, this, mainView.getClassDiagramPane());
+                            ClassBox interfaceBox = new ClassBox(bClassBox, this, mainView.getClassDiagramPane(),"Interface Box");
                             interfaceBox.setLayoutX(bClassBox.getX());
                             interfaceBox.setLayoutY(bClassBox.getY());
                             interfaceBox.setOperations(bClassBox.getOperations());
-                            mainView.getClassDiagramPane().addInterfaceBox(interfaceBox);
+                            mainView.getClassDiagramPane().addClassBox(interfaceBox);
                             countinterface++;
                         }
                     }
@@ -160,7 +160,7 @@ public class MainController {
                     else if(relationship.source.Type.equals("Class Box") && relationship.target.Type.equals("Interface Box")) {
                         // Find source and target class boxes
                         ClassBox source = mainView.getClassDiagramPane().getClassBoxByTitle(relationship.getSource().getTitle());
-                        InterfaceBox target = mainView.getClassDiagramPane().getInterfaceBoxByTitle(relationship.getTarget().getTitle());
+                        ClassBox target = mainView.getClassDiagramPane().getClassBoxByTitle(relationship.getTarget().getTitle());
 
                         if (source != null && target != null) {
                             // Add relationship line
@@ -255,7 +255,7 @@ public class MainController {
 
 
             // Create a ClassBox and add it to the UI layer
-            ClassBox classBox = new ClassBox(BClassBox, this, diagramPane); // Pass available class names
+            ClassBox classBox = new ClassBox(BClassBox, this, diagramPane, BClassBox.Type); // Pass available class names
             diagramPane.addClassBox(classBox); // Ensure click handler is registered
             System.out.println("ClassBox added for: " + BClassBox.getTitle());
             countclasses++;
@@ -267,13 +267,14 @@ public class MainController {
             projectService.createProject("Untitled Project");
         }
 
-        BClassBox interfaceDiagram = new BClassBox("Interface "+countinterface);
-        interfaceDiagram.Type="Interface Box";
-        diagramService.addDiagram(interfaceDiagram);
+        BClassBox interfacebox = new BClassBox("Interface "+countinterface);
+        interfacebox.Type="Interface Box";
+        diagramService.addDiagram(interfacebox);
 
 
-        InterfaceBox interfaceBox = new InterfaceBox(interfaceDiagram, this ,diagramPane);
-        diagramPane.addInterfaceBox(interfaceBox);
+        ClassBox classBox = new ClassBox(interfacebox, this, diagramPane, interfacebox.Type); // Pass available class names
+        diagramPane.addClassBox(classBox); // Ensure click handler is registered
+        System.out.println("InterfaceBox added for: " + interfacebox.getTitle());
         countinterface++;
     }
 
@@ -324,30 +325,6 @@ public class MainController {
         pane.getChildren().add(line); // Add to UI
     }
 
-    public void createRelationship(ClassDiagramPane pane, InterfaceBox source, String sourceSide, ClassBox target, String targetSide, RelationshipLine.RelationshipType type) {
-        //int relationshipIndex = countRelationshipsBetween(source, target);
-        RelationshipLine line = new RelationshipLine(source, sourceSide, target, targetSide, type, 0, 0, 0);
-
-        relationshipLines.add(line); // Track the new relationship
-        pane.getChildren().add(line); // Add to UI
-    }
-
-    public void createRelationship(ClassDiagramPane pane, ClassBox source, String sourceSide, InterfaceBox target, String targetSide, RelationshipLine.RelationshipType type) {
-        //int relationshipIndex = countRelationshipsBetween(source, target);
-        RelationshipLine line = new RelationshipLine(source, sourceSide, target, targetSide, type, 0, 0, 0);
-
-        // Create the Relationship (business layer)
-        Relationship relationship = new Relationship(source.BClassBox, target.interfaceDiagram, type, line.getMultiplicityStart(),line.getMultiplicityEnd(),line.getRelationshipLabel());
-        relationships.add(relationship);  // Track the new Relationship object
-
-        relationshipMapping.put(line, relationship);
-
-
-        line.setMainView(mainView);
-        relationshipLines.add(line); // Track the new relationship
-        pane.getChildren().add(line); // Add to UI
-    }
-
     public int countRelationshipsBetween(ClassBox source, ClassBox target) {
         return (int) relationshipLines.stream()
                 .filter(rel -> (rel.getSource() == source && rel.getTarget() == target) || (rel.getSource() == target && rel.getTarget() == source))
@@ -391,30 +368,7 @@ public class MainController {
         System.out.println("Package added: " + packageName);
     }
 
-    public void deleteInterfaceBox(ClassDiagramPane pane, InterfaceBox interfaceBox) {
-        if (interfaceBox == null) {
-            System.out.println("Error: ClassBox to delete is null");
-            return;
-        }
-
-        // Remove all connected relationships
-        interfaceBox.deleteConnectedRelationships(pane);
-        // Remove all associated relationship lines
-        List<RelationshipLine> linesToRemove = pane.getRelationshipLinesConnectedTo(interfaceBox);
-        for (RelationshipLine line : linesToRemove) {
-            pane.removeRelationshipLine(line);
-            diagramService.removeRelationship(line.getSourceDiagram(), line.getTargetDiagram());
-
-        }
-
-        // Remove the ClassBox from the pane
-        pane.getChildren().remove(interfaceBox);
-
-        // Remove the ClassDiagram from the business layer
-        diagramService.removeDiagram(interfaceBox.getInterfaceDiagram());
-        System.out.println("Deleted ClassBox and all associated relationships for: " + interfaceBox.getInterfaceDiagram().getTitle());
-        if (mainView != null) {
-            mainView.classListView.getItems().remove(interfaceBox.getClassName());
-        }
-        }
+    public MainView getmainview() {
+        return mainView;
+    }
 }
