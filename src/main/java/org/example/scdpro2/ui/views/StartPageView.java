@@ -69,8 +69,16 @@ public class StartPageView extends BorderPane {
     }
 
     private void openExistingProject() {
-        MainView mainView = new MainView(mainController, "Class Diagram"); // Reuse the existing controller
+        String projectName = "ClassDiagram";
+        String projectType = "Class Diagram";
+
+        mainController.createNewProject(projectName);
+
+        MainView mainView = new MainView(mainController, projectType); // Reuse the existing controller
         this.mainController.setMainView(mainView);
+
+        primaryStage.setScene(new Scene(mainView, 800, 600));
+
         if(mainController.getmainview()==null)
         {
             System.out.println("Main view is nll baby");
