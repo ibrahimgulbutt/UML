@@ -7,6 +7,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
+import org.example.scdpro2.business.models.BPackageDiagarm.PackageClassComponent;
 import org.example.scdpro2.business.models.BPackageDiagarm.PackageComponent;
 import org.example.scdpro2.ui.controllers.MainController;
 
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PackageBox extends BorderPane  {
-    private final PackageComponent packageComponent;
+    public PackageComponent packageComponent;
     private final MainController controller;
     private final PackageDiagramPane diagramPane;
 
@@ -45,8 +46,8 @@ public class PackageBox extends BorderPane  {
         contentBox.getChildren().add(nameLabel);
 
         // Set initial size
-        setPrefWidth(200);
-        setPrefHeight(150);
+        setPrefWidth(packageComponent.getWidth());
+        setPrefHeight(packageComponent.getHeight());
 
         // Set up the top rectangle
         topRectangle.setHeight(20); // Small height for the rectangle
@@ -81,13 +82,12 @@ public class PackageBox extends BorderPane  {
 
         // Show context menu on right-click
         setOnContextMenuRequested(event -> contextMenu.show(this, event.getScreenX(), event.getScreenY()));
-
-
-
-
-
     }
 
+    public void setPackageComponentid(String id)
+    {
+        this.packageComponent.setName(id);
+    }
 
     private void setupNameEditing() {
         nameLabel.setOnMouseClicked(event -> {
@@ -125,9 +125,40 @@ public class PackageBox extends BorderPane  {
         }
     }
 
-    private void addClassBox() {
+    public void addClassBox() {
         // Create a new instance of PackageClassBox
         PackageClassBox classBox = controller.addPackageClassBox(diagramPane,this,packageComponent);
+
+        // Set the default size of the class box
+        classBox.setPrefWidth(100); // Set width to 100 pixels (default size)
+        classBox.setPrefHeight(80); // Set height to 80 pixels (default size)
+
+        // Calculate the new position of the class box, ensuring it stays within the bounds of the PackageBox
+        double newLayoutX = getLayoutX() + 10; // Offset for visibility
+        double newLayoutY = getLayoutY() + 10;
+
+        // Ensure the new layoutX and layoutY are within the bounds of the PackageBox
+        double maxX = getLayoutX() + getPrefWidth() - classBox.getPrefWidth();
+        double maxY = getLayoutY() + getPrefHeight() - classBox.getPrefHeight();
+        if (newLayoutX > maxX) {
+            newLayoutX = maxX; // Restrict to the right boundary
+        }
+        if (newLayoutY > maxY) {
+            newLayoutY = maxY; // Restrict to the bottom boundary
+        }
+
+        classBox.setLayoutX(newLayoutX);
+        classBox.setLayoutY(newLayoutY);
+
+        packageClassBoxes.add(classBox);
+        // Add the class box to the diagram pane
+        diagramPane.addClassBox(classBox,this);
+    }
+
+    public void addClassBoxforload(PackageClassComponent pcc)
+    {
+        // Create a new instance of PackageClassBox
+        PackageClassBox classBox = controller.addPackageClassBox(diagramPane,this,packageComponent,pcc);
 
         // Set the default size of the class box
         classBox.setPrefWidth(100); // Set width to 100 pixels (default size)
@@ -253,6 +284,27 @@ public class PackageBox extends BorderPane  {
         }
     }
 
+    public void updateBox(double x, double y, double width, double height) {
+        // Update the position of the PackageBox
+        setLayoutX(x);
+        setLayoutY(y);
+
+        // Update the size of the PackageBox
+        setPrefWidth(width);
+        setPrefHeight(height);
+
+        // Update the size of the top rectangle
+        topRectangle.setWidth(width * 0.45); // Adjust top rectangle width accordingly
+
+        // Update the width and height in the PackageComponent model as well
+        packageComponent.setWidth(width);
+        packageComponent.setHeight(height);
+
+        // If needed, adjust the layout of any child elements (e.g., PackageClassBox) based on the new size
+        moveClassBoxes(0, 0); // Optionally, this can be adjusted if you want to move the child boxes as well
+    }
+
+
     private void resize(MouseEvent event) {
         double deltaX = event.getSceneX() - initialMouseX;
         double deltaY = event.getSceneY() - initialMouseY;
@@ -338,4 +390,20 @@ public class PackageBox extends BorderPane  {
     }
 
 
+    public PackageComponent getPackageDiagram() {
+        return packageComponent;
+    }
+
+    public String getName() {
+        return nameLabel.getText();
+    }
+
+    public void setName(String name) {
+        this.nameLabel.setText(name);
+    }
+
+    public ArrayList<PackageClassBox> getPackageClassBoxes()
+    {
+        return packageClassBoxes;
+    }
 }

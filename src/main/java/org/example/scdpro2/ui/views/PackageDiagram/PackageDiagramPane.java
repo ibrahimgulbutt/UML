@@ -3,12 +3,9 @@ package org.example.scdpro2.ui.views.PackageDiagram;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ToggleButton;
-import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.Pane;
 import org.example.scdpro2.business.models.BPackageDiagarm.BPackageRelationShip;
 import org.example.scdpro2.business.models.BPackageDiagarm.PackageComponent;
-import org.example.scdpro2.business.models.BPackageDiagarm.PackageDiagram;
-import org.example.scdpro2.business.models.Project;
 import org.example.scdpro2.business.services.DiagramService;
 import org.example.scdpro2.ui.controllers.MainController;
 import org.example.scdpro2.ui.views.MainView;
@@ -27,14 +24,12 @@ public class PackageDiagramPane extends Pane {
 
     private final Map<PackageComponent, Node> packageToUIMap = new HashMap<>();
     private final Map<PackageBox, Node> classToUIMap = new HashMap<>();
-    private PackageDiagram activePackageDiagram; // Current package diagram
 
     private ToggleButton relationshipModeButton = new ToggleButton("Relationship Mode");
     private final List<PackageRelationship> relationships = new ArrayList<>();
 
     private PackageBox relationshipSourceBox = null;
     private Node relationshipSourceNode = null; // Source node for relationshipsregisterPackageBox
-    private PackageDiagram packageDiagram;
 
     private List<BPackageRelationShip> bPackageRelationShips = new ArrayList<>();
 
@@ -46,33 +41,8 @@ public class PackageDiagramPane extends Pane {
         this.mainView = mainView;
         this.controller = controller;
         this.diagramService = diagramService;
-
-        this.activePackageDiagram = initializePackageDiagram();
         initializeRelationshipModeButton();
         loadPackagesFromDiagram();
-    }
-
-    public PackageComponent getPackageComponentById(String id) {
-        // Iterate over the packages in the active package diagram
-        for (PackageComponent packageComponent : activePackageDiagram.getPackages()) {
-            // Check if the ID of the package component matches the provided ID
-            if (packageComponent.getId().equals(id)) {
-                return packageComponent; // Return the matching package component
-            }
-        }
-        // If no match is found, return null
-        return null;
-    }
-
-
-    // UI Functions
-    private PackageDiagram initializePackageDiagram() {
-        if (diagramService.getPackageDiagrams().isEmpty()) {
-            PackageDiagram defaultDiagram = new PackageDiagram("Default Package Diagram");
-            diagramService.addPackageDiagram(defaultDiagram);
-            return defaultDiagram;
-        }
-        return diagramService.getPackageDiagrams().get(0);
     }
 
     private void initializeRelationshipModeButton() {
@@ -87,15 +57,38 @@ public class PackageDiagramPane extends Pane {
     public void removePackageComponent(PackageComponent packageComponent) {
         if (packageToUIMap.containsKey(packageComponent)) {
             packageToUIMap.remove(packageComponent);
-            packageDiagram=controller.getPackagediagram();
-            packageDiagram.removePackage(packageComponent);
             System.out.println("Package " + packageComponent.getName() + " removed from diagram.");
         }
+    }
+
+    public Node findNodeById(String Id) {
+        // Iterate through all the nodes in the package diagram
+        for (Node node : getChildren()) {
+            // Check if the node is a PackageBox and if its name matches
+            if (node instanceof PackageBox) {
+                PackageBox packageBox = (PackageBox) node;
+                System.out.println(packageBox.getId());
+                if (packageBox.getId().equals(Id))
+                {
+                    return packageBox;
+                }
+            }
+            // Check if the node is a PackageClassBox and if its name matches
+            else if (node instanceof PackageClassBox) {
+                PackageClassBox classBox = (PackageClassBox) node;
+                if (classBox.getId().equals(Id))
+                {
+                    return classBox;
+                }
+            }
+        }
+        return null; // Return null if no node with the given name is found
     }
 
 
     public void addPackageBox(PackageBox packageBox) {
         if (!getChildren().contains(packageBox)) {
+            System.out.println("I am called bpsssssssss");
             registerPackageBox(packageBox);
             getChildren().add(packageBox);
             packageToUIMap.put(packageBox.getPackageComponent(), packageBox);
@@ -114,6 +107,15 @@ public class PackageDiagramPane extends Pane {
         }
     }
 
+    public PackageBox getPackageBoxForDiagram(PackageComponent diagram) {
+        for (Node node : getChildren()) {
+            if (node instanceof PackageBox packageBox && packageBox.getPackageDiagram().equals(diagram)) {
+                return packageBox;
+            }
+        }
+        return null;
+    }
+
     public void clearSelectedPackage() {
         if (selectedPackageBox != null) {
             selectedPackageBox.setStyle("-fx-border-color: black;");
@@ -127,6 +129,12 @@ public class PackageDiagramPane extends Pane {
 
     public void registerPackageClassBox(PackageClassBox packageClassBox) {
         packageClassBox.setOnMouseClicked(event -> handleRelationshipMode(packageClassBox));
+    }
+
+    public PackageBox createPackageBoxForDiagram(PackageComponent packageComponent) {
+        PackageBox packageBox = new PackageBox(packageComponent, controller, this);
+        addPackageBox(packageBox); // Add to the UI (pane)
+        return packageBox;
     }
 
 
@@ -144,7 +152,7 @@ public class PackageDiagramPane extends Pane {
         }
     }
 
-    private void createRelationship(Node source, Node target) {
+    public void createRelationship(Node source, Node target) {
         if (source == target) {
             Alert alert = new Alert(Alert.AlertType.WARNING, "Cannot create a relationship with the same component.");
             alert.show();
@@ -169,12 +177,14 @@ public class PackageDiagramPane extends Pane {
 
         PackageRelationship relationship = new PackageRelationship(this, source, target);
         this.addRelationship(relationship);
+        controller.addPackageRelationship(relationship);
         System.out.println("Relationship created between " + source.getPackageComponent().getName() + " and " + target.getPackageComponent().getName());
     }
 
     private void createPackageToClassRelationship(PackageBox packageBox, PackageClassBox classBox) {
         PackageRelationship relationship = new PackageRelationship(this, packageBox, classBox);
         this.addRelationship(relationship);
+        controller.addPackageRelationship(relationship);
         System.out.println("Relationship created between Package " + packageBox.getPackageComponent().getName() +
                 " and Class " + classBox.getNameField().getText());
     }
@@ -183,6 +193,7 @@ public class PackageDiagramPane extends Pane {
 
         PackageRelationship relationship = new PackageRelationship(this, sourceClass, targetClass);
         this.addRelationship(relationship);
+        controller.addPackageRelationship(relationship);
         System.out.println("Relationship created between Class " + sourceClass.getNameField().getText() +
                 " and Class " + targetClass.getNameField().getText());
     }
@@ -209,10 +220,10 @@ public class PackageDiagramPane extends Pane {
     // Business layer functions
     public void loadPackagesFromDiagram() {
         getChildren().clear();
-        for (PackageComponent pkg : activePackageDiagram.getPackages()) {
-            PackageBox packageBox = new PackageBox(pkg, controller, this);
-            addPackageBox(packageBox);
-        }
+        //for (PackageComponent pkg : activePackageDiagram.getPackages()) {
+        //    PackageBox packageBox = new PackageBox(pkg, controller, this);
+        //    addPackageBox(packageBox);
+        //}
     }
     public void clearDiagrams() {
         getChildren().clear();

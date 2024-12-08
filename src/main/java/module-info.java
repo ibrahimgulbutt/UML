@@ -10,7 +10,7 @@ module org.example.scdpro2 {
     requires eu.hansolo.tilesfx;
     requires com.fasterxml.jackson.databind;
     requires javafx.swing; // Add this line
-    requires java.desktop; // Add this line
+    requires java.desktop;
 
     opens org.example.scdpro2 to javafx.fxml;
     exports org.example.scdpro2;

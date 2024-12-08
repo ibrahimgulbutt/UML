@@ -1,8 +1,11 @@
 package org.example.scdpro2.business.models.BPackageDiagarm;
 
+import org.example.scdpro2.business.models.Diagram;
+import org.example.scdpro2.business.models.DiagramType;
+
 import java.util.ArrayList;
 
-public class PackageClassComponent {
+public class PackageClassComponent extends Diagram {
     private PackageComponent parent; // Parent package component reference
     private String name; // Class name
     private String visibility; // Visibility (+, -, #)
@@ -13,6 +16,7 @@ public class PackageClassComponent {
 
     // Constructor
     public PackageClassComponent(PackageComponent parent, String name, String visibility) {
+        super(name);
         this.parent = parent;
         this.name = validateName(name);
         this.visibility = validateVisibility(visibility);
@@ -89,5 +93,20 @@ public class PackageClassComponent {
                 ", xCoordinates=" + xCoordinates +
                 ", yCoordinates=" + yCoordinates +
                 '}';
+    }
+
+    @Override
+    public void render() {
+
+    }
+
+    @Override
+    public String toCode() {
+        return "";
+    }
+
+    @Override
+    public DiagramType getType() {
+        return null;
     }
 }

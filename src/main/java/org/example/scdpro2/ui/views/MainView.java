@@ -9,7 +9,6 @@ import javafx.geometry.Insets;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
-import org.example.scdpro2.business.models.BPackageDiagarm.PackageComponent;
 import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.ui.controllers.MainController;
 import org.example.scdpro2.business.services.DiagramService;
@@ -165,7 +164,7 @@ public class MainView extends BorderPane {
 
         } else if (selectedItem instanceof RelationshipLine) {
             RelationshipLine relationshipLine = (RelationshipLine) selectedItem;
-            Relationship relationship = controller.relationshipMapping.get(relationshipLine);
+            Relationship relationship = controller.ClassRelationshipMapping.get(relationshipLine);
 
             // Adding a relationship details section with labels and input fields
             Label relationshipDetailsLabel = new Label("Relationship Details");
@@ -181,7 +180,7 @@ public class MainView extends BorderPane {
                 String newTitle = titleField.getText();
                 relationshipLine.setTitle(newTitle);
                 relationship.relationshipLabel = newTitle;
-                controller.relationshipMapping.put(relationshipLine, relationship);
+                controller.ClassRelationshipMapping.put(relationshipLine, relationship);
             });
 
             Label startMultiplicityLabel = new Label("Start Multiplicity:");
@@ -194,7 +193,7 @@ public class MainView extends BorderPane {
                 String newStartMultiplicity = startMultiplicityField.getText();
                 relationshipLine.setMultiplicityStart(newStartMultiplicity);
                 relationship.sourceMultiplicity = newStartMultiplicity;
-                controller.relationshipMapping.put(relationshipLine, relationship);
+                controller.ClassRelationshipMapping.put(relationshipLine, relationship);
             });
 
             Label endMultiplicityLabel = new Label("End Multiplicity:");
@@ -207,7 +206,7 @@ public class MainView extends BorderPane {
                 String newEndMultiplicity = endMultiplicityField.getText();
                 relationshipLine.setMultiplicityEnd(newEndMultiplicity);
                 relationship.targetMultiplicity = newEndMultiplicity;
-                controller.relationshipMapping.put(relationshipLine, relationship);
+                controller.ClassRelationshipMapping.put(relationshipLine, relationship);
             });
 
             // Add components to the right-side toolbar

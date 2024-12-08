@@ -1,33 +1,29 @@
 package org.example.scdpro2.business.models.BPackageDiagarm;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-
 public class BPackageRelationShip<T extends javafx.scene.layout.BorderPane> {
-    public T startPackageId;
-    public T endPackageId;
+    public String startPackagename;
+    public String endPackagename;
     public String relationshipType;
     public double startX, startY, endX, endY;
-    public BPackageRelationShip(T startPackageId, T endPackageId, String relationshipType) {
-        this.startPackageId = startPackageId;
-        this.endPackageId = endPackageId;
-        this.relationshipType = relationshipType;
+    public BPackageRelationShip(String startPackagename, String endPackagename) {
+        this.startPackagename = startPackagename;
+        this.endPackagename = endPackagename;
     }
 
-    public T getStartPackageId() {
-        return startPackageId;
+    public String getStartPackageid() {
+        return startPackagename;
     }
 
-    public void setStartPackageId(T startPackageId) {
-        this.startPackageId = startPackageId;
+    public void setStartPackagename(String startPackagename) {
+        this.startPackagename = startPackagename;
     }
 
-    public T getEndPackageId() {
-        return endPackageId;
+    public String getEndPackageid() {
+        return endPackagename;
     }
 
-    public void setEndPackageId(T endPackageId) {
-        this.endPackageId = endPackageId;
+    public void setEndPackagename(String endPackagename) {
+        this.endPackagename = endPackagename;
     }
 
     public String getRelationshipType() {

@@ -26,7 +26,8 @@ public class PackageClassBox extends BorderPane {
     private PackageBox parentPackageBox; // Reference to parent PackageBox
     private PackageClassComponent packageClassComponent; // Reference to the associated model
 
-    public PackageClassBox(PackageBox parentPackageBox, PackageClassComponent packageClassComponent) {
+    public PackageClassBox(PackageBox parentPackageBox, PackageClassComponent packageClassComponent)
+    {
         this.parentPackageBox = parentPackageBox;
         this.packageClassComponent = packageClassComponent;
 
@@ -67,13 +68,15 @@ public class PackageClassBox extends BorderPane {
 
         // Add a context menu for deletion
         setOnMouseClicked(event -> {
-            if (event.getButton() == MouseButton.SECONDARY && event.getClickCount() == 2) {
+            if (event.getButton() == MouseButton.SECONDARY && event.getClickCount() == 1) {
                 // Show confirmation dialog
                 if (confirmAction("Delete Class Box", "Are you sure you want to delete this class box?")) {
                     parentPackageBox.getDiagramPane().getChildren().remove(this); // Remove from the diagram
+                    event.consume(); // Prevent event propagation
                 }
             }
         });
+
 
         // Listen for changes in the nameField and visibilityDropdown and update the model
         nameField.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -84,6 +87,7 @@ public class PackageClassBox extends BorderPane {
             packageClassComponent.setVisibility(newValue); // Update the model's visibility
         });
     }
+
 
     // Utility method for showing a confirmation dialog
     private boolean confirmAction(String title, String message) {

@@ -16,8 +16,8 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
     private final Polygon arrow;
     private final Label relationshipLabel;
 
-    private final T startPackage;
-    private final T endPackage;
+    public final T startPackage;
+    public final T endPackage;
 
     private final Pane diagramPane;
 
@@ -39,6 +39,7 @@ public class PackageRelationship<T extends javafx.scene.layout.BorderPane> exten
     {
         relationshipLabel.setText(text);
     }
+
 
     public PackageRelationship(Pane diagramPane, T startPackage, T endPackage) {
         this.diagramPane = diagramPane;

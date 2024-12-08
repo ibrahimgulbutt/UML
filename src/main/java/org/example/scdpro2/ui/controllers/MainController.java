@@ -1,6 +1,5 @@
 package org.example.scdpro2.ui.controllers;
 
-import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import org.example.scdpro2.business.models.*;
 import org.example.scdpro2.business.models.BClassDiagarm.BClassBox;
@@ -8,7 +7,6 @@ import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
 import org.example.scdpro2.business.models.BPackageDiagarm.BPackageRelationShip;
 import org.example.scdpro2.business.models.BPackageDiagarm.PackageClassComponent;
 import org.example.scdpro2.business.models.BPackageDiagarm.PackageComponent;
-import org.example.scdpro2.business.models.BPackageDiagarm.PackageDiagram;
 import org.example.scdpro2.business.services.DiagramService;
 import org.example.scdpro2.data.dao.ProjectDAOImpl;
 import org.example.scdpro2.business.services.ProjectService;
@@ -40,10 +38,13 @@ public class MainController {
 
     private List<RelationshipLine> relationshipLines = new ArrayList<>();
     public List<Relationship> relationships = new ArrayList<>();
-    public Map<RelationshipLine, Relationship> relationshipMapping = new HashMap<>();
+    public Map<RelationshipLine, Relationship> ClassRelationshipMapping = new HashMap<>();
+    public Map<PackageRelationship, BPackageRelationShip> PackageRelationshipMapping = new HashMap<>();
 
     private static int countclasses = 1;
     private static int countinterface = 1;
+    private static int countpackage = 1;
+    private static int countpackageclass = 1;
 
 
     public MainController(DiagramService diagramService) {
@@ -99,8 +100,8 @@ public class MainController {
 
             // Save project relationships
             // Extract Relationships from relationshipMapping
-            List<Relationship> projectRelationships = new ArrayList<>(relationshipMapping.values());
-            currentProject.setRelationships(projectRelationships); // Replace or update relationships in the project
+            List<Relationship> projectRelationships = new ArrayList<>(ClassRelationshipMapping.values());
+            currentProject.setBClasssRelationships(projectRelationships); // Replace or update relationships in the project
 
             // Serialize project
             oos.writeObject(currentProject);
@@ -109,6 +110,104 @@ public class MainController {
             System.err.println("Error saving project: " + e.getMessage());
         }
     }
+
+    public void savePackageProjectToFile(File file) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
+            Project currentProject = diagramService.getCurrentProject();
+            if (currentProject == null) {
+                System.out.println("No project to save.");
+                return;
+            }
+
+            // Save UI-related data to business model
+            for (Diagram diagram : currentProject.getDiagrams()) {
+                System.out.println("i ma holding a project ");
+                if (diagram instanceof PackageComponent packageComponent) {
+                    System.out.println("I have package component object ");
+                    // Save additional package-specific data
+                    PackageBox packageBox = mainView.getPackageDiagramPane().getPackageBoxForDiagram(packageComponent);
+                    if (packageBox != null) {
+                        System.out.println("1 package is being added ");
+                        packageComponent.setName(packageBox.getName());
+                        packageComponent.setX(packageBox.getLayoutX());
+                        packageComponent.setY(packageBox.getLayoutY());
+                        packageComponent.setWidth(packageBox.getWidth());
+                        packageComponent.setHeight(packageBox.getHeight());
+                        int k=0;
+                        List<PackageClassBox> packageClassBoxes = new ArrayList<>(packageBox.getPackageClassBoxes());
+                        for (PackageClassBox pcb : packageClassBoxes) {
+                            System.out.println("package class box is being saved: " + k++);
+                            packageComponent.addClassBox(pcb.getPackageClassComponent());
+                        }
+
+
+                    }
+                }
+            }
+
+            List<BPackageRelationShip> projectRelationships = new ArrayList<>(PackageRelationshipMapping.values());
+            for(BPackageRelationShip bpw: projectRelationships)
+            {
+                System.out.println(bpw.startPackagename+" :::: " + bpw.endPackagename);
+            }
+            currentProject.setBPackageRelationships(projectRelationships); // Replace or update relationships in the project
+
+            // Write the entire project to the file
+            oos.writeObject(currentProject);
+            System.out.println("Package project saved successfully to " + file.getAbsolutePath());
+        } catch (IOException e) {
+            System.err.println("Error while saving package project: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    public void loadPackageProjectFromFile(File file) {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+            // Read the Project object from the file
+            Project loadedProject = (Project) ois.readObject();
+
+            if (loadedProject == null) {
+                System.out.println("No project found in the file.");
+                return;
+            }
+
+            // Set the loaded project as the current project
+            diagramService.setCurrentProject(loadedProject);
+
+            // Restore package-specific UI elements
+            for (Diagram diagram : loadedProject.getDiagrams()) {
+                if (diagram instanceof PackageComponent packageComponent) {
+                    PackageBox packageBox = mainView.getPackageDiagramPane().createPackageBoxForDiagram(packageComponent);
+                    if (packageBox != null)
+                    {
+                        packageBox.setName(packageComponent.getName());
+                        packageBox.setId(packageBox.getName());
+                        packageBox.updateBox(packageComponent.x,packageComponent.y,packageComponent.getWidth(),packageComponent.getHeight());
+                        for(PackageClassComponent pcc : packageComponent.getPackageClassComponents())
+                        {
+                            packageBox.addClassBoxforload(pcc);
+                        }
+                    }
+                }
+            }
+
+            // Restore package relationships
+            List<BPackageRelationShip> restoredRelationships = loadedProject.getBPackageRelationships();
+            if (restoredRelationships != null) {
+                PackageRelationshipMapping.clear(); // Clear existing relationships
+                for (BPackageRelationShip relationship : restoredRelationships)
+                {
+                    System.out.println("Package relationship is being loaded.");
+                    mainView.packageDiagramPane.createRelationship(mainView.packageDiagramPane.findNodeById(relationship.getStartPackageid()),mainView.packageDiagramPane.findNodeById(relationship.getEndPackageid()));
+                }
+            }
+
+            System.out.println("Package project loaded successfully from " + file.getAbsolutePath());
+        } catch (IOException | ClassNotFoundException e) {
+            System.err.println("Error while loading package project: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
 
     public void loadClassProjectFromFile(File file) {
         System.out.println("LoadProject from filr is called ");
@@ -147,7 +246,7 @@ public class MainController {
                 }
 
                 // Restore relationships
-                for (Relationship relationship : loadedProject.getRelationships()) {
+                for (Relationship relationship : loadedProject.getBClasssRelationships()) {
                     RelationshipLine.RelationshipType type = RelationshipLine.RelationshipType.valueOf(relationship.getTypee());
 
                     if(relationship.source.Type.equals("Class Box") && relationship.target.Type.equals("Class Box")) {
@@ -190,14 +289,22 @@ public class MainController {
 
     public void saveProject() {
         File file = new FileChooser().showSaveDialog(null);
-        if (file != null) {
+        if (file != null&&mainView.classDiagramPane!=null) {
             saveClassProjectToFile(file);
+        } else if (file != null&&mainView.packageDiagramPane!=null)
+        {
+            savePackageProjectToFile(file);
         }
+
     }
 
     public void loadProject() {
         File file = new FileChooser().showOpenDialog(null);
-        if (file != null) {
+        if (file != null && mainView.packageDiagramPane!=null) {
+            mainView.packageDiagramPane.clearDiagrams();
+            loadPackageProjectFromFile(file);
+        }
+        else if (file != null && mainView.classDiagramPane!=null) {
             mainView.classDiagramPane.clearDiagrams();
             mainView.classListView.getItems().clear();
             loadClassProjectFromFile(file);
@@ -315,7 +422,7 @@ public class MainController {
 
         source.BClassBox.addRelationship(relationship);
 
-        relationshipMapping.put(line, relationship);
+        ClassRelationshipMapping.put(line, relationship);
 
 
         System.out.println("Line is being created "+ relationshipIndex);
@@ -341,13 +448,9 @@ public class MainController {
     }
 
     public void addPackageDiagram() {
-        Project project = diagramService.getCurrentProject();
-        if (project == null) {
-            throw new IllegalStateException("No project loaded.");
+        if (mainView != null) {
+            mainView.updateClassListView();
         }
-        PackageDiagram packageDiagram = new PackageDiagram("New Package Diagram");
-        diagramService.addPackageDiagram(packageDiagram);
-        System.out.println("Package diagram added: " + packageDiagram.getTitle());
     }
 
 
@@ -356,21 +459,18 @@ public class MainController {
             projectService.createProject("Untitled Project");
         }
 
-        PackageDiagram packageDiagram = diagramService.getOrCreateActivePackageDiagram();
 
-        String packageName = "NewPackage";
+        String packageName = "NewPackage " + countpackage;
         PackageComponent newPackage = new PackageComponent(packageName);
-        packageDiagram.addPackage(newPackage);
-
         PackageBox packageBox = new PackageBox(newPackage, this, diagramPane);
+        packageBox.setId(packageName);
+        packageBox.setPackageComponentid(packageName);
         diagramPane.addPackageBox(packageBox);
+        diagramService.addDiagram(newPackage);
+
+        countpackage++;
 
         System.out.println("Package added: " + packageName);
-    }
-
-    public PackageDiagram getPackagediagram()
-    {
-        return diagramService.getOrCreateActivePackageDiagram();
     }
 
     public PackageClassBox addPackageClassBox(PackageDiagramPane diagramPane, PackageBox packageBox,PackageComponent packageComponent) {
@@ -378,9 +478,10 @@ public class MainController {
             projectService.createProject("Untitled Project");
         }
 
-        String packageName = "NewCLass";
+        String packageName = "NewCLass " + countpackageclass;
         PackageClassComponent newPackage = new PackageClassComponent(packageComponent,packageName,"+");
-        //packageComponent.addClassBox(newPackage);
+        diagramService.addDiagram(newPackage);
+        countpackageclass++;
 
         PackageClassBox classBox = new PackageClassBox(packageBox,newPackage);
 
@@ -388,7 +489,29 @@ public class MainController {
         return classBox;
     }
 
+    public PackageClassBox addPackageClassBox(PackageDiagramPane diagramPane, PackageBox packageBox,PackageComponent packageComponent,PackageClassComponent pcc)
+    {
+        if (projectService.getCurrentProject() == null) {
+            projectService.createProject("Untitled Project");
+        }
+
+        PackageClassComponent newPackage = pcc;
+
+        PackageClassBox classBox = new PackageClassBox(packageBox,newPackage);
+
+        return classBox;
+    }
+
     public MainView getmainview() {
         return mainView;
+    }
+
+    public void addPackageRelationship(PackageRelationship relationship) {
+
+        BPackageRelationShip bPackageRelationShip = new BPackageRelationShip<>(relationship.startPackage.getId(),relationship.endPackage.getId());
+        bPackageRelationShip.startPackagename=relationship.startPackage.getId();
+        bPackageRelationShip.endPackagename=relationship.endPackage.getId();
+        PackageRelationshipMapping.put(relationship,bPackageRelationShip);
+
     }
 }

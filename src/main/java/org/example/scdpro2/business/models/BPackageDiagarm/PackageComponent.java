@@ -12,16 +12,32 @@ import java.util.UUID;
 public class PackageComponent extends Diagram implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    public ArrayList<PackageClassComponent> getPackageClassComponents() {
+        return packageClassComponents;
+    }
+
     private final String id; // Unique ID
     private String name;
-    private final List<Relationship> relationships;
-    private ArrayList<PackageClassComponent> packageClassComponents;
+    private ArrayList<PackageClassComponent> packageClassComponents= new ArrayList<>();
+    public double x;
+    public double y;
+    private double width;  // New property for width
+    private double height; // New property for height
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
 
     public PackageComponent(String name) {
         super(name);
         this.id = UUID.randomUUID().toString(); // Generate a unique ID
         this.name = name;
-        this.relationships = new ArrayList<>();
+        this.width = 200; // Default width
+        this.height = 150; // Default height
     }
 
 
@@ -37,26 +53,6 @@ public class PackageComponent extends Diagram implements Serializable {
         this.name = name;
     }
 
-    public void addRelationship(Relationship relationship) {
-        relationships.add(relationship);
-    }
-
-    public void removeRelationship(Relationship relationship) {
-        relationships.remove(relationship);
-    }
-
-    public List<Relationship> getRelationships() {
-        return relationships;
-    }
-
-    public String generateCode() {
-        StringBuilder codeBuilder = new StringBuilder("package " + name + " {\n");
-        for (Relationship relationship : relationships) {
-            codeBuilder.append("// Relationship: ").append(relationship).append("\n");
-        }
-        codeBuilder.append("}");
-        return codeBuilder.toString();
-    }
 
     @Override
     public void render() {
@@ -65,7 +61,7 @@ public class PackageComponent extends Diagram implements Serializable {
 
     @Override
     public String toCode() {
-        return generateCode();
+        return " ";
     }
 
     @Override
@@ -75,5 +71,24 @@ public class PackageComponent extends Diagram implements Serializable {
 
     public void addClassBox(PackageClassComponent newPackage) {
         this.packageClassComponents.add(newPackage);
+    }
+    public void addAllClassBox(PackageClassComponent newPackage) {
+        this.packageClassComponents.add(newPackage);
+    }
+
+    public double getWidth() {
+        return width;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public void setHeight(double height) {
+        this.height = height;
+    }
+
+    public void setWidth(double newWidth) {
+        this.width=newWidth;
     }
 }

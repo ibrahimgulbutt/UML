@@ -10,8 +10,8 @@ import java.util.List;
 public class Project implements Serializable {
     private String name;
     private List<Diagram> diagrams;
-    private List<Relationship> relationships;
-    public List<BPackageRelationShip> bPackageRelationShips;
+    private List<Relationship> BClasssRelationships;// for class diagram
+    public List<BPackageRelationShip> bPackageRelationShips;// for package diagram
 
     public List<BPackageRelationShip> getbPackageRelationShips() {
         return bPackageRelationShips;
@@ -27,11 +27,15 @@ public class Project implements Serializable {
     public Project(String name) {
         this.name = name;
         this.diagrams = new ArrayList<>();
-        this.relationships = new ArrayList<>();
+        this.BClasssRelationships = new ArrayList<>();
         this.bPackageRelationShips= new ArrayList<>();
     }
-    public void setRelationships(List<Relationship> relationships) {
-        this.relationships = relationships;
+    public void setBClasssRelationships(List<Relationship> BClasssRelationships) {
+        this.BClasssRelationships = BClasssRelationships;
+    }
+
+    public void setBPackageRelationships(List<BPackageRelationShip> BPackageRelationships) {
+        this.bPackageRelationShips = bPackageRelationShips;
     }
 
 
@@ -43,16 +47,12 @@ public class Project implements Serializable {
         diagrams.remove(diagram);
     }
 
-    public void addRelationship(Relationship relationship) {
-        relationships.add(relationship);
-    }
-
     public List<Diagram> getDiagrams() {
         return diagrams;
     }
 
-    public List<Relationship> getRelationships() {
-        return relationships;
+    public List<Relationship> getBClasssRelationships() {
+        return BClasssRelationships;
     }
 
     public String getName() {
@@ -61,5 +61,9 @@ public class Project implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public List<BPackageRelationShip> getBPackageRelationships() {
+        return bPackageRelationShips;
     }
 }
