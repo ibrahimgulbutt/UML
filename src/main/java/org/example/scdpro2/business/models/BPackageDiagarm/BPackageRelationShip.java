@@ -1,6 +1,9 @@
 package org.example.scdpro2.business.models.BPackageDiagarm;
 
-public class BPackageRelationShip<T extends javafx.scene.layout.BorderPane> {
+import java.io.Serializable;
+
+public class BPackageRelationShip<T extends javafx.scene.layout.BorderPane> implements Serializable {
+    private static final long serialVersionUID = 1L;
     public String startPackagename;
     public String endPackagename;
     public String relationshipType;

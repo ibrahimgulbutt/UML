@@ -68,19 +68,21 @@ public class PackageClassBox extends BorderPane {
 
         // Add a context menu for deletion
         setOnMouseClicked(event -> {
-            if (event.getButton() == MouseButton.SECONDARY && event.getClickCount() == 1) {
-                // Show confirmation dialog
+            if (event.getButton() == MouseButton.SECONDARY) { // Single click
+                System.out.println("Right-click detected!");
                 if (confirmAction("Delete Class Box", "Are you sure you want to delete this class box?")) {
-                    parentPackageBox.getDiagramPane().getChildren().remove(this); // Remove from the diagram
-                    event.consume(); // Prevent event propagation
+                    parentPackageBox.getDiagramPane().getChildren().remove(this);
+                    event.consume();
                 }
             }
         });
 
 
+
         // Listen for changes in the nameField and visibilityDropdown and update the model
         nameField.textProperty().addListener((observable, oldValue, newValue) -> {
             packageClassComponent.setName(newValue); // Update the model's name
+            parentPackageBox.controller.getmainview().addClassToList(newValue);
         });
 
         visibilityDropdown.valueProperty().addListener((observable, oldValue, newValue) -> {
@@ -95,6 +97,12 @@ public class PackageClassBox extends BorderPane {
         alert.setTitle(title);
         alert.setHeaderText(null);
         return alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES;
+    }
+
+    public void updatePositionAndSize(double x, double y, double width) {
+        setLayoutX(x);
+        setLayoutY(y);
+        setPrefWidth(width);
     }
 
     // Drag and Resize related functions

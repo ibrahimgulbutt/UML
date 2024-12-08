@@ -137,6 +137,10 @@ public class MainController {
                         List<PackageClassBox> packageClassBoxes = new ArrayList<>(packageBox.getPackageClassBoxes());
                         for (PackageClassBox pcb : packageClassBoxes) {
                             System.out.println("package class box is being saved: " + k++);
+                            pcb.getPackageClassComponent().xCoordinates=pcb.getLayoutX();
+                            pcb.getPackageClassComponent().yCoordinates=pcb.getLayoutY();
+                            pcb.getPackageClassComponent().width=pcb.getPrefWidth();
+                            pcb.getPackageClassComponent().setName(pcb.getId());
                             packageComponent.addClassBox(pcb.getPackageClassComponent());
                         }
 
@@ -145,11 +149,12 @@ public class MainController {
                 }
             }
 
-            List<BPackageRelationShip> projectRelationships = new ArrayList<>(PackageRelationshipMapping.values());
+            ArrayList<BPackageRelationShip> projectRelationships = new ArrayList<>(PackageRelationshipMapping.values());
             for(BPackageRelationShip bpw: projectRelationships)
             {
                 System.out.println(bpw.startPackagename+" :::: " + bpw.endPackagename);
             }
+            System.out.println("save project keh waqat : "+projectRelationships.size());
             currentProject.setBPackageRelationships(projectRelationships); // Replace or update relationships in the project
 
             // Write the entire project to the file
@@ -180,11 +185,11 @@ public class MainController {
                     if (packageBox != null)
                     {
                         packageBox.setName(packageComponent.getName());
-                        packageBox.setId(packageBox.getName());
+                        packageBox.setId(packageComponent.getName());
                         packageBox.updateBox(packageComponent.x,packageComponent.y,packageComponent.getWidth(),packageComponent.getHeight());
                         for(PackageClassComponent pcc : packageComponent.getPackageClassComponents())
                         {
-                            packageBox.addClassBoxforload(pcc);
+                            packageBox.addClassBoxforload(pcc,pcc.xCoordinates,pcc.yCoordinates,pcc.width,pcc.getName());
                         }
                     }
                 }
@@ -192,13 +197,19 @@ public class MainController {
 
             // Restore package relationships
             List<BPackageRelationShip> restoredRelationships = loadedProject.getBPackageRelationships();
-            if (restoredRelationships != null) {
+            if (restoredRelationships != null)
+            {
+                System.out.println(restoredRelationships.size());
                 PackageRelationshipMapping.clear(); // Clear existing relationships
                 for (BPackageRelationShip relationship : restoredRelationships)
                 {
                     System.out.println("Package relationship is being loaded.");
                     mainView.packageDiagramPane.createRelationship(mainView.packageDiagramPane.findNodeById(relationship.getStartPackageid()),mainView.packageDiagramPane.findNodeById(relationship.getEndPackageid()));
                 }
+            }
+            else {
+
+                System.out.println("Restored relationships are null");
             }
 
             System.out.println("Package project loaded successfully from " + file.getAbsolutePath());
@@ -470,6 +481,7 @@ public class MainController {
 
         countpackage++;
 
+        mainView.addClassToList(packageName);
         System.out.println("Package added: " + packageName);
     }
 
@@ -485,6 +497,9 @@ public class MainController {
 
         PackageClassBox classBox = new PackageClassBox(packageBox,newPackage);
 
+        classBox.setId(packageName);
+
+        mainView.addClassToList(packageName);
         System.out.println("Package added: " + packageName);
         return classBox;
     }
@@ -499,6 +514,7 @@ public class MainController {
 
         PackageClassBox classBox = new PackageClassBox(packageBox,newPackage);
 
+        mainView.addClassToList(pcc.getName());
         return classBox;
     }
 

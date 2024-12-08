@@ -11,18 +11,7 @@ public class Project implements Serializable {
     private String name;
     private List<Diagram> diagrams;
     private List<Relationship> BClasssRelationships;// for class diagram
-    public List<BPackageRelationShip> bPackageRelationShips;// for package diagram
-
-    public List<BPackageRelationShip> getbPackageRelationShips() {
-        return bPackageRelationShips;
-    }
-
-    public void setbPackageRelationShips(List<BPackageRelationShip> bPackageRelationShips) {
-        this.bPackageRelationShips = bPackageRelationShips;
-    }
-    public void addBPackageRelationship(BPackageRelationShip relationship) {
-        bPackageRelationShips.add(relationship);
-    }
+    public ArrayList<BPackageRelationShip> bPackageRelationShips;// for package diagram
 
     public Project(String name) {
         this.name = name;
@@ -32,10 +21,12 @@ public class Project implements Serializable {
     }
     public void setBClasssRelationships(List<Relationship> BClasssRelationships) {
         this.BClasssRelationships = BClasssRelationships;
+
     }
 
-    public void setBPackageRelationships(List<BPackageRelationShip> BPackageRelationships) {
-        this.bPackageRelationShips = bPackageRelationShips;
+    public void setBPackageRelationships(ArrayList<BPackageRelationShip> BPackageRelationships) {
+        this.bPackageRelationShips = BPackageRelationships;
+        System.out.println("Project mein relationship ka size save karte hoe : " + bPackageRelationShips.size());
     }
 
 
@@ -64,6 +55,7 @@ public class Project implements Serializable {
     }
 
     public List<BPackageRelationShip> getBPackageRelationships() {
+        System.out.println("Project mein relationship ka size : " + bPackageRelationShips.size());
         return bPackageRelationShips;
     }
 }

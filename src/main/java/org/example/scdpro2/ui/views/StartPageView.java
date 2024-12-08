@@ -5,6 +5,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.example.scdpro2.business.services.DiagramService;
@@ -61,12 +62,78 @@ public class StartPageView extends BorderPane {
     }
 
     private void showNewProjectDialog() {
-        String projectName = "ClassDiagram";
-        String projectType = "Package Diagram";
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Create New Project");
+        dialog.getDialogPane().getStyleClass().add("dialog-pane");
 
-        mainController.createNewProject(projectName);
-        openMainView(projectType);
+        // Create a VBox container for dialog content
+        VBox dialogContent = new VBox(15);
+        dialogContent.setPadding(new Insets(20));
+        dialogContent.setStyle("-fx-background-color: #ffffff; -fx-border-color: #dddddd; -fx-border-radius: 10; -fx-background-radius: 10;");
+
+        // Project type label
+        Label projectTypeLabel = new Label("Select Project Type:");
+        projectTypeLabel.getStyleClass().addAll("h5", "text-primary", "mb-2");
+
+        // Radio buttons for project type selection
+        ToggleGroup projectTypeGroup = new ToggleGroup();
+        RadioButton classDiagramButton = new RadioButton("Class Diagram");
+        classDiagramButton.setToggleGroup(projectTypeGroup);
+        classDiagramButton.getStyleClass().add("form-check");
+
+        RadioButton packageDiagramButton = new RadioButton("Package Diagram");
+        packageDiagramButton.setToggleGroup(projectTypeGroup);
+        packageDiagramButton.getStyleClass().add("form-check");
+
+        VBox projectTypeOptions = new VBox(10, classDiagramButton, packageDiagramButton);
+        projectTypeOptions.getStyleClass().add("form-group");
+
+        // Project name label and text field
+        Label projectNameLabel = new Label("Enter Project Name:");
+        projectNameLabel.getStyleClass().addAll("h5", "text-primary", "mb-2");
+
+        TextField projectNameField = new TextField();
+        projectNameField.setPromptText("Enter a unique project name");
+        projectNameField.getStyleClass().add("form-control");
+
+        // Add components to dialog content
+        dialogContent.getChildren().addAll(
+                projectTypeLabel, projectTypeOptions,
+                projectNameLabel, projectNameField
+        );
+
+        // Set dialog content
+        dialog.getDialogPane().setContent(dialogContent);
+
+        // Add buttons with styling
+        ButtonType okButtonType = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButtonType = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, cancelButtonType);
+
+        // Apply BootstrapFX styles to buttons
+        Button okButton = (Button) dialog.getDialogPane().lookupButton(okButtonType);
+        okButton.getStyleClass().addAll("btn", "btn-success");
+
+        Button cancelButton = (Button) dialog.getDialogPane().lookupButton(cancelButtonType);
+        cancelButton.getStyleClass().addAll("btn", "btn-outline-secondary");
+
+        // Show dialog and handle response
+        dialog.showAndWait().ifPresent(response -> {
+            if (response == okButtonType) {
+                String projectName = projectNameField.getText().trim();
+                RadioButton selectedType = (RadioButton) projectTypeGroup.getSelectedToggle();
+
+                if (!projectName.isEmpty() && selectedType != null) {
+                    mainController.createNewProject(projectName);
+                    openMainView(selectedType.getText());
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Please fill all fields.", ButtonType.OK);
+                    alert.showAndWait();
+                }
+            }
+        });
     }
+
 
     private void openExistingProject() {
         String projectName = "ClassDiagram";

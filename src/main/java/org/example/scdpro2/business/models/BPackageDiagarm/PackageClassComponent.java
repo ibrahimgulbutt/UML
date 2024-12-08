@@ -9,8 +9,9 @@ public class PackageClassComponent extends Diagram {
     private PackageComponent parent; // Parent package component reference
     private String name; // Class name
     private String visibility; // Visibility (+, -, #)
-    private int xCoordinates; // X-coordinate position
-    private int yCoordinates; // Y-coordinate position
+    public double xCoordinates; // X-coordinate position
+    public double yCoordinates; // Y-coordinate position
+    public double width;
     private ArrayList<BPackageRelationShip> bPackageRelationShips;
 
 
@@ -44,7 +45,7 @@ public class PackageClassComponent extends Diagram {
     }
 
     // Coordinates getters and setters
-    public int getXCoordinates() {
+    public double getXCoordinates() {
         return xCoordinates;
     }
 
@@ -52,7 +53,7 @@ public class PackageClassComponent extends Diagram {
         this.xCoordinates = xCoordinates;
     }
 
-    public int getYCoordinates() {
+    public double getYCoordinates() {
         return yCoordinates;
     }
 

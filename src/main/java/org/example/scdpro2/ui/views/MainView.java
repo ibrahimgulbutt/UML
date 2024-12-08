@@ -584,7 +584,6 @@ public class MainView extends BorderPane {
         return codeGenerationPanel;
     }
 
-
     public void updateClassListView() {
         projectExplorer.setRoot(new TreeItem<>("Class Diagrams"));
         if (controller.getCurrentProject() != null) {

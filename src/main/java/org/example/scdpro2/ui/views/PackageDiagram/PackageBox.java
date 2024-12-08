@@ -16,7 +16,7 @@ import java.util.List;
 
 public class PackageBox extends BorderPane  {
     public PackageComponent packageComponent;
-    private final MainController controller;
+    public final MainController controller;
     private final PackageDiagramPane diagramPane;
 
     private double offsetX, offsetY; // For dragging
@@ -81,7 +81,11 @@ public class PackageBox extends BorderPane  {
         contextMenu.getItems().add(deletePackageMenuItem);
 
         // Show context menu on right-click
-        setOnContextMenuRequested(event -> contextMenu.show(this, event.getScreenX(), event.getScreenY()));
+        setOnContextMenuRequested(event -> {
+            System.out.println("Context menu requested");
+            contextMenu.show(this, event.getScreenX(), event.getScreenY());
+        });
+
     }
 
     public void setPackageComponentid(String id)
@@ -100,6 +104,7 @@ public class PackageBox extends BorderPane  {
                     nameLabel.setText(newName);
                     contentBox.getChildren().remove(nameField);
                     contentBox.getChildren().add(0, nameLabel);
+                    controller.getmainview().addClassToList(newName);
                 }
             });
             contentBox.getChildren().remove(nameLabel);
@@ -155,18 +160,20 @@ public class PackageBox extends BorderPane  {
         diagramPane.addClassBox(classBox,this);
     }
 
-    public void addClassBoxforload(PackageClassComponent pcc)
+    public void addClassBoxforload(PackageClassComponent pcc,double x,double y,double w,String id)
     {
         // Create a new instance of PackageClassBox
         PackageClassBox classBox = controller.addPackageClassBox(diagramPane,this,packageComponent,pcc);
 
+        classBox.setId(id);
+
         // Set the default size of the class box
-        classBox.setPrefWidth(100); // Set width to 100 pixels (default size)
+        classBox.setPrefWidth(w); // Set width to 100 pixels (default size)
         classBox.setPrefHeight(80); // Set height to 80 pixels (default size)
 
         // Calculate the new position of the class box, ensuring it stays within the bounds of the PackageBox
-        double newLayoutX = getLayoutX() + 10; // Offset for visibility
-        double newLayoutY = getLayoutY() + 10;
+        double newLayoutX = x + 10; // Offset for visibility
+        double newLayoutY = y + 10;
 
         // Ensure the new layoutX and layoutY are within the bounds of the PackageBox
         double maxX = getLayoutX() + getPrefWidth() - classBox.getPrefWidth();
