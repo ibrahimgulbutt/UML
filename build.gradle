@@ -50,34 +50,18 @@ dependencies {
   implementation("com.fasterxml.jackson.core:jackson-core:2.15.2")     // Core functionalities
   implementation("com.fasterxml.jackson.core:jackson-annotations:2.15.2") // Annotations support
 
-  // TestFX dependencies
-  testImplementation("org.testfx:testfx-core:4.0.16")
-  testImplementation("org.testfx:testfx-junit5:4.0.16") // JUnit 5 (recommended)
-
-  // JUnit 5 dependencies
-  testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testImplementation("org.junit.jupiter:junit-jupiter-engine:5.10.0")
-
-  // Optional: For Kotlin support (if you're using Kotlin)
-  testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:1.6.10")
+  testImplementation ("org.testfx:testfx-core:4.0.16-alpha")
+  testImplementation ("org.testfx:testfx-junit5:4.0.16-alpha")
+  testImplementation ("org.assertj:assertj-core:3.24.2")
 
   // JUnit for unit testing
   testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
 
   // Mockito for mocking dependencies
-  testImplementation("org.mockito:mockito-core:5.5.0")
-
-  // JavaFX dependencies
-  implementation ("org.openjfx:javafx-controls:20") // Adjust to the version you're using
-  implementation ("org.openjfx:javafx-fxml:20")
-
-  // TestFX dependencies
-  testImplementation ("org.testfx:testfx-core:4.0.17")
-  testImplementation ("org.testfx:testfx-junit5:4.0.17") // If you're using JUnit 5
-  testImplementation ("org.junit.jupiter:junit-jupiter-api:5.7.0") // JUnit 5
-  testImplementation ("org.junit.jupiter:junit-jupiter-engine:5.7.0") // JUnit 5 engine
+  testImplementation ("org.mockito:mockito-core:5.5.0")
 }
+
 test {
   useJUnitPlatform()}
 
