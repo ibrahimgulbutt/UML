@@ -136,47 +136,51 @@ public class RelationshipLine extends Group {
 
     private void updateRightAnglePath() {
         // Ensure neither source nor target are null, and polyline is initialized
-        if ((source == null ) || (target == null) || polyline == null)
+        if ((source == null) || (target == null) || polyline == null)
             return;
 
-        double offset = 20 * relationshipIndex; // Offset for multiple relationships
+        double offset = 40 * relationshipIndex; // Offset for multiple relationships
 
         // Initialize coordinates
         double sourceX, sourceY, sourceWidth, sourceHeight;
         double targetX, targetY, targetWidth, targetHeight;
 
         // Use source or sourceinterface depending on availability
-            sourceX = source.getLayoutX();
-            sourceY = source.getLayoutY();
-            sourceWidth = source.getWidth();
-            sourceHeight = source.getHeight();
+        sourceX = source.getLayoutX();
+        sourceY = source.getLayoutY();
+        sourceWidth = source.getWidth();
+        sourceHeight = source.getHeight();
 
         // Use target or targetinterface depending on availability
-            targetX = target.getLayoutX();
-            targetY = target.getLayoutY();
-            targetWidth = target.getWidth();
-            targetHeight = target.getHeight();
+        targetX = target.getLayoutX();
+        targetY = target.getLayoutY();
+        targetWidth = target.getWidth();
+        targetHeight = target.getHeight();
 
         // Determine connection direction (horizontal or vertical)
-        double startX, startY, endX, endY;
+        double startX, startY, endX, endY, bendX, bendY;
 
         if (Math.abs(targetX - sourceX) > Math.abs(targetY - sourceY)) {
             // Horizontal connection
             startX = sourceX + (targetX > sourceX ? sourceWidth : 0); // Right or Left edge
             startY = sourceY + sourceHeight / 2 + offset; // Vertically centered with offset
-            endX = targetX + (targetX > sourceX ? 0 : targetWidth); // Left or Right edge
+            bendX = targetX + (targetX > sourceX ? 0 : targetWidth); // Left or Right edge
+            bendY = startY; // Y remains the same for a horizontal line
+            endX = bendX; // End X is the same as bend
             endY = targetY + targetHeight / 2 + offset; // Vertically centered with offset
         } else {
             // Vertical connection
             startX = sourceX + sourceWidth / 2 + offset; // Horizontally centered with offset
             startY = sourceY + (targetY > sourceY ? sourceHeight : 0); // Bottom or Top edge
+            bendX = startX; // X remains the same for vertical connection
+            bendY = targetY + (targetY > sourceY ? 0 : targetHeight); // Top or Bottom edge
             endX = targetX + targetWidth / 2 + offset; // Horizontally centered with offset
-            endY = targetY + (targetY > sourceY ? 0 : targetHeight); // Top or Bottom edge
+            endY = bendY; // End Y is the same as bend
         }
 
-        // Update polyline path
+        // Update polyline path (with bend)
         polyline.getPoints().clear();
-        polyline.getPoints().addAll(startX, startY, startX, endY, endX, endY);
+        polyline.getPoints().addAll(startX, startY, bendX, bendY, endX, endY);
 
         // Update the end indicator position and rotation
         if (endIndicator instanceof Polygon polygon) {
@@ -186,44 +190,50 @@ public class RelationshipLine extends Group {
             polygon.setRotate(calculateRotationAngle(startX, startY, endX, endY));
         }
 
-        // Update visible line
+        // Update visible line (this is the same path as polyline)
         line.setStartX(startX);
         line.setStartY(startY);
         line.setEndX(endX);
         line.setEndY(endY);
 
-        double midX = startX;
-        double midY = endY;
-
-        // Update the main line (or polyline)
-        polyline.getPoints().setAll(startX, startY, midX, midY, endX, endY);
-
         // Update the clickOverlay to match the main line path
-        clickOverlay.getPoints().setAll(startX, startY, midX, midY, endX, endY);
+        clickOverlay.getPoints().setAll(startX, startY, bendX, bendY, endX, endY);
         clickOverlay.setStroke(Color.TRANSPARENT);
         line.setStroke(Color.TRANSPARENT);
 
-        // Update relationship label position
+        // Update relationship label position based on polyline
         if (relationshipLabel != null) {
+            // Calculate the midpoints of the polyline segments
+            double midX = (startX + bendX) / 2;
+            double midY = (startY + bendY) / 2;
+
+            // Calculate the label's position
             relationshipLabel.setLayoutX(midX - relationshipLabel.getWidth() / 2); // Center horizontally
-            relationshipLabel.setLayoutY(midY - 15); // Place slightly above the line
+            relationshipLabel.setLayoutY(midY - relationshipLabel.getHeight() / 2); // Center vertically
+
+            // Adjust for if polyline is mostly horizontal or vertical
+            if (Math.abs(startX - endX) > Math.abs(startY - endY)) {
+                // If the polyline is more horizontal, position label near the middle segment
+                relationshipLabel.setLayoutY(midY - 10); // Slightly above the middle of the polyline
+                // Set rotation to 0 for horizontal
+                relationshipLabel.setRotate(0);
+            } else {
+                // If polyline is vertical, position label slightly right of the line
+                relationshipLabel.setLayoutX(midX + 10); // Slightly to the right
+                // Set rotation to 180 for vertical (rotate 180 degrees)
+                relationshipLabel.setRotate(90);
+            }
         }
 
         // Update the position of multiplicity labels
         if (sourceMultiplicity != null) {
             sourceMultiplicity.setLayoutX(startX - 15);  // Adjust X offset for better placement
-            sourceMultiplicity.setLayoutY(startY - 10);  // Adjust Y offset for better placement
-            System.out.println("Source is not null");
-        } else {
-            System.out.println("Source is null");
+            sourceMultiplicity.setLayoutY(startY - 0);  // Adjust Y offset for better placement
         }
 
         if (targetMultiplicity != null) {
             targetMultiplicity.setLayoutX(endX + 5);  // Adjust X offset for better placement
-            targetMultiplicity.setLayoutY(endY - 10);  // Adjust Y offset for better placement
-            System.out.println("Target is not null");
-        } else {
-            System.out.println("Target is null");
+            targetMultiplicity.setLayoutY(endY - 20);  // Adjust Y offset for better placement
         }
     }
 

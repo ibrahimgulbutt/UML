@@ -8,6 +8,7 @@ public class BPackageRelationShip<T extends javafx.scene.layout.BorderPane> impl
     public String endPackagename;
     public String relationshipType;
     public double startX, startY, endX, endY;
+
     public BPackageRelationShip(String startPackagename, String endPackagename) {
         this.startPackagename = startPackagename;
         this.endPackagename = endPackagename;

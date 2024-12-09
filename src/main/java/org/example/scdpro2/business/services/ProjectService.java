@@ -19,7 +19,6 @@ public class ProjectService {
         return currentProject;
     }
 
-
     public Project getCurrentProject() {
         return currentProject;
     }

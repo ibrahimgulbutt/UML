@@ -55,17 +55,9 @@ public class MainController {
 
     }
 
-    public void setMainView(MainView mainView) {
-        this.mainView = mainView;
-    }
-
     public void createNewProject() {
         Project project = projectService.createProject("New Project");
         System.out.println("New Project Created: " + project.getName());
-    }
-
-    public DiagramService getDiagramService() {
-        return diagramService;
     }
 
     public void saveClassProjectToFile(File file) {
@@ -165,6 +157,7 @@ public class MainController {
             e.printStackTrace();
         }
     }
+
     public void loadPackageProjectFromFile(File file) {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
             // Read the Project object from the file
@@ -218,7 +211,6 @@ public class MainController {
             e.printStackTrace();
         }
     }
-
 
     public void loadClassProjectFromFile(File file) {
         System.out.println("LoadProject from filr is called ");
@@ -347,18 +339,6 @@ public class MainController {
         }
     }
 
-
-    public List<String> getAvailableClassNames() {
-        Project currentProject = projectService.getCurrentProject();
-        if (currentProject != null) {
-            return currentProject.getDiagrams().stream()
-                    .filter(diagram -> diagram instanceof BClassBox)
-                    .map(diagram -> diagram.getTitle())
-                    .collect(Collectors.toList());
-        }
-        return List.of(); // Return an empty list if no project or diagrams
-    }
-
     public void addClassBox(ClassDiagramPane diagramPane) {
         // Ensure a project is initialized
         if (projectService.getCurrentProject() == null) {
@@ -448,8 +428,13 @@ public class MainController {
                 .count();
     }
 
-    public Project getCurrentProject() {
-        return projectService.getCurrentProject();
+    public void addPackageRelationship(PackageRelationship relationship) {
+
+        BPackageRelationShip bPackageRelationShip = new BPackageRelationShip<>(relationship.startPackage.getId(),relationship.endPackage.getId());
+        bPackageRelationShip.startPackagename=relationship.startPackage.getId();
+        bPackageRelationShip.endPackagename=relationship.endPackage.getId();
+        PackageRelationshipMapping.put(relationship,bPackageRelationShip);
+
     }
 
     public void addClassDiagram() {
@@ -463,7 +448,6 @@ public class MainController {
             mainView.updateClassListView();
         }
     }
-
 
     public void addPackageBox(PackageDiagramPane diagramPane) {
         if (projectService.getCurrentProject() == null) {
@@ -518,16 +502,34 @@ public class MainController {
         return classBox;
     }
 
+
+
     public MainView getmainview() {
         return mainView;
     }
 
-    public void addPackageRelationship(PackageRelationship relationship) {
-
-        BPackageRelationShip bPackageRelationShip = new BPackageRelationShip<>(relationship.startPackage.getId(),relationship.endPackage.getId());
-        bPackageRelationShip.startPackagename=relationship.startPackage.getId();
-        bPackageRelationShip.endPackagename=relationship.endPackage.getId();
-        PackageRelationshipMapping.put(relationship,bPackageRelationShip);
-
+    public Project getCurrentProject() {
+        return projectService.getCurrentProject();
     }
+
+    public List<String> getAvailableClassNames() {
+        Project currentProject = projectService.getCurrentProject();
+        if (currentProject != null) {
+            return currentProject.getDiagrams().stream()
+                    .filter(diagram -> diagram instanceof BClassBox)
+                    .map(diagram -> diagram.getTitle())
+                    .collect(Collectors.toList());
+        }
+        return List.of(); // Return an empty list if no project or diagrams
+    }
+
+    public DiagramService getDiagramService() {
+        return diagramService;
+    }
+
+    public void setMainView(MainView mainView) {
+        this.mainView = mainView;
+    }
+
+
 }

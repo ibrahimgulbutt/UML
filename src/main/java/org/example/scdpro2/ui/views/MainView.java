@@ -89,7 +89,7 @@ public class MainView extends BorderPane {
 
     }
 
-    private VBox createRightSideToolbar() {
+    VBox createRightSideToolbar() {
         VBox toolbar = new VBox();
         toolbar.setPadding(new Insets(10));
         toolbar.setSpacing(10);

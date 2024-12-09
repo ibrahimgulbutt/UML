@@ -25,7 +25,7 @@ public class CodeGenerationService {
         return codeBuilder.toString();
     }
 
-    private String generateClassCode(BClassBox bClassBox) {
+    String generateClassCode(BClassBox bClassBox) {
         StringBuilder classCode = new StringBuilder();
 
         RelationshipLine.RelationshipType rel = RelationshipLine.RelationshipType.INHERITANCE;
@@ -64,7 +64,7 @@ public class CodeGenerationService {
     }
 
 
-    private String generateAttributeCode(AttributeComponent attribute) {
+    String generateAttributeCode(AttributeComponent attribute) {
         String visibility = switch (attribute.getVisibility()) {
             case "+" -> "public";
             case "-" -> "private";
@@ -75,7 +75,7 @@ public class CodeGenerationService {
         return visibility + " "+attribute.getDataType()+" " + attribute.getName() + ";";
     }
 
-    private String generateOperationCode(OperationComponent operation) {
+    String generateOperationCode(OperationComponent operation) {
         String visibility = switch (operation.getVisibility()) {
             case "+" -> "public";
             case "-" -> "private";

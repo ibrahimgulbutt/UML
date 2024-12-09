@@ -1,77 +1,68 @@
 package org.example.scdpro2.business.models.BClassDiagarm;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.example.scdpro2.business.models.BClassDiagarm.AttributeComponent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 class AttributeComponentTest {
 
-    private AttributeComponent attribute;
+    private AttributeComponent attributeComponent;
 
     @BeforeEach
     void setUp() {
-        // Initialize the AttributeComponent with sample data
-        attribute = new AttributeComponent("attributeName", "private", "String");
+        // Initialize the AttributeComponent before each test
+        attributeComponent = new AttributeComponent("name", "private", "String");
     }
 
     @Test
-    void testGenerateCode() {
-        // Expected generated code for the attribute
-        String expectedCode = "private attributeName; String";
-
-        // Actual generated code from the generateCode() method
-        String actualCode = attribute.generateCode();
-
-        // Assert that the generated code matches the expected code
-        assertEquals(expectedCode, actualCode);
+    void testConstructor() {
+        // Test that the constructor initializes the values correctly
+        assertEquals("name", attributeComponent.getName(), "The name should be initialized correctly");
+        assertEquals("private", attributeComponent.getVisibility(), "The visibility should be initialized correctly");
+        assertEquals("String", attributeComponent.getDataType(), "The datatype should be initialized correctly");
     }
 
     @Test
     void testToString() {
-        // Expected string representation of the attribute
-        String expectedString = "private' name='attributeName':";
-
-        // Actual string representation from toString() method
-        String actualString = attribute.toString();
-
-        // Assert that the toString() output matches the expected string
-        assertEquals(expectedString, actualString);
+        // Test that the toString method formats the string correctly
+        String expected = "private name='name':";
+        assertEquals(expected, attributeComponent.toString(), "The toString method should return the correct string format");
     }
 
     @Test
-    void testSettersAndGetters() {
-        // Test setters and getters for visibility, name, and data type
-
-        // Set new values
-        attribute.setVisibility("protected");
-        attribute.setName("newAttributeName");
-        attribute.setDataType("int");
-
-        // Assert the new values are set correctly
-        assertEquals("protected", attribute.getVisibility());
-        assertEquals("newAttributeName", attribute.getName());
-        assertEquals("int", attribute.getDataType());
-    }
-
-    @Test
-    void testSetName() {
-        // Test that the setName method correctly updates the name
-        attribute.setName("updatedName");
-        assertEquals("updatedName", attribute.getName());
+    void testGenerateCode() {
+        // Test that the generateCode method formats the code correctly
+        String expectedCode = "private name; String";
+        assertEquals(expectedCode, attributeComponent.generateCode(), "The generateCode method should return the correct code format");
     }
 
     @Test
     void testSetVisibility() {
-        // Test that the setVisibility method correctly updates the visibility
-        attribute.setVisibility("public");
-        assertEquals("public", attribute.getVisibility());
+        // Test that the visibility can be updated correctly
+        attributeComponent.setVisibility("public");
+        assertEquals("public", attributeComponent.getVisibility(), "The visibility should be updated correctly");
+    }
+
+    @Test
+    void testSetName() {
+        // Test that the name can be updated correctly
+        attributeComponent.setName("newName");
+        assertEquals("newName", attributeComponent.getName(), "The name should be updated correctly");
     }
 
     @Test
     void testSetDataType() {
-        // Test that the setDataType method correctly updates the data type
-        attribute.setDataType("boolean");
-        assertEquals("boolean", attribute.getDataType());
+        // Test that the datatype can be updated correctly
+        attributeComponent.setDataType("int");
+        assertEquals("int", attributeComponent.getDataType(), "The datatype should be updated correctly");
+    }
+
+    @Test
+    void testValidate() {
+        // Test that the validate method doesn't throw any exceptions (assuming it's just a placeholder for now)
+        // In a real-world scenario, we would test attribute-specific validation rules here.
+        assertDoesNotThrow(() -> attributeComponent.validate(), "The validate method should not throw an exception");
     }
 }
-

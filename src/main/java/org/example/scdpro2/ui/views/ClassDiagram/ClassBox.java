@@ -244,14 +244,11 @@ public class ClassBox extends BorderPane {
         visibilityComboBox.getItems().addAll("+", "-", "#");
         visibilityComboBox.getSelectionModel().select(operation.getVisibility());
 
-        visibilityComboBox.setPrefWidth(10);
-        visibilityComboBox.setPrefHeight(20);
-        visibilityComboBox.setMinWidth(50);
+        visibilityComboBox.prefWidthProperty().bind(operationBox.widthProperty().multiply(0.1));
 
         TextField operationNameField = new TextField(operation.getName());
 
-        operationNameField.setPrefWidth(70);
-        operationNameField.setPrefHeight(20);
+        operationNameField.prefWidthProperty().bind(operationBox.widthProperty().multiply(0.3));
 
         ComboBox<String> returnTypeComboBox = new ComboBox<>();
         returnTypeComboBox.setEditable(true);
@@ -259,8 +256,7 @@ public class ClassBox extends BorderPane {
         returnTypeComboBox.setPromptText("Return Type");
         returnTypeComboBox.getSelectionModel().select(operation.getReturnType());
 
-        returnTypeComboBox.setPrefWidth(50);
-        returnTypeComboBox.setPrefHeight(20);
+        returnTypeComboBox.prefWidthProperty().bind(operationBox.widthProperty().multiply(0.3));
 
         // Add listeners for updates
         visibilityComboBox.valueProperty().addListener((obs, oldVal, newVal) -> operation.setVisibility(newVal));
@@ -268,6 +264,7 @@ public class ClassBox extends BorderPane {
         returnTypeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> operation.setReturnType(newVal));
 
         Button deleteButton = new Button("❌");
+        deleteButton.prefWidthProperty().bind(operationBox.widthProperty().multiply(0.1));
         deleteButton.setOnAction(e -> {
             operationsBox.getChildren().remove(operationBox); // Remove from UI
             BClassBox.getOperations().remove(operation);     // Remove from model
@@ -289,28 +286,20 @@ public class ClassBox extends BorderPane {
         visibilityComboBox.getItems().addAll("+", "-", "#");
         visibilityComboBox.getSelectionModel().select(attribute.getVisibility());
 
-        visibilityComboBox.setPrefWidth(10);  // Example width
-        visibilityComboBox.setPrefHeight(20);  // Example height
-        visibilityComboBox.setMinWidth(50);
-        visibilityComboBox.setMaxWidth(100);
+        visibilityComboBox.prefWidthProperty().bind(attributeBox.widthProperty().multiply(0.1));
+
 
         TextField attributeNameField = new TextField(attribute.getName());
 
-        // Set preferred width and height of attributeNameField
-        attributeNameField.setPrefWidth(70);  // Example width
-        attributeNameField.setPrefHeight(20);  // Example height
-        attributeNameField.setMaxWidth(200);
+        attributeNameField.prefWidthProperty().bind(attributeBox.widthProperty().multiply(0.3));
 
         ComboBox<String> dataTypeComboBox = new ComboBox<>();
         dataTypeComboBox.setEditable(true);
         dataTypeComboBox.getItems().addAll("int", "String", "boolean", "double", "float", "char", "long", "short");
         dataTypeComboBox.setPromptText("Data Type");
         dataTypeComboBox.getSelectionModel().select(attribute.getDataType());
+        dataTypeComboBox.prefWidthProperty().bind(attributeBox.widthProperty().multiply(0.3));
 
-        dataTypeComboBox.setMinWidth(50);
-        dataTypeComboBox.setMaxWidth(200);
-        dataTypeComboBox.setPrefWidth(50);
-        dataTypeComboBox.setPrefHeight(20);
 
         // Add listeners for updates
         visibilityComboBox.valueProperty().addListener((obs, oldVal, newVal) -> attribute.setVisibility(newVal));
@@ -318,11 +307,11 @@ public class ClassBox extends BorderPane {
         dataTypeComboBox.valueProperty().addListener((obs, oldVal, newVal) -> attribute.setDataType(newVal));
 
         Button deleteButton = new Button("❌");
+        deleteButton.prefWidthProperty().bind(attributeBox.widthProperty().multiply(0.1));
         deleteButton.setOnAction(e -> {
             attributesBox.getChildren().remove(attributeBox); // Remove from UI
             BClassBox.removeAttribute(attribute);            // Remove from model
         });
-        deleteButton.setMaxWidth(200);
 
         visibilityComboBox.getStyleClass().add("classbox-combobox");
         attributeNameField.getStyleClass().add("classbox-input");

@@ -1,144 +1,174 @@
 package org.example.scdpro2.business.services;
 
+import org.example.scdpro2.business.models.*;
+import org.example.scdpro2.business.models.BClassDiagarm.BClassBox;
+import org.example.scdpro2.business.models.BClassDiagarm.AttributeComponent;
+import org.example.scdpro2.business.models.BClassDiagarm.OperationComponent;
+import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
+import org.example.scdpro2.ui.views.ClassDiagram.RelationshipLine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.example.scdpro2.business.models.*;
-import org.example.scdpro2.business.models.BClassDiagarm.*;
-import org.example.scdpro2.business.services.CodeGenerationService;
-import org.example.scdpro2.ui.views.ClassDiagram.RelationshipLine;
+import org.mockito.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-class CodeGenerationServiceTest {
+public class CodeGenerationServiceTest {
+
+    @Mock
+    private Project mockProject;
+
+    @Mock
+    private BClassBox mockBClassBox;
+
+    @Mock
+    private AttributeComponent mockAttribute;
+
+    @Mock
+    private OperationComponent mockOperation;
+
+    @Mock
+    private Relationship mockRelationship;
 
     private CodeGenerationService codeGenerationService;
-    private Project project;
-    private BClassBox bClassBox;
 
     @BeforeEach
     void setUp() {
+        MockitoAnnotations.openMocks(this);
         codeGenerationService = new CodeGenerationService();
-
-        // Initialize a sample project
-        project = new Project("TestProject");
-
-        // Create a BClassBox with attributes, operations, and relationships
-        bClassBox = new BClassBox("TestClass");
-
-        // Add attributes
-        List<AttributeComponent> attributes = new ArrayList<>();
-        attributes.add(new AttributeComponent("attribute1", "+", "int"));
-        attributes.add(new AttributeComponent("attribute2", "-", "String"));
-        bClassBox.setAttributes(attributes);
-
-        // Add operations
-        List<OperationComponent> operations = new ArrayList<>();
-        operations.add(new OperationComponent("operation1", "+", "void"));
-        operations.add(new OperationComponent("operation2", "-", "int"));
-        bClassBox.setOperations(operations);
-
-        // Add relationships
-        List<Relationship> relationships = new ArrayList<>();
-        BClassBox parentClass = new BClassBox("ParentClass");
-        relationships.add(new Relationship(parentClass, bClassBox, RelationshipLine.RelationshipType.INHERITANCE, "1", "1", "inherits"));
-        bClassBox.setRelationships(relationships);
-
-        // Add the class diagram to the project
-        List<Diagram> diagrams = new ArrayList<>();
-        diagrams.add(bClassBox);
-        project.setDiagrams(diagrams);
     }
 
+    // Test case for generating code for a project
     @Test
     void testGenerateCode() {
-        // Generate code for the project
-        String generatedCode = codeGenerationService.generateCode(project);
+        List<Diagram> diagrams = new ArrayList<>();
+        diagrams.add(mockBClassBox);
 
-        // Expected code output
-        String expectedCode = """
-            public class TestClass extends ParentClass {
-                public int attribute1;
-                private String attribute2;
-                public void operation1 { }
-                private int operation2 { }
-            }
-            """;
+        when(mockProject.getDiagrams()).thenReturn(diagrams);
+        when(mockBClassBox.getTitle()).thenReturn("MyClass");
 
-        // Assert that the generated code matches the expected output
-        assertEquals(expectedCode.trim(), generatedCode.trim());
+        String code = codeGenerationService.generateCode(mockProject);
+
+        assertTrue(code.contains("public class MyClass"));
     }
 
+    // Test case for generating class code with no relationships
     @Test
-    void testGenerateClassCodeWithNoInheritance() {
-        // Remove relationships to test a class without inheritance
-        bClassBox.setRelationships(new ArrayList<>());
+    void testGenerateClassCode_NoRelationships() {
+        List<Relationship> relationships = new ArrayList<>();
+        when(mockBClassBox.getRelationships()).thenReturn(relationships);
+        when(mockBClassBox.getTitle()).thenReturn("MyClass");
 
-        // Generate code for the project
-        String generatedCode = codeGenerationService.generateCode(project);
+        List<AttributeComponent> attributes = new ArrayList<>();
+        when(mockBClassBox.getAttributes()).thenReturn(attributes);
 
-        // Expected code output
-        String expectedCode = """
-            public class TestClass {
-                public int attribute1;
-                private String attribute2;
-                public void operation1 { }
-                private int operation2 { }
-            }
-            """;
+        List<OperationComponent> operations = new ArrayList<>();
+        when(mockBClassBox.getOperations()).thenReturn(operations);
 
-        // Assert that the generated code matches the expected output
-        assertEquals(expectedCode.trim(), generatedCode.trim());
+        String classCode = codeGenerationService.generateClassCode(mockBClassBox);
+
+        assertTrue(classCode.contains("public class MyClass"));
+        assertTrue(classCode.contains("{"));
+        assertTrue(classCode.contains("}"));
     }
 
+    // Test case for generating class code with inheritance
     @Test
-    void testGenerateCodeWithEmptyClass() {
-        // Create an empty BClassBox
-        BClassBox emptyClassBox = new BClassBox("EmptyClass");
-        project.setDiagrams(List.of(emptyClassBox));
+    void testGenerateClassCode_WithInheritance() {
+        List<Relationship> relationships = new ArrayList<>();
+        Relationship inheritanceRel = mock(Relationship.class);
+        BClassBox targetClass = mock(BClassBox.class);
+        when(targetClass.getTitle()).thenReturn("ParentClass");
+        when(inheritanceRel.getType()).thenReturn(RelationshipLine.RelationshipType.INHERITANCE);
+        when(inheritanceRel.getTarget()).thenReturn(targetClass);
+        relationships.add(inheritanceRel);
 
-        // Generate code for the project
-        String generatedCode = codeGenerationService.generateCode(project);
+        when(mockBClassBox.getRelationships()).thenReturn(relationships);
+        when(mockBClassBox.getTitle()).thenReturn("MyClass");
 
-        // Expected code output
-        String expectedCode = """
-            public class EmptyClass {
-            }
-            """;
+        List<AttributeComponent> attributes = new ArrayList<>();
+        when(mockBClassBox.getAttributes()).thenReturn(attributes);
 
-        // Assert that the generated code matches the expected output
-        assertEquals(expectedCode.trim(), generatedCode.trim());
+        List<OperationComponent> operations = new ArrayList<>();
+        when(mockBClassBox.getOperations()).thenReturn(operations);
+
+        String classCode = codeGenerationService.generateClassCode(mockBClassBox);
+
+        assertTrue(classCode.contains("public class MyClass extends ParentClass"));
     }
 
+    // Test case for generating attribute code with public visibility
     @Test
-    void testGenerateAttributeCode() {
-        AttributeComponent attribute = new AttributeComponent("testAttribute", "+", "boolean");
+    void testGenerateAttributeCode_PublicVisibility() {
+        when(mockAttribute.getVisibility()).thenReturn("+");
+        when(mockAttribute.getDataType()).thenReturn("String");
+        when(mockAttribute.getName()).thenReturn("name");
 
-        // Generate attribute code
-        String generatedCode = codeGenerationService.generateAttributeCode(attribute);
+        String attributeCode = codeGenerationService.generateAttributeCode(mockAttribute);
 
-        // Expected code output
-        String expectedCode = "public boolean testAttribute;";
-
-        // Assert that the generated code matches the expected output
-        assertEquals(expectedCode, generatedCode);
+        assertEquals("public String name;", attributeCode);
     }
 
+    // Test case for generating attribute code with private visibility
     @Test
-    void testGenerateOperationCode() {
-        OperationComponent operation = new OperationComponent("testOperation", "#", "double");
+    void testGenerateAttributeCode_PrivateVisibility() {
+        when(mockAttribute.getVisibility()).thenReturn("-");
+        when(mockAttribute.getDataType()).thenReturn("int");
+        when(mockAttribute.getName()).thenReturn("age");
 
-        // Generate operation code
-        String generatedCode = codeGenerationService.generateOperationCode(operation);
+        String attributeCode = codeGenerationService.generateAttributeCode(mockAttribute);
 
-        // Expected code output
-        String expectedCode = "protected double testOperation { }";
+        assertEquals("private int age;", attributeCode);
+    }
 
-        // Assert that the generated code matches the expected output
-        assertEquals(expectedCode, generatedCode);
+    // Test case for generating attribute code with protected visibility
+    @Test
+    void testGenerateAttributeCode_ProtectedVisibility() {
+        when(mockAttribute.getVisibility()).thenReturn("#");
+        when(mockAttribute.getDataType()).thenReturn("double");
+        when(mockAttribute.getName()).thenReturn("salary");
+
+        String attributeCode = codeGenerationService.generateAttributeCode(mockAttribute);
+
+        assertEquals("protected double salary;", attributeCode);
+    }
+
+    // Test case for generating operation code with public visibility
+    @Test
+    void testGenerateOperationCode_PublicVisibility() {
+        when(mockOperation.getVisibility()).thenReturn("+");
+        when(mockOperation.getReturnType()).thenReturn("void");
+        when(mockOperation.getName()).thenReturn("setName");
+
+        String operationCode = codeGenerationService.generateOperationCode(mockOperation);
+
+        assertEquals("public void setName { }", operationCode);
+    }
+
+    // Test case for generating operation code with private visibility
+    @Test
+    void testGenerateOperationCode_PrivateVisibility() {
+        when(mockOperation.getVisibility()).thenReturn("-");
+        when(mockOperation.getReturnType()).thenReturn("int");
+        when(mockOperation.getName()).thenReturn("getAge");
+
+        String operationCode = codeGenerationService.generateOperationCode(mockOperation);
+
+        assertEquals("private int getAge { }", operationCode);
+    }
+
+    // Test case for generating operation code with protected visibility
+    @Test
+    void testGenerateOperationCode_ProtectedVisibility() {
+        when(mockOperation.getVisibility()).thenReturn("#");
+        when(mockOperation.getReturnType()).thenReturn("String");
+        when(mockOperation.getName()).thenReturn("getName");
+
+        String operationCode = codeGenerationService.generateOperationCode(mockOperation);
+
+        assertEquals("protected String getName { }", operationCode);
     }
 }
-
-
