@@ -26,26 +26,79 @@ import javafx.scene.SnapshotParameters;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.io.IOException;
-
+/**
+ * The {@code MainView} class represents the primary user interface layout for the UML Editor application.
+ * It serves as the main workspace for managing and visualizing different UML diagrams.
+ *
+ * <p>This class provides functionality for:
+ * <ul>
+ *   <li>Displaying and managing Class and Package diagrams.</li>
+ *   <li>Integrating menus, toolbars, and a project explorer.</li>
+ *   <li>Managing dynamic class lists and facilitating code generation.</li>
+ * </ul>
+ * </p>
+ *
+ * <p>It follows a layered architecture and interacts with the {@link MainController}
+ * and {@link DiagramService} to perform business logic operations.</p>
+ *
+ * @see MainController
+ * @see DiagramService
+ * @see ClassDiagramPane
+ * @see PackageDiagramPane
+ */
 public class MainView extends BorderPane {
+    /**
+     * Controller responsible for managing the application's business logic.
+     */
     private final MainController controller;
-
+    /**
+     * The pane for displaying and managing Class Diagrams.
+     */
     public ClassDiagramPane classDiagramPane;
+    /**
+     * The pane for displaying and managing Package Diagrams.
+     */
     public PackageDiagramPane packageDiagramPane;
-
+    /**
+     * Toggle button for enabling/disabling relationship mode in diagrams.
+     */
     private ToggleButton relationshipModeToggle;
+    /**
+     * Currently selected relationship type for diagram connections.
+     */
     private RelationshipType selectedRelationshipType; // Current selected relationship type
-
+    /**
+     * Temporarily holds the source {@link ClassBox} for creating a relationship in a diagram.
+     */
     private ClassBox sourceClassBox; // Temporarily holds the source ClassBox for relationship
+    /**
+     * Flag indicating whether relationship mode is currently enabled.
+     */
     private boolean relationshipMode = false;
-
+    /**
+     * Temporarily holds the source {@link PackageBox} for creating a relationship in a package diagram.
+     */
     private PackageBox sourcePackageBox; // To track the source for relationships
-
-    public final ListView<String> classListView; // Dynamic list of class names
+    /**
+     * A dynamic list view for displaying class names in the current project.
+     */
+    public final ListView<String> classListView;// Dynamic list of class names
+    /**
+     * Tree view representing the project structure for navigation and management.
+     */
     private TreeView<String> projectExplorer;
+    /**
+     * Toolbar on the right side of the layout for additional tools and features.
+     */
     private VBox rightSideToolbar;
 
-
+    /**
+     * Constructs a new {@code MainView} instance and initializes the layout based on the specified diagram type.
+     *
+     * @param controller  The {@link MainController} instance managing the business logic.
+     * @param diagramType The type of diagram to initialize the view with. Accepted values are "Class Diagram" and "Package Diagram".
+     * @throws IllegalArgumentException If an invalid diagram type is provided.
+     */
     public MainView(MainController controller, String diagramType) {
         this.controller = controller; // Use the passed controller directly
 
@@ -88,7 +141,12 @@ public class MainView extends BorderPane {
         setRight(rightSideToolbar);
 
     }
-
+    /**
+     * Creates the right-side toolbar with a title.
+     * The toolbar is styled to have a fixed width and padding, making it consistent with modern UI standards.
+     *
+     * @return A VBox instance styled as the right-side toolbar.
+     */
     private VBox createRightSideToolbar() {
         VBox toolbar = new VBox();
         toolbar.setPadding(new Insets(10));
@@ -111,7 +169,13 @@ public class MainView extends BorderPane {
         return toolbar;
     }
 
-
+    /**
+     * Updates the right-side toolbar based on the selected item.
+     * If the item is a ClassBox, it displays the code with syntax highlighting.
+     * If the item is a RelationshipLine, it displays relationship details with input fields for modifications.
+     *
+     * @param selectedItem The selected item, either a ClassBox or RelationshipLine.
+     */
     public void updateRightSideToolbar(Object selectedItem) {
         // Clear previous content
         rightSideToolbar.getChildren().clear();
@@ -219,7 +283,12 @@ public class MainView extends BorderPane {
         }
     }
 
-
+    /**
+     * Updates the right-side toolbar to display the full code of a class diagram.
+     * The code is shown within a scrollable, syntax-highlighted view.
+     *
+     * @param code The complete code to be displayed in the right-side toolbar.
+     */
     public void updateRightSideToolbarForFullcode(String code) {
         // Clear the previous content from the toolbar
         rightSideToolbar.getChildren().clear();
@@ -264,12 +333,23 @@ public class MainView extends BorderPane {
         // Add the scrollable view to the right-side toolbar
         rightSideToolbar.getChildren().add(scrollPane);
     }
-
+    /**
+     * Handles the selection of an item in the diagram.
+     * Delegates the task of updating the toolbar to the {@link #updateRightSideToolbar(Object)} method.
+     *
+     * @param selectedItem The selected item to be processed.
+     */
     public void handleSelection(Object selectedItem) {
         this.updateRightSideToolbar(selectedItem);
     }
 
-
+    /**
+     * Handles the clicking of a ClassBox in the diagram.
+     * In relationship mode, it creates a relationship between the source and target ClassBox.
+     * Otherwise, it updates the toolbar to display details of the clicked ClassBox.
+     *
+     * @param clickedClassBox The ClassBox that was clicked.
+     */
     public void handleClassBoxClick(ClassBox clickedClassBox) {
         System.out.println("handleClassBoxClick called for " + clickedClassBox.getClassDiagram().getTitle());
         handleSelection(clickedClassBox);
@@ -297,7 +377,13 @@ public class MainView extends BorderPane {
             System.out.println("Source selection cleared.");
         }
     }
-
+    /**
+     * Creates the top toolbar for the diagram pane.
+     * The toolbar contains sections for adding classes/interfaces, toggling relationship mode,
+     * selecting relationship types, and zoom controls.
+     *
+     * @return A ToolBar instance styled and populated for the diagram pane.
+     */
     private ToolBar createToolbar() {
         ToolBar toolbar = new ToolBar();
         toolbar.getStyleClass().add("custom-toolbar");
@@ -464,7 +550,13 @@ public class MainView extends BorderPane {
 
         return toolbar;
     }
+
     // UI functions
+    /**
+     * Creates the main menu bar with options for project management and diagram creation.
+     *
+     * @return a {@link MenuBar} containing the project and diagram menus.
+     */
     private MenuBar createMenuBar() {
         MenuBar menuBar = new MenuBar();
         menuBar.getStyleClass().addAll("navbar", "navbar-light", "bg-light");
@@ -486,13 +578,25 @@ public class MainView extends BorderPane {
         menuBar.getMenus().addAll(projectMenu, diagramMenu);
         return menuBar;
     }
-
+    /**
+     * Creates a tree view representing the project explorer, displaying the hierarchy of class diagrams.
+     *
+     * @return a {@link TreeView} initialized with a root item labeled "Project Explorer".
+     */
     private TreeView<String> createProjectExplorer() {
         TreeItem<String> rootItem = new TreeItem<>("Project Explorer");
         rootItem.setExpanded(true);
         return new TreeView<>(rootItem);
     }
 
+    /**
+     * Creates a toggleable radio button for selecting a relationship type.
+     *
+     * @param text  the label for the radio button.
+     * @param group the toggle group to which the button belongs.
+     * @param type  the {@link RelationshipType} associated with this button.
+     * @return a styled {@link RadioButton} instance.
+     */
     private RadioButton createRadioButton(String text, ToggleGroup group, RelationshipType type) {
         RadioButton button = new RadioButton(text);
         button.setToggleGroup(group);
@@ -500,7 +604,11 @@ public class MainView extends BorderPane {
         button.getStyleClass().add("btn-toggle");
         return button;
     }
-
+    /**
+     * Creates a panel for listing classes, allowing users to view and interact with class entries.
+     *
+     * @return a {@link VBox} containing the class list and associated interaction logic.
+     */
     private VBox createClassListPanel() {
         VBox panel = new VBox();
         panel.setSpacing(15); // Modern spacing
@@ -571,7 +679,11 @@ public class MainView extends BorderPane {
 
         return panel;
     }
-
+    /**
+     * Creates a panel for code generation, providing a button to trigger code creation.
+     *
+     * @return a {@link VBox} containing the code generation controls.
+     */
     private VBox createCodeGenerationPanel() {
         VBox codeGenerationPanel = new VBox();
         codeGenerationPanel.setSpacing(10);
@@ -583,7 +695,10 @@ public class MainView extends BorderPane {
         codeGenerationPanel.getChildren().addAll(codeGenerationLabel, generateButton);
         return codeGenerationPanel;
     }
-
+    /**
+     * Updates the project explorer with the current project's class diagrams.
+     * Ensures the view reflects any changes to the project's structure.
+     */
     public void updateClassListView() {
         projectExplorer.setRoot(new TreeItem<>("Class Diagrams"));
         if (controller.getCurrentProject() != null) {
@@ -594,13 +709,21 @@ public class MainView extends BorderPane {
         }
         projectExplorer.refresh(); // Ensure the view is refreshed
     }
-
+    /**
+     * Adds a new class to the class list view.
+     *
+     * @param className the name of the class to add.
+     */
     public void addClassToList(String className) {
         classListView.getItems().add(className);
     }
 
 
     // UI helper functions
+    /**
+     * Captures and saves the current diagram as an image file.
+     * Opens a file chooser to allow the user to specify the save location and format.
+     */
     public void saveDiagramAsImage() {
         // Determine which pane to capture: ClassDiagramPane or PackageDiagramPane
         WritableImage snapshot = null;
@@ -641,6 +764,11 @@ public class MainView extends BorderPane {
     }
 
     // setter getters
+    /**
+     * Enables or disables relationship mode, affecting the behavior of package diagrams.
+     *
+     * @param enabled true to enable relationship mode, false to disable it.
+     */
     public void setRelationshipModeEnabled(boolean enabled) {
         this.relationshipMode = enabled;
         if (!enabled) {
@@ -648,20 +776,38 @@ public class MainView extends BorderPane {
         }
     }
 
+    /**
+     * Retrieves the file extension from a given file name.
+     *
+     * @param fileName the name of the file.
+     * @return the file extension, or null if none exists.
+     */
     private String getFileExtension(String fileName) {
         int dotIndex = fileName.lastIndexOf('.');
         return (dotIndex > 0 && dotIndex < fileName.length() - 1) ? fileName.substring(dotIndex + 1) : null;
     }
-
+    /**
+     * Gets the pane used for class diagrams.
+     *
+     * @return the {@link ClassDiagramPane}.
+     */
     public ClassDiagramPane getClassDiagramPane() {
         return classDiagramPane;
     }
-
+    /**
+     * Gets the main controller handling application logic.
+     *
+     * @return the {@link MainController}.
+     */
     public MainController getController() {
         return controller;
     }
 
-
+    /**
+     * Gets the pane used for package diagrams.
+     *
+     * @return the {@link PackageDiagramPane}.
+     */
     public PackageDiagramPane getPackageDiagramPane() {
         return packageDiagramPane;
     }

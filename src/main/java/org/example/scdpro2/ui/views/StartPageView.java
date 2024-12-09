@@ -12,12 +12,20 @@ import org.example.scdpro2.business.services.DiagramService;
 import org.example.scdpro2.ui.controllers.MainController;
 
 import java.io.File;
-
+/**
+ * The {@code StartPageView} class represents the start page of the SCDPro2 application.
+ * It provides users with options to create a new project or open an existing one.
+ */
 public class StartPageView extends BorderPane {
     private final Stage primaryStage;
     private final MainController mainController;
     private MainView mainView;
 
+    /**
+     * Constructs a new instance of {@code StartPageView}.
+     *
+     * @param primaryStage the primary {@link Stage} used to display this view
+     */
     public StartPageView(Stage primaryStage) {
         this.primaryStage = primaryStage;
         DiagramService diagramService = new DiagramService();
@@ -25,7 +33,10 @@ public class StartPageView extends BorderPane {
 
         initializeUI();
     }
-
+    /**
+     * Initializes the user interface components for the start page.
+     * Includes a welcome message, project buttons, and a styled layout.
+     */
     private void initializeUI() {
         // Title Label with modern styling
         Label titleLabel = new Label("Welcome to SCDPro2");
@@ -60,7 +71,9 @@ public class StartPageView extends BorderPane {
         // Center the main layout in the scene
         setCenter(layoutContainer);
     }
-
+    /**
+     * Displays a dialog to create a new project and initializes the main view.
+     */
     private void showNewProjectDialog() {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Create New Project");
@@ -133,8 +146,10 @@ public class StartPageView extends BorderPane {
             }
         });
     }
-
-
+    /**
+     * Opens an existing project by initializing the main view and setting up
+     * the controller to load the project data.
+     */
     private void openExistingProject() {
         String projectName = "ClassDiagram";
         String projectType = "Class Diagram";
@@ -152,7 +167,11 @@ public class StartPageView extends BorderPane {
         }
         mainController.loadProject();
     }
-
+    /**
+     * Opens the main view of the application and initializes the selected project type.
+     *
+     * @param projectType the type of the project, either "Class Diagram" or "Package Diagram"
+     */
     private void openMainView(String projectType) {
         MainView mainView = new MainView(mainController, projectType); // Reuse the existing controller
         this.mainController.setMainView(mainView);

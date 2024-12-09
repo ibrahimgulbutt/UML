@@ -13,7 +13,11 @@ import org.example.scdpro2.ui.controllers.MainController;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * Represents a visual representation of a package in the package diagram.
+ * The PackageBox contains a name label, a top rectangle, and class boxes.
+ * It supports features such as dragging, resizing, renaming, and adding/removing class boxes.
+ */
 public class PackageBox extends BorderPane  {
     public PackageComponent packageComponent;
     public final MainController controller;
@@ -30,7 +34,13 @@ public class PackageBox extends BorderPane  {
     private final Label nameLabel = new Label(); // Displays package name
     private final Rectangle topRectangle = new Rectangle(); // Small rectangle on top
     private ArrayList<PackageClassBox> packageClassBoxes;
-
+    /**
+     * Constructs a PackageBox.
+     *
+     * @param packageComponent The underlying package component.
+     * @param controller        The main controller.
+     * @param diagramPane       The diagram pane where this PackageBox will be displayed.
+     */
     public PackageBox(PackageComponent packageComponent, MainController controller, PackageDiagramPane diagramPane) {
         this.packageComponent = packageComponent;
         this.controller = controller;
@@ -87,12 +97,18 @@ public class PackageBox extends BorderPane  {
         });
 
     }
-
+    /**
+     * Sets the ID of the underlying PackageComponent.
+     *
+     * @param id The new ID for the package.
+     */
     public void setPackageComponentid(String id)
     {
         this.packageComponent.setName(id);
     }
-
+    /**
+     * Enables editing of the package's name by clicking on the label.
+     */
     private void setupNameEditing() {
         nameLabel.setOnMouseClicked(event -> {
             TextField nameField = new TextField(packageComponent.getName());
@@ -120,7 +136,12 @@ public class PackageBox extends BorderPane  {
         alert.setHeaderText(null);
         return alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES;
     }
-
+    /**
+     * Moves all class boxes associated with this PackageBox.
+     *
+     * @param deltaX The change in X-coordinate.
+     * @param deltaY The change in Y-coordinate.
+     */
     public void moveClassBoxes(double deltaX, double deltaY) {
         for (var node : diagramPane.getChildren()) {
             if (node instanceof PackageClassBox classBox && classBox.getParentPackageBox() == this) {
@@ -129,7 +150,9 @@ public class PackageBox extends BorderPane  {
             }
         }
     }
-
+    /**
+     * Adds a new class box to this package.
+     */
     public void addClassBox() {
         // Create a new instance of PackageClassBox
         PackageClassBox classBox = controller.addPackageClassBox(diagramPane,this,packageComponent);
@@ -159,7 +182,11 @@ public class PackageBox extends BorderPane  {
         // Add the class box to the diagram pane
         diagramPane.addClassBox(classBox,this);
     }
-
+    /**
+     * Loads an existing class box into this package.
+     *
+     * @param pcc The class component to load.
+     */
     public void addClassBoxforload(PackageClassComponent pcc,double x,double y,double w,String id)
     {
         // Create a new instance of PackageClassBox
@@ -192,7 +219,9 @@ public class PackageBox extends BorderPane  {
         // Add the class box to the diagram pane
         diagramPane.addClassBox(classBox,this);
     }
-
+    /**
+     * Deletes this PackageBox and all associated relationships and class boxes.
+     */
     private void deletePackage() {
         if (confirmAction("Delete Package Box", "Are you sure you want to delete this package box and all its relationships?")) {
             List<PackageRelationship> relationshipsToRemove = new ArrayList<>();
@@ -226,6 +255,11 @@ public class PackageBox extends BorderPane  {
 
 
     // drag and resize functions
+    /**
+     * Handles the mouse released event, resetting the resizing state.
+     *
+     * @param event the MouseEvent triggered when the mouse is released.
+     */
     private void handleMousePressed(MouseEvent event) {
         if (isOnEdge(event)) {
             // Start resizing
@@ -388,10 +422,19 @@ public class PackageBox extends BorderPane  {
 
 
     // setter and getters
+    /**
+     * Gets the diagram pane this PackageBox belongs to.
+     *
+     * @return the PackageDiagramPane containing this PackageBox.
+     */
     public PackageDiagramPane getDiagramPane() {
         return diagramPane;
     }
-
+    /**
+     * Gets the PackageComponent represented by this PackageBox.
+     *
+     * @return the PackageComponent instance.
+     */
     public PackageComponent getPackageComponent() {
         return packageComponent;
     }
@@ -401,14 +444,28 @@ public class PackageBox extends BorderPane  {
         return packageComponent;
     }
 
+    /**
+     * Gets the name of the PackageComponent.
+     *
+     * @return the name of the PackageComponent.
+     */
     public String getName() {
         return nameLabel.getText();
     }
-
+    /**
+     * Sets the name of the PackageComponent and updates the UI.
+     *
+     * @param name the new name for the PackageComponent.
+     */
     public void setName(String name) {
         this.nameLabel.setText(name);
     }
 
+    /**
+     * Gets the list of PackageClassBoxes contained within this PackageBox.
+     *
+     * @return an ArrayList of PackageClassBoxes.
+     */
     public ArrayList<PackageClassBox> getPackageClassBoxes()
     {
         return packageClassBoxes;

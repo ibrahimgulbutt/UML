@@ -12,7 +12,12 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.example.scdpro2.business.models.BPackageDiagarm.PackageClassComponent;
-
+/**
+ * Represents a visual component for a class in a package diagram editor.
+ * The class box includes a name field, a visibility dropdown, and supports
+ * dragging and resizing operations. It also updates the associated model
+ * (`PackageClassComponent`) dynamically based on user interactions.
+ */
 public class PackageClassBox extends BorderPane {
     private double offsetX, offsetY;
     private double initialWidth, initialHeight;
@@ -26,6 +31,13 @@ public class PackageClassBox extends BorderPane {
     private PackageBox parentPackageBox; // Reference to parent PackageBox
     private PackageClassComponent packageClassComponent; // Reference to the associated model
 
+    /**
+     * Constructs a new PackageClassBox associated with a parent PackageBox
+     * and a PackageClassComponent model.
+     *
+     * @param parentPackageBox      the parent PackageBox containing this class box.
+     * @param packageClassComponent the model associated with this class box.
+     */
     public PackageClassBox(PackageBox parentPackageBox, PackageClassComponent packageClassComponent)
     {
         this.parentPackageBox = parentPackageBox;
@@ -92,6 +104,13 @@ public class PackageClassBox extends BorderPane {
 
 
     // Utility method for showing a confirmation dialog
+    /**
+     * Displays a confirmation dialog for user actions, such as deletion.
+     *
+     * @param title   the title of the confirmation dialog.
+     * @param message the message displayed in the confirmation dialog.
+     * @return true if the user confirms the action; false otherwise.
+     */
     private boolean confirmAction(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message, ButtonType.YES, ButtonType.NO);
         alert.setTitle(title);
@@ -106,6 +125,12 @@ public class PackageClassBox extends BorderPane {
     }
 
     // Drag and Resize related functions
+    /**
+     * Handles the mouse pressed event, determining whether the box should
+     * be dragged or resized based on cursor position.
+     *
+     * @param event the MouseEvent triggered when the mouse is pressed.
+     */
     private void handleMousePressed(MouseEvent event) {
         if (isOnEdge(event)) {
             // Start resizing
@@ -121,7 +146,12 @@ public class PackageClassBox extends BorderPane {
             offsetY = event.getSceneY() - getLayoutY();
         }
     }
-
+    /**
+     * Handles the mouse dragged event, updating the position or size of the
+     * box based on user interaction.
+     *
+     * @param event the MouseEvent triggered when the mouse is dragged.
+     */
     private void handleMouseDragged(MouseEvent event) {
         if (isResizing) {
             resize(event);
@@ -149,12 +179,20 @@ public class PackageClassBox extends BorderPane {
             setLayoutY(newY);
         }
     }
-
+    /**
+     * Handles the mouse released event, resetting resizing state.
+     *
+     * @param event the MouseEvent triggered when the mouse is released.
+     */
     private void handleMouseReleased(MouseEvent event) {
         isResizing = false;
         resizeDirection = "";
     }
-
+    /**
+     * Resizes the box dynamically based on mouse movement.
+     *
+     * @param event the MouseEvent triggered during resizing.
+     */
     private void resize(MouseEvent event) {
         double deltaX = event.getSceneX() - initialMouseX;
         double deltaY = event.getSceneY() - initialMouseY;
@@ -168,7 +206,11 @@ public class PackageClassBox extends BorderPane {
             if (newHeight >= 50) setPrefHeight(newHeight);
         }
     }
-
+    /**
+     * Updates the cursor style based on mouse position and resizing direction.
+     *
+     * @param event the MouseEvent triggered when the mouse moves.
+     */
     private void updateCursor(MouseEvent event) {
         if (isOnEdge(event)) {
             switch (resizeDirection) {
@@ -189,7 +231,12 @@ public class PackageClassBox extends BorderPane {
             setCursor(Cursor.MOVE);
         }
     }
-
+    /**
+     * Determines if the mouse cursor is on the edge of the box, enabling resizing.
+     *
+     * @param event the MouseEvent triggered during cursor movement.
+     * @return true if the cursor is on the edge; false otherwise.
+     */
     private boolean isOnEdge(MouseEvent event) {
         double mouseX = event.getX();
         double mouseY = event.getY();
@@ -210,14 +257,27 @@ public class PackageClassBox extends BorderPane {
     }
 
     // setter getters
+    /**
+     * Gets the parent PackageBox containing this PackageClassBox.
+     *
+     * @return the parent PackageBox.
+     */
     public PackageBox getParentPackageBox() {
         return parentPackageBox;
     }
-
+    /**
+     * Gets the TextField used for editing the class name.
+     *
+     * @return the name TextField.
+     */
     public TextField getNameField() {
         return nameField;
     }
-
+    /**
+     * Gets the PackageClassComponent model associated with this PackageClassBox.
+     *
+     * @return the PackageClassComponent model.
+     */
     public PackageClassComponent getPackageClassComponent() {
         return packageClassComponent;
     }

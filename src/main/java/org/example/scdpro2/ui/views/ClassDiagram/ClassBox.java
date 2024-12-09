@@ -15,7 +15,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+/**
+ * The ClassBox class represents a UI component that displays a class box in a class diagram.
+ * It supports drag-and-drop functionality, resizing, and context menu options for deleting the class box.
+ * The class box contains sections for attributes and operations, with the ability to add, update, and remove them.
+ */
 public class ClassBox extends BorderPane {
     private final MainController controller;
     public final BClassBox BClassBox;
@@ -35,6 +39,14 @@ public class ClassBox extends BorderPane {
     private String resizeDirection = ""; // Tracks the direction of resizing
     private String Type;
 
+    /**
+     * Constructs a new ClassBox with the provided class box model, controller, diagram pane, and type.
+     *
+     * @param BClassBox The model object for this class box.
+     * @param controller The controller for the application.
+     * @param diagramPane The pane containing the class diagram.
+     * @param Type The type of the class box ("Class Box" or "Interface Box").
+     */
     public ClassBox(BClassBox BClassBox, MainController controller, ClassDiagramPane diagramPane, String Type) {
         this.BClassBox = BClassBox;
         this.controller = controller;
@@ -122,7 +134,12 @@ public class ClassBox extends BorderPane {
         setOnMouseMoved(this::updateCursor);
     }
 
-    // UI functions
+    /**
+     * Creates a context menu for the class box, with an option to delete the class.
+     *
+     * @param diagramPane The pane containing the class diagram.
+     * @return The context menu with the delete option.
+     */
     private ContextMenu createContextMenu(ClassDiagramPane diagramPane) {
         ContextMenu contextMenu = new ContextMenu();
         MenuItem deleteItem = new MenuItem("Delete Class");
@@ -138,7 +155,12 @@ public class ClassBox extends BorderPane {
         contextMenu.getItems().add(deleteItem);
         return contextMenu;
     }
-
+    /**
+     * Creates a name box for an interface, allowing the user to edit the interface name.
+     *
+     * @param diagramPane The pane containing the class diagram.
+     * @return The HBox containing the name field and update button.
+     */
     private HBox createInterfaceNameBox(ClassDiagramPane diagramPane) {
         VBox titleBox = new VBox(5); // Container for the title and name box
         titleBox.setAlignment(Pos.CENTER); // Center align
@@ -191,7 +213,12 @@ public class ClassBox extends BorderPane {
         titleBox.getChildren().addAll(interfaceTitle, nameBox);
         return new HBox(titleBox); // Return as HBox for BorderPane integration
     }
-
+    /**
+     * Creates a name box for a class, allowing the user to edit the class name.
+     *
+     * @param diagramPane The pane containing the class diagram.
+     * @return The HBox containing the name field and update button.
+     */
     private HBox createNameBox(ClassDiagramPane diagramPane) {
         HBox nameBox = new HBox(10); // Spacing between class name and button
         nameBox.setAlignment(Pos.CENTER); // Center the class name
@@ -236,7 +263,11 @@ public class ClassBox extends BorderPane {
         nameBox.getChildren().addAll(classNameField, updateClassNameButton);
         return nameBox;
     }
-
+    /**
+     * Adds a new operation to the UI and updates the model.
+     *
+     * @param operation The operation to be added.
+     */
     private void addOperationToUI(OperationComponent operation) {
         HBox operationBox = new HBox();
 
@@ -281,7 +312,11 @@ public class ClassBox extends BorderPane {
         operationBox.getChildren().addAll(visibilityComboBox, operationNameField, returnTypeComboBox, deleteButton);
         operationsBox.getChildren().add(operationBox);
     }
-
+    /**
+     * Adds a new attribute to the UI and updates the model.
+     *
+     * @param attribute The attribute to be added.
+     */
     private void addAttributeToUI(AttributeComponent attribute) {
         HBox attributeBox = new HBox();
 
@@ -333,20 +368,27 @@ public class ClassBox extends BorderPane {
         attributeBox.getChildren().addAll(visibilityComboBox, attributeNameField, dataTypeComboBox, deleteButton);
         attributesBox.getChildren().add(attributeBox);
     }
-
+    /**
+     * Adds a new attribute to the class box and updates both the UI and model.
+     */
     private void addAttribute(VBox attributesBox) {
         AttributeComponent attribute = new AttributeComponent("attribute", "+","int");
         BClassBox.addAttribute(attribute); // Add to the business model
         addAttributeToUI(attribute);
     }
-
+    /**
+     * Adds a new operation to the class box and updates both the UI and model.
+     */
     private void addOperation(VBox operationsBox) {
         OperationComponent operation = new OperationComponent("operation", "+","void");
         BClassBox.addOperation(operation); // Add to the business model
         addOperationToUI(operation);
     }
-
-    // grabbing and resizing functions
+    /**
+     * Handles mouse press event for dragging functionality.
+     *
+     * @param event The mouse event triggered on press.
+     */
     private void handleMousePressed(MouseEvent event) {
         if (isOnEdge(event)) {
             isResizing = true;
@@ -361,12 +403,20 @@ public class ClassBox extends BorderPane {
             offsetY = event.getSceneY() - getLayoutY();
         }
     }
-
+    /**
+     * Handles mouse drag event for dragging functionality.
+     *
+     * @param event The mouse event triggered on drag.
+     */
     private void handleMouseReleased(MouseEvent event) {
         isResizing = false; // End resizing
     }
 
-
+    /**
+     * Handles mouse release event for resizing functionality.
+     *
+     * @param event The mouse event triggered on release.
+     */
     private void handleMouseDragged(MouseEvent event) {
         if (isResizing) {
             double deltaX = event.getSceneX() - initialMouseX;
@@ -387,7 +437,11 @@ public class ClassBox extends BorderPane {
         }
     }
 
-
+    /**
+     * Updates the cursor when hovering over the class box to show resizing options.
+     *
+     * @param event The mouse event triggered on mouse movement.
+     */
     private void updateCursor(MouseEvent event) {
         if (isOnEdge(event)) {
             switch (resizeDirection) {
@@ -412,7 +466,13 @@ public class ClassBox extends BorderPane {
             setCursor(Cursor.DEFAULT);
         }
     }
-
+    /**
+     * Determines if the mouse is currently on the edge of the diagram component for resizing.
+     * Sets the resizing direction accordingly.
+     *
+     * @param event The MouseEvent triggered by a mouse movement.
+     * @return true if the mouse is on an edge, false otherwise.
+     */
     private boolean isOnEdge(MouseEvent event) {
         double edgeThreshold = 5.0; // Buffer zone for detecting edges
         double mouseX = event.getX();
@@ -436,8 +496,11 @@ public class ClassBox extends BorderPane {
 
         return !resizeDirection.isEmpty();
     }
-
-    // UI helper functions
+    /**
+     * Deletes the connected relationships from the parent pane and clears the list of connected relationships.
+     *
+     * @param parentPane The parent pane containing the diagram component.
+     */
     public void deleteConnectedRelationships(Pane parentPane) {
         for (RelationshipLine relationship : new ArrayList<>(connectedRelationships)) {
             parentPane.getChildren().remove(relationship); // Remove the relationship from the UI
@@ -447,22 +510,33 @@ public class ClassBox extends BorderPane {
         }
         connectedRelationships.clear();
     }
-
+    /**
+     * Adds a relationship line to the list of connected relationships.
+     *
+     * @param relationship The RelationshipLine to be added.
+     */
     public void addRelationship(RelationshipLine relationship) {
         connectedRelationships.add(relationship);
     }
-
+    /**
+     * Removes a relationship line from the list of connected relationships.
+     *
+     * @param relationship The RelationshipLine to be removed.
+     */
     public void removeRelationship(RelationshipLine relationship) {
         connectedRelationships.remove(relationship);
     }
-
-    //loading from/to business layer functions
+    /**
+     * Loads and displays the attributes of the class in the diagram from the business layer.
+     */
     private void loadAttributes() {
         for (AttributeComponent attribute : BClassBox.getAttributes()) {
             addAttributeToUI(attribute);
         }
     }
-
+    /**
+     * Loads and displays the operations of the class in the diagram from the business layer.
+     */
     private void loadOperations() {
         for (OperationComponent operation : BClassBox.getOperations()) {
             addOperationToUI(operation);
@@ -470,46 +544,92 @@ public class ClassBox extends BorderPane {
     }
 
     // getter setters
+    /**
+     * Gets the list of connected relationship lines.
+     *
+     * @return A list of RelationshipLine objects representing the connected relationships.
+     */
     public List<RelationshipLine> getConnectedRelationships() {
         return connectedRelationships;
     }
-
+    /**
+     * Gets the list of attributes for the class diagram.
+     *
+     * @return A list of AttributeComponent objects representing the class attributes.
+     */
     public List<AttributeComponent> getAttributes() {
         return BClassBox.getAttributes();
     }
-
+    /**
+     * Gets the list of operations for the class diagram.
+     *
+     * @return A list of OperationComponent objects representing the class operations.
+     */
     public List<OperationComponent> getOperations() {
         return BClassBox.getOperations();
     }
-
+    /**
+     * Sets the attributes for the class diagram.
+     *
+     * @param attributes A list of AttributeComponent objects to set as the attributes.
+     */
     public void setAttributes(List<AttributeComponent> attributes) {
         BClassBox.setAttributes(attributes);
     }
-
+    /**
+     * Sets the operations for the class diagram.
+     *
+     * @param operations A list of OperationComponent objects to set as the operations.
+     */
     public void setOperations(List<OperationComponent> operations) {
         BClassBox.setOperations(operations);
     }
-
+    /**
+     * Gets the BClassBox associated with this class diagram component.
+     *
+     * @return The BClassBox representing the class diagram.
+     */
     public BClassBox getClassDiagram() {
         return BClassBox;
     }
-
+    /**
+     * Gets the class name of the diagram.
+     *
+     * @return The title of the class, which represents the class name in the diagram.
+     */
     public String getClassName() {
         return BClassBox.getTitle();
     }
+    /**
+     * Gets the title of the class diagram.
+     *
+     * @return The title of the class diagram.
+     */
 
     public String getTitle() {
         return BClassBox.getTitle();
     }
-
+    /**
+     * Gets a string representation of the attributes box of the class diagram.
+     *
+     * @return A string representing the attributes box.
+     */
     public Object getAttributesBox() {
         return BClassBox.getAttributes().toString();
     }
-
+    /**
+     * Gets a string representation of the operations box of the class diagram.
+     *
+     * @return A string representing the operations box.
+     */
     public Object getOperationsBox() {
         return BClassBox.getOperations().toString();
     }
-
+    /**
+     * Gets the BClassBox diagram component.
+     *
+     * @return The BClassBox representing the class diagram.
+     */
     public Object getDiagram() {
         return BClassBox;
     }

@@ -26,7 +26,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.List;
-
+/**
+ * The {@code MainController} class serves as the primary controller for managing
+ * interactions between the UI and business logic in the diagram management application.
+ * It handles the creation, saving, loading, and manipulation of projects and diagrams.
+ */
 public class MainController {
     private ProjectService projectService;
     private CodeGenerationService codeGenerationService;
@@ -46,7 +50,11 @@ public class MainController {
     private static int countpackage = 1;
     private static int countpackageclass = 1;
 
-
+    /**
+     * Constructs a new {@code MainController} with the specified {@code DiagramService}.
+     *
+     * @param diagramService the diagram service responsible for managing diagram-related operations.
+     */
     public MainController(DiagramService diagramService) {
         this.diagramService = diagramService;
         this.projectDAO = new ProjectDAOImpl();
@@ -55,19 +63,35 @@ public class MainController {
 
     }
 
+    /**
+     * Sets the {@code MainView} for this controller.
+     *
+     * @param mainView the main view associated with this controller.
+     */
     public void setMainView(MainView mainView) {
         this.mainView = mainView;
     }
-
+    /**
+     * Creates a new project with a default name and logs its creation.
+     */
     public void createNewProject() {
         Project project = projectService.createProject("New Project");
         System.out.println("New Project Created: " + project.getName());
     }
-
+    /**
+     * Retrieves the {@code DiagramService} instance used by this controller.
+     *
+     * @return the {@code DiagramService} instance.
+     */
     public DiagramService getDiagramService() {
         return diagramService;
     }
-
+    /**
+     * Saves the current class project to the specified file. The method serializes the project's state,
+     * including diagrams and relationships, and writes it to the file.
+     *
+     * @param file the file to which the project will be saved.
+     */
     public void saveClassProjectToFile(File file) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
             Project currentProject = diagramService.getCurrentProject();
@@ -110,7 +134,12 @@ public class MainController {
             System.err.println("Error saving project: " + e.getMessage());
         }
     }
-
+    /**
+     * Saves the current package project to the specified file. The method serializes package diagrams
+     * and their relationships, ensuring all UI-related data is persisted.
+     *
+     * @param file the file to which the project will be saved.
+     */
     public void savePackageProjectToFile(File file) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
             Project currentProject = diagramService.getCurrentProject();
@@ -165,6 +194,11 @@ public class MainController {
             e.printStackTrace();
         }
     }
+    /**
+     * Loads a package project from the specified file and updates the UI accordingly.
+     *
+     * @param file the file from which the project will be loaded.
+     */
     public void loadPackageProjectFromFile(File file) {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
             // Read the Project object from the file
@@ -219,7 +253,11 @@ public class MainController {
         }
     }
 
-
+    /**
+     * Loads a class project from the specified file and updates the UI with the restored data.
+     *
+     * @param file the file from which the project will be loaded.
+     */
     public void loadClassProjectFromFile(File file) {
         System.out.println("LoadProject from filr is called ");
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -297,7 +335,10 @@ public class MainController {
             System.err.println("Error loading project: " + e.getMessage());
         }
     }
-
+    /**
+     * Saves the current project to a user-selected file. The method distinguishes between class
+     * and package projects based on the active diagram pane.
+     */
     public void saveProject() {
         File file = new FileChooser().showSaveDialog(null);
         if (file != null&&mainView.classDiagramPane!=null) {
@@ -308,7 +349,10 @@ public class MainController {
         }
 
     }
-
+    /**
+     * Loads a project from a user-selected file. The method distinguishes between class and package
+     * projects based on the active diagram pane.
+     */
     public void loadProject() {
         File file = new FileChooser().showOpenDialog(null);
         if (file != null && mainView.packageDiagramPane!=null) {
@@ -321,7 +365,11 @@ public class MainController {
             loadClassProjectFromFile(file);
         }
     }
-
+    /**
+     * Creates a new project with the specified name. If the main view is set, updates the class list view.
+     *
+     * @param projectName the name of the new project.
+     */
     public void createNewProject(String projectName) {
         if (diagramService.getCurrentProject() == null) {
             Project newProject = projectService.createProject(projectName);
@@ -335,7 +383,11 @@ public class MainController {
             System.err.println("MainView is not set in MainController.");
         }
     }
-
+    /**
+     * Generates code from the current project using the {@code CodeGenerationService}.
+     *
+     * @return the generated code as a {@code String}, or {@code null} if no diagrams are available.
+     */
     public String generateCode() {
         Project project = projectService.getCurrentProject();
         if (project != null && !project.getDiagrams().isEmpty()) {
@@ -359,6 +411,11 @@ public class MainController {
         return List.of(); // Return an empty list if no project or diagrams
     }
 
+    /**
+     * Adds a new class box to the class diagram pane and the underlying project structure.
+     *
+     * @param diagramPane the pane to which the class box will be added.
+     */
     public void addClassBox(ClassDiagramPane diagramPane) {
         // Ensure a project is initialized
         if (projectService.getCurrentProject() == null) {
@@ -377,7 +434,11 @@ public class MainController {
         System.out.println("ClassBox added for: " + BClassBox.getTitle());
         countclasses++;
     }
-
+    /**
+     * Adds a new interface box to the class diagram pane and the underlying project structure.
+     *
+     * @param diagramPane the pane to which the interface box will be added.
+     */
     public void addInterfaceBox(ClassDiagramPane diagramPane) {
 
         if (projectService.getCurrentProject() == null) {
@@ -394,7 +455,12 @@ public class MainController {
         System.out.println("InterfaceBox added for: " + interfacebox.getTitle());
         countinterface++;
     }
-
+    /**
+     * Deletes a specified class box along with all associated relationships from the class diagram pane and project structure.
+     *
+     * @param pane      the diagram pane from which the class box will be removed.
+     * @param classBox  the class box to be deleted.
+     */
     public void deleteClassBox(ClassDiagramPane pane, ClassBox classBox) {
         if (classBox == null) {
             System.out.println("Error: ClassBox to delete is null");
@@ -422,6 +488,16 @@ public class MainController {
         }
     }
 
+    /**
+     * Creates a relationship between two class boxes and adds it to both the UI and the business layer.
+     *
+     * @param pane        the diagram pane where the relationship will be visualized.
+     * @param source      the source class box.
+     * @param sourceSide  the side of the source class box where the relationship originates.
+     * @param target      the target class box.
+     * @param targetSide  the side of the target class box where the relationship terminates.
+     * @param type        the type of relationship being created.
+     */
     public void createRelationship(ClassDiagramPane pane, ClassBox source, String sourceSide, ClassBox target, String targetSide, RelationshipLine.RelationshipType type) {
         int relationshipIndex = countRelationshipsBetween(source, target);
         System.out.println(relationshipIndex);
@@ -441,30 +517,48 @@ public class MainController {
         relationshipLines.add(line); // Track the new relationship
         pane.getChildren().add(line); // Add to UI
     }
-
+    /**
+     * Counts the number of relationships between two specified class boxes.
+     *
+     * @param source the source class box.
+     * @param target the target class box.
+     * @return the number of relationships between the source and target.
+     */
     public int countRelationshipsBetween(ClassBox source, ClassBox target) {
         return (int) relationshipLines.stream()
                 .filter(rel -> (rel.getSource() == source && rel.getTarget() == target) || (rel.getSource() == target && rel.getTarget() == source))
                 .count();
     }
-
+    /**
+     * Retrieves the current project from the project service.
+     *
+     * @return the current project or null if no project is initialized.
+     */
     public Project getCurrentProject() {
         return projectService.getCurrentProject();
     }
-
+    /**
+     * Updates the main view to reflect changes in the class list, typically after adding a class diagram.
+     */
     public void addClassDiagram() {
         if (mainView != null) {
             mainView.updateClassListView();
         }
     }
-
+    /**
+     * Updates the main view to reflect changes in the package list, typically after adding a package diagram.
+     */
     public void addPackageDiagram() {
         if (mainView != null) {
             mainView.updateClassListView();
         }
     }
 
-
+    /**
+     * Adds a new package box to the package diagram pane and updates the business layer with the package component.
+     *
+     * @param diagramPane the pane to which the package box will be added.
+     */
     public void addPackageBox(PackageDiagramPane diagramPane) {
         if (projectService.getCurrentProject() == null) {
             projectService.createProject("Untitled Project");
@@ -484,7 +578,14 @@ public class MainController {
         mainView.addClassToList(packageName);
         System.out.println("Package added: " + packageName);
     }
-
+    /**
+     * Adds a new class to an existing package box in the package diagram pane.
+     *
+     * @param diagramPane      the pane to which the package class box will be added.
+     * @param packageBox       the package box where the class will be added.
+     * @param packageComponent the package component associated with the class.
+     * @return the created package class box.
+     */
     public PackageClassBox addPackageClassBox(PackageDiagramPane diagramPane, PackageBox packageBox,PackageComponent packageComponent) {
         if (projectService.getCurrentProject() == null) {
             projectService.createProject("Untitled Project");
@@ -503,7 +604,15 @@ public class MainController {
         System.out.println("Package added: " + packageName);
         return classBox;
     }
-
+    /**
+     * Adds a new class to an existing package box using an existing package class component.
+     *
+     * @param diagramPane      the pane to which the package class box will be added.
+     * @param packageBox       the package box where the class will be added.
+     * @param packageComponent the package component associated with the class.
+     * @param pcc              the package class component to be added.
+     * @return the created package class box.
+     */
     public PackageClassBox addPackageClassBox(PackageDiagramPane diagramPane, PackageBox packageBox,PackageComponent packageComponent,PackageClassComponent pcc)
     {
         if (projectService.getCurrentProject() == null) {
@@ -517,11 +626,19 @@ public class MainController {
         mainView.addClassToList(pcc.getName());
         return classBox;
     }
-
+    /**
+     * Retrieves the main view of the application.
+     *
+     * @return the main view instance.
+     */
     public MainView getmainview() {
         return mainView;
     }
-
+    /**
+     * Adds a new relationship between two packages to the business layer and updates the mapping.
+     *
+     * @param relationship the package relationship to be added.
+     */
     public void addPackageRelationship(PackageRelationship relationship) {
 
         BPackageRelationShip bPackageRelationShip = new BPackageRelationShip<>(relationship.startPackage.getId(),relationship.endPackage.getId());

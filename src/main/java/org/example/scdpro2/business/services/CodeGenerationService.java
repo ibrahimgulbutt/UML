@@ -9,9 +9,19 @@ import org.example.scdpro2.ui.views.ClassDiagram.RelationshipLine;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/**
+ * The CodeGenerationService class provides functionality for generating Java source code
+ * from class diagrams defined in a {@link Project}. The generated code includes class declarations,
+ * attributes, operations, and relationships like inheritance.
+ */
 public class CodeGenerationService {
 
+    /**
+     * Generates Java source code for all {@link BClassBox} diagrams in the given {@link Project}.
+     *
+     * @param project the {@link Project} containing the class diagrams.
+     * @return a string representation of the generated Java source code.
+     */
     public String generateCode(Project project) {
         StringBuilder codeBuilder = new StringBuilder();
 
@@ -24,7 +34,12 @@ public class CodeGenerationService {
 
         return codeBuilder.toString();
     }
-
+    /**
+     * Generates the Java source code for a specific {@link BClassBox}.
+     *
+     * @param bClassBox the {@link BClassBox} for which code is generated.
+     * @return a string representation of the Java class code.
+     */
     private String generateClassCode(BClassBox bClassBox) {
         StringBuilder classCode = new StringBuilder();
 
@@ -63,7 +78,12 @@ public class CodeGenerationService {
         return classCode.toString();
     }
 
-
+    /**
+     * Generates the Java source code for an {@link AttributeComponent} in a class diagram.
+     *
+     * @param attribute the {@link AttributeComponent} representing a class attribute.
+     * @return a string representation of the attribute declaration in Java.
+     */
     private String generateAttributeCode(AttributeComponent attribute) {
         String visibility = switch (attribute.getVisibility()) {
             case "+" -> "public";
@@ -75,6 +95,12 @@ public class CodeGenerationService {
         return visibility + " "+attribute.getDataType()+" " + attribute.getName() + ";";
     }
 
+    /**
+     * Generates the Java source code for an {@link OperationComponent} in a class diagram.
+     *
+     * @param operation the {@link OperationComponent} representing a class operation (method).
+     * @return a string representation of the operation declaration in Java.
+     */
     private String generateOperationCode(OperationComponent operation) {
         String visibility = switch (operation.getVisibility()) {
             case "+" -> "public";

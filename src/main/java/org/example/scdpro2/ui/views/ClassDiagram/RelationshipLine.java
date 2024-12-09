@@ -12,9 +12,14 @@ import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Shape;
 import org.example.scdpro2.business.models.BClassDiagarm.BClassBox;
 import org.example.scdpro2.ui.views.MainView;
-
+/**
+ * Represents a relationship line between two class boxes in a class diagram.
+ * The line may be one of several types, such as association, aggregation, composition, or inheritance.
+ */
 public class RelationshipLine extends Group {
-
+    /**
+     * Enum for different types of relationships between class boxes.
+     */
     public enum RelationshipType {
         ASSOCIATION, AGGREGATION, COMPOSITION, INHERITANCE
     }
@@ -42,7 +47,19 @@ public class RelationshipLine extends Group {
 
     private Polyline clickOverlay; // Change to Polyline
 
-    // Example corrected constructor
+    /**
+     * Constructs a RelationshipLine with the given source and target class boxes,
+     * relationship type, and other associated properties.
+     *
+     * @param source          The source class box
+     * @param sourceSide      The side of the source class box
+     * @param target          The target class box
+     * @param targetSide      The side of the target class box
+     * @param type            The type of the relationship
+     * @param sourceOffsetIndex   The offset index for the source
+     * @param targetOffsetIndex   The offset index for the target
+     * @param relationshipIndex    The index of the relationship (for multiple relationships)
+     */
     public RelationshipLine(ClassBox source, String sourceSide, ClassBox target, String targetSide, RelationshipType type, int sourceOffsetIndex, int targetOffsetIndex, int relationshipIndex) {
         this.source = source;
         this.target = target;
@@ -89,51 +106,97 @@ public class RelationshipLine extends Group {
         // Calculate initial path and position
         updateRightAnglePath();
     }
-
+    /**
+     * Returns the label of the relationship.
+     *
+     * @return The relationship label
+     */
     public String getRelationshipLabel() {
         return relationshipLabel.getText();
     }
-
+    /**
+     * Returns the source class box of the relationship.
+     *
+     * @return The source class box
+     */
     public ClassBox getSource() {
         return source;
     }
-
+    /**
+     * Returns the target class box of the relationship.
+     *
+     * @return The target class box
+     */
     public ClassBox getTarget() {
         return target;
     }
-
+    /**
+     * Returns the polyline representing the path of the relationship.
+     *
+     * @return The polyline
+     */
     public Polyline getPolyline() {
         return polyline;
     }
-
+    /**
+     * Returns the multiplicity text for the start (source) end of the relationship.
+     *
+     * @return The multiplicity for the start end
+     */
     public String getMultiplicityStart() {
         return sourceMultiplicity.getText();
     }
-
+    /**
+     * Sets the multiplicity text for the start (source) end of the relationship.
+     *
+     * @param text The multiplicity text for the start end
+     */
     public void setMultiplicityStart(String text) {
         sourceMultiplicity.setText(text);
     }
-
+    /**
+     * Returns the multiplicity text for the end (target) of the relationship.
+     *
+     * @return The multiplicity for the end
+     */
     public String getMultiplicityEnd() {
         return targetMultiplicity.getText();
     }
-
+    /**
+     * Sets the multiplicity text for the end (target) of the relationship.
+     *
+     * @param text The multiplicity text for the end
+     */
     public void setMultiplicityEnd(String text) {
         targetMultiplicity.setText(text);
     }
-
+    /**
+     * Sets the title text for the relationship.
+     *
+     * @param text The title text
+     */
     public void setTitle(String text) {
         relationshipLabel.setText(text);
     }
-
+    /**
+     * Returns the title text of the relationship.
+     *
+     * @return The relationship title
+     */
     public String getTitle() {
         return relationshipLabel.getText();
     }
-
+    /**
+     * Sets the main view of the relationship line for mouse interaction handling.
+     *
+     * @param mainView The main view
+     */
     public void setMainView(MainView mainView) {
         this.mainView = mainView;
     }
-
+    /**
+     * Updates the path of the relationship line, including the polyline, line, and position of labels.
+     */
     private void updateRightAnglePath() {
         // Ensure neither source nor target are null, and polyline is initialized
         if ((source == null ) || (target == null) || polyline == null)
@@ -227,7 +290,15 @@ public class RelationshipLine extends Group {
         }
     }
 
-
+    /**
+     * Centers the end indicator based on the start and end coordinates.
+     *
+     * @param endX  The end X coordinate
+     * @param endY  The end Y coordinate
+     * @param startX The start X coordinate
+     * @param startY The start Y coordinate
+     * @return The centered position of the end indicator as an array [X, Y]
+     */
     private double[] centerEndIndicator(double endX, double endY, double startX, double startY) {
         double angle = Math.atan2(endY - startY, endX - startX);
         double distance = 10; // Adjust based on the size of your diamond or triangle
@@ -236,7 +307,9 @@ public class RelationshipLine extends Group {
                 endY - distance * Math.sin(angle)  // Center Y position
         };
     }
-
+    /**
+     * Sets up the mouse events for selection and deletion of the relationship line.
+     */
     private void setupMouseEvents() {
         // Clickable overlay for selection
         clickOverlay.setOnMouseClicked(event -> {
@@ -272,7 +345,9 @@ public class RelationshipLine extends Group {
         });
     }
 
-
+    /**
+     * Deletes the relationship line from the parent pane and updates the class boxes.
+     */
     private void deleteRelationship() {
         if (getParent() instanceof Pane parentPane) {
             parentPane.getChildren().remove(this); // Remove from UI
@@ -284,7 +359,9 @@ public class RelationshipLine extends Group {
             System.out.println("Relationship deleted.");
         }
     }
-
+    /**
+     * Updates the selection style of the relationship line, highlighting it when selected.
+     */
     private void updateSelectionStyle() {
         if (isSelected) {
             polyline.setStroke(Color.RED); // Highlight in red when selected
@@ -292,7 +369,12 @@ public class RelationshipLine extends Group {
             polyline.setStroke(Color.BLACK); // Default to black
         }
     }
-
+    /**
+     * Creates the end indicator shape for the relationship line based on the relationship type.
+     *
+     * @param type The type of relationship (e.g., inheritance, aggregation, etc.)
+     * @return The shape used as the end indicator
+     */
     private Shape createEndIndicator(RelationshipType type) {
         switch (type) {
             case INHERITANCE: // Triangle arrowhead
@@ -333,31 +415,64 @@ public class RelationshipLine extends Group {
                 return null;
         }
     }
-
+    /**
+     * Calculates the rotation angle for the end indicator based on the start and end points.
+     *
+     * @param startX The start X coordinate
+     * @param startY The start Y coordinate
+     * @param endX   The end X coordinate
+     * @param endY   The end Y coordinate
+     * @return The rotation angle in degrees
+     */
     private double calculateRotationAngle(double startX, double startY, double endX, double endY) {
         return Math.toDegrees(Math.atan2(endY - startY, endX - startX));
     }
-
+    /**
+     * Returns the line representing the relationship path.
+     *
+     * @return The relationship line
+     */
     public Line getLine() {
         return line;
     }
-
+    /**
+     * Returns the end indicator shape of the relationship.
+     *
+     * @return The end indicator shape
+     */
     public Shape getEndIndicator() {
         return endIndicator;
     }
-
+    /**
+     * Returns the source class diagram of the relationship.
+     *
+     * @return The source class diagram
+     */
     public BClassBox getSourceDiagram() {
         return sourceDiagram;
     }
-
+    /**
+     * Returns the target class diagram of the relationship.
+     *
+     * @return The target class diagram
+     */
     public BClassBox getTargetDiagram() {
         return targetDiagram;
     }
-
+    /**
+     * Returns the type of the relationship.
+     *
+     * @return The relationship type
+     */
     public RelationshipType getType() {
         return type;
     }
-
+    /**
+     * Checks if the relationship is connected to a given class box.
+     *
+     * @param classBox The class box to check
+     * @return True if connected to the class box, false otherwise
+     */
     public boolean isConnectedTo(ClassBox classBox) {
         return sourceDiagram.equals(classBox.getClassDiagram()) || targetDiagram.equals(classBox.getClassDiagram());
     }
