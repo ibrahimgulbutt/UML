@@ -13,11 +13,9 @@ import org.kordamp.bootstrapfx.BootstrapFX; // Import BootstrapFX
  * and configured to run within a primary {@link Stage}.</p>
  *
  * <p>This class follows a three-layered architecture:
- * <ul>
- *   <li>UI Layer: Manages the user interface and views.</li>
- *   <li>Business Layer: Contains the business logic (not implemented here).</li>
- *   <li>Data Layer: Handles data management (not implemented here).</li>
- * </ul>
+ *   UI Layer: Manages the user interface and views.
+ *   Business Layer: Contains the business logic (not implemented here).
+ *   Data Layer: Handles data management (not implemented here).
  * </p>
  *
  * <p>To run the application, execute the main method.</p>

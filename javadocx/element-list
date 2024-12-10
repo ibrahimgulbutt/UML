@@ -1,0 +1,11 @@
+module:org.example.scdpro2
+org.example.scdpro2
+org.example.scdpro2.business.models
+org.example.scdpro2.business.models.BClassDiagarm
+org.example.scdpro2.business.models.BPackageDiagarm
+org.example.scdpro2.business.services
+org.example.scdpro2.data.dao
+org.example.scdpro2.ui.controllers
+org.example.scdpro2.ui.views
+org.example.scdpro2.ui.views.ClassDiagram
+org.example.scdpro2.ui.views.PackageDiagram

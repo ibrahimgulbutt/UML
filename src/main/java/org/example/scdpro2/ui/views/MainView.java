@@ -31,11 +31,9 @@ import java.io.IOException;
  * It serves as the main workspace for managing and visualizing different UML diagrams.
  *
  * <p>This class provides functionality for:
- * <ul>
- *   <li>Displaying and managing Class and Package diagrams.</li>
- *   <li>Integrating menus, toolbars, and a project explorer.</li>
- *   <li>Managing dynamic class lists and facilitating code generation.</li>
- * </ul>
+ *   Displaying and managing Class and Package diagrams.
+ *   Integrating menus, toolbars, and a project explorer.
+ *   Managing dynamic class lists and facilitating code generation.
  * </p>
  *
  * <p>It follows a layered architecture and interacts with the {@link MainController}
