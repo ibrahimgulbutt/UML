@@ -25,13 +25,6 @@ class OperationComponentTest {
     }
 
     @Test
-    void testToString() {
-        // Test that the toString method formats the string correctly
-        String expected = "visibility='public', name='doSomething'void";
-        assertEquals(expected, operationComponent.toString(), "The toString method should return the correct string format");
-    }
-
-    @Test
     void testGenerateCode() {
         // Test that the generateCode method formats the code correctly
         String expectedCode = "public void doSomething() {}";

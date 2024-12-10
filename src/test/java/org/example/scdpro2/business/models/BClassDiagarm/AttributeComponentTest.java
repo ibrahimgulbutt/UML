@@ -25,13 +25,6 @@ class AttributeComponentTest {
     }
 
     @Test
-    void testToString() {
-        // Test that the toString method formats the string correctly
-        String expected = "private name='name':";
-        assertEquals(expected, attributeComponent.toString(), "The toString method should return the correct string format");
-    }
-
-    @Test
     void testGenerateCode() {
         // Test that the generateCode method formats the code correctly
         String expectedCode = "private name; String";

@@ -28,8 +28,8 @@ import java.util.stream.Collectors;
 import java.util.List;
 
 public class MainController {
-    private ProjectService projectService;
-    private CodeGenerationService codeGenerationService;
+    ProjectService projectService;
+    CodeGenerationService codeGenerationService;
     private final DiagramService diagramService;
 
     private ProjectDAOImpl projectDAO;
@@ -502,8 +502,6 @@ public class MainController {
         return classBox;
     }
 
-
-
     public MainView getmainview() {
         return mainView;
     }
@@ -531,5 +529,12 @@ public class MainController {
         this.mainView = mainView;
     }
 
+    public void setCodeGenerationService(CodeGenerationService codeGenerationService) {
+        this.codeGenerationService = codeGenerationService;
+    }
+
+    public void setProjectService(ProjectService projectService) {
+        this.projectService = projectService;
+    }
 
 }
