@@ -94,7 +94,6 @@ public class PackageClassBox extends BorderPane {
         // Listen for changes in the nameField and visibilityDropdown and update the model
         nameField.textProperty().addListener((observable, oldValue, newValue) -> {
             packageClassComponent.setName(newValue); // Update the model's name
-            parentPackageBox.controller.getmainview().addClassToList(newValue);
         });
 
         visibilityDropdown.valueProperty().addListener((observable, oldValue, newValue) -> {

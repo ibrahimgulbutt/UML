@@ -40,7 +40,7 @@ public class CodeGenerationService {
      * @param bClassBox the {@link BClassBox} for which code is generated.
      * @return a string representation of the Java class code.
      */
-    private String generateClassCode(BClassBox bClassBox) {
+    String generateClassCode(BClassBox bClassBox) {
         StringBuilder classCode = new StringBuilder();
 
         RelationshipLine.RelationshipType rel = RelationshipLine.RelationshipType.INHERITANCE;
@@ -84,7 +84,7 @@ public class CodeGenerationService {
      * @param attribute the {@link AttributeComponent} representing a class attribute.
      * @return a string representation of the attribute declaration in Java.
      */
-    private String generateAttributeCode(AttributeComponent attribute) {
+    String generateAttributeCode(AttributeComponent attribute) {
         String visibility = switch (attribute.getVisibility()) {
             case "+" -> "public";
             case "-" -> "private";
@@ -101,7 +101,7 @@ public class CodeGenerationService {
      * @param operation the {@link OperationComponent} representing a class operation (method).
      * @return a string representation of the operation declaration in Java.
      */
-    private String generateOperationCode(OperationComponent operation) {
+    String generateOperationCode(OperationComponent operation) {
         String visibility = switch (operation.getVisibility()) {
             case "+" -> "public";
             case "-" -> "private";

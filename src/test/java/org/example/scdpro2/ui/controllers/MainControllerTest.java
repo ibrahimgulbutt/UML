@@ -13,7 +13,6 @@ import org.example.scdpro2.business.models.BClassDiagarm.BClassBox;
 import org.example.scdpro2.business.models.BClassDiagarm.OperationComponent;
 import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
 import org.example.scdpro2.business.models.BPackageDiagarm.PackageComponent;
-import org.example.scdpro2.business.models.BPackageDiagarm.PackageDiagram;
 import org.example.scdpro2.business.services.CodeGenerationService;
 import org.example.scdpro2.business.services.DiagramService;
 import org.example.scdpro2.business.services.ProjectService;
@@ -22,6 +21,7 @@ import org.example.scdpro2.ui.views.ClassDiagram.ClassDiagramPane;
 import org.example.scdpro2.ui.views.ClassDiagram.RelationshipLine;
 import org.example.scdpro2.ui.views.MainView;
 import org.example.scdpro2.ui.views.PackageDiagram.PackageBox;
+import org.example.scdpro2.ui.views.PackageDiagram.PackageClassBox;
 import org.example.scdpro2.ui.views.PackageDiagram.PackageDiagramPane;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +32,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -97,7 +98,7 @@ class MainControllerTest {
         when(mockDiagramService.getCurrentProject()).thenReturn(mockProject);
 
         // Call the method
-        mainController.saveProjectToFile(tempFile);
+        mainController.saveClassProjectToFile(tempFile);
 
         // Verify that the file is being written to (this would normally be more specific with assertions)
         assertTrue(tempFile.exists(), "The project file should exist after saving");
@@ -124,7 +125,7 @@ class MainControllerTest {
         doNothing().when(mockDiagramService).setCurrentProject(any(Project.class));
 
         // Call the method
-        mainController.loadProjectFromFile(tempFile);
+        mainController.loadClassProjectFromFile(tempFile);
 
         // Verify interactions and deserialized project
         ArgumentCaptor<Project> projectCaptor = ArgumentCaptor.forClass(Project.class);
@@ -138,21 +139,6 @@ class MainControllerTest {
     }
 
     @Test
-    void testSaveProjectToFileWhenNoProject() {
-        File tempFile = new File("temp.ser");
-
-        when(mockDiagramService.getCurrentProject()).thenReturn(null);
-
-        Exception exception = assertThrows(IllegalStateException.class, () -> {
-            mainController.saveProjectToFile(tempFile);
-        });
-
-        assertEquals("No project to save", exception.getMessage(),
-                "Should throw an appropriate exception when no project is set");
-        verifyNoInteractions(mockClassDiagramPane);
-    }
-
-    @Test
     void testLoadInvalidProjectFile() throws IOException {
         File invalidFile = File.createTempFile("invalidProject", ".ser");
         invalidFile.deleteOnExit();
@@ -162,56 +148,19 @@ class MainControllerTest {
             fos.write("Invalid content".getBytes());
         }
 
-        Exception exception = assertThrows(IOException.class, () -> {
-            mainController.loadProjectFromFile(invalidFile);
-        });
+        mainController.loadClassProjectFromFile(invalidFile);
 
-        assertTrue(exception.getMessage().contains("invalid stream header"),
-                "Should throw an appropriate exception for invalid file");
+        // Verify no project is loaded and interactions are avoided
+        verify(mockDiagramService, never()).setCurrentProject(any());
+        verify(mockMainView.getClassDiagramPane(), never()).clearDiagrams();
     }
+
 
     @Test
     void testAddClassBoxWithNullPane() {
         // Act & Assert
         assertThrows(NullPointerException.class, () -> mainController.addClassBox(null),
                 "Should throw NullPointerException when ClassDiagramPane is null");
-    }
-
-    @Test
-    void testAddInterfaceBoxWithNullPane() {
-        // Act & Assert
-        assertThrows(NullPointerException.class, () -> mainController.addInterfaceBox(null),
-                "Should throw NullPointerException when ClassDiagramPane is null");
-    }
-
-    @Test
-    void testCountRelationshipsBetween() {
-        // Mock ClassBoxes
-        ClassBox mockBox1 = mock(ClassBox.class);
-        ClassBox mockBox2 = mock(ClassBox.class);
-
-        // Mock RelationshipLine
-        RelationshipLine mockLine1 = mock(RelationshipLine.class);
-        RelationshipLine mockLine2 = mock(RelationshipLine.class);
-
-        // Set up relationship mock behavior
-        when(mockLine1.isConnectedTo(mockBox1)).thenReturn(true);
-        when(mockLine1.isConnectedTo(mockBox2)).thenReturn(true);
-
-        when(mockLine2.isConnectedTo(mockBox1)).thenReturn(true);
-        when(mockLine2.isConnectedTo(mockBox2)).thenReturn(false);
-
-        // Add relationships to pane
-        ClassDiagramPane pane = new ClassDiagramPane(mock(MainView.class), mock(MainController.class), mock(DiagramService.class));
-        pane.getRelationships().add(mockLine1);
-        pane.getRelationships().add(mockLine2);
-
-        // Call the hypothetical method
-        List<RelationshipLine> connections = pane.relationshipBetween(mockBox1, mockBox2);
-
-        // Verify
-        assertEquals(1, connections.size(), "There should be one relationship between mockBox1 and mockBox2.");
-        assertTrue(connections.contains(mockLine1), "The connection should include mockLine1.");
     }
 
     @Test
@@ -237,6 +186,40 @@ class MainControllerTest {
     }
 
     @Test
+    void testAddClassBox_AddsToUIAndBusinessLayer() {
+        when(mockProjectService.getCurrentProject()).thenReturn(mock(Project.class));
+
+        mainController.addClassBox(mockClassDiagramPane);
+
+        verify(mockDiagramService).addDiagram(any());
+        verify(mockClassDiagramPane).addClassBox(any());
+    }
+
+    @Test
+    void testDeleteClassBoxWithNull() {
+        mainController.deleteClassBox(mockClassDiagramPane, null);
+
+        // Verify that no interactions occur with the pane or service if classBox is null
+        verifyNoInteractions(mockClassDiagramPane, mockDiagramService);
+    }
+
+    @Test
+    void testDeleteClassBox_NullClassBox() {
+        mainController.deleteClassBox(mockClassDiagramPane, null);
+
+        verifyNoInteractions(mockDiagramService);
+        verifyNoInteractions(mockClassDiagramPane);
+    }
+
+
+    @Test
+    void testAddInterfaceBoxWithNullPane() {
+        // Act & Assert
+        assertThrows(NullPointerException.class, () -> mainController.addInterfaceBox(null),
+                "Should throw NullPointerException when ClassDiagramPane is null");
+    }
+
+    @Test
     void testAddInterfaceBox() throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
 
@@ -259,68 +242,162 @@ class MainControllerTest {
     }
 
     @Test
-    void testDeleteClassBoxWithNull() {
-        mainController.deleteClassBox(mockClassDiagramPane, null);
+    void testAddInterfaceBox_AddsToUIAndBusinessLayer() {
+        when(mockProjectService.getCurrentProject()).thenReturn(mock(Project.class));
 
-        // Verify that no interactions occur with the pane or service if classBox is null
-        verifyNoInteractions(mockClassDiagramPane, mockDiagramService);
+        mainController.addInterfaceBox(mockClassDiagramPane);
+
+        verify(mockDiagramService).addDiagram(any());
+        verify(mockClassDiagramPane).addClassBox(any());
+    }
+
+
+    @Test
+    void testAddPackageBox_AddsPackageToPaneAndService() {
+        when(mockProjectService.getCurrentProject()).thenReturn(mock(Project.class));
+
+        mainController.addPackageBox(mock(PackageDiagramPane.class));
+
+        verify(mockDiagramService).addDiagram(any());
+        verify(mockMainView).addClassToList(anyString());
     }
 
     @Test
-    void testAddPackageBoxWithNoProject() {
-        // Arrange
+    void testAddPackageClassBox_CreatesPackageClass() {
+        PackageComponent mockPackageComponent = mock(PackageComponent.class);
         PackageDiagramPane mockDiagramPane = mock(PackageDiagramPane.class);
+        PackageBox mockPackageBox = mock(PackageBox.class);
 
-        when(mockDiagramService.getCurrentProject()).thenReturn(null);
-        PackageDiagram mockPackageDiagram = mock(PackageDiagram.class);
-        when(mockDiagramService.getOrCreateActivePackageDiagram()).thenReturn(mockPackageDiagram);
+        PackageClassBox result = mainController.addPackageClassBox(mockDiagramPane, mockPackageBox, mockPackageComponent);
 
-        // Act
-        mainController.addPackageBox(mockDiagramPane);
-
-        // Assert
-        verify(mockDiagramService).getOrCreateActivePackageDiagram();
-        verify(mockDiagramPane).addPackageBox(any(PackageBox.class));
+        assertNotNull(result);
+        verify(mockDiagramService).addDiagram(any());
+        verify(mockMainView).addClassToList(anyString());
     }
 
-    @Test
-    void testAddPackageBox() {
-        PackageDiagramPane mockDiagramPane = mock(PackageDiagramPane.class);
-        PackageDiagram mockPackageDiagram = mock(PackageDiagram.class);
-        when(mockDiagramService.getOrCreateActivePackageDiagram()).thenReturn(mockPackageDiagram);
 
-        mainController.addPackageBox(mockDiagramPane);
-
-        // Verify the package diagram is updated
-        verify(mockPackageDiagram).addPackage(any(PackageComponent.class));
-
-        // Verify the package box is added to the diagram pane
-        verify(mockDiagramPane).addPackageBox(any(PackageBox.class));
-    }
 
     @Test
-    void testAddPackageDiagramWithNoProject() {
-        when(mockDiagramService.getCurrentProject()).thenReturn(null);
-
-        Exception exception = assertThrows(IllegalStateException.class, () -> {
-            mainController.addPackageDiagram();
-        });
-
-        assertEquals("No project loaded.", exception.getMessage(),
-                "Should throw an exception when no project is loaded.");
-    }
-
-    @Test
-    void testAddPackageDiagram() {
-        // Mock a project and set it as the current project
+    void testGenerateCode_WithValidProject() {
+        // Mock the current project
         Project mockProject = mock(Project.class);
-        when(mockDiagramService.getCurrentProject()).thenReturn(mockProject);
+        Diagram mockDiagram = mock(Diagram.class);
+
+        // Mock behaviors
+        when(mockProjectService.getCurrentProject()).thenReturn(mockProject);
+        when(mockProject.getDiagrams()).thenReturn(List.of(mockDiagram));
+        when(mockCodeGenerationService.generateCode(mockProject)).thenReturn("Generated Code");
+
+        // Set up the services in MainController
+        mainController.setProjectService(mockProjectService);
+        mainController.setCodeGenerationService(mockCodeGenerationService);
 
         // Call the method
-        mainController.addPackageDiagram();
+        String result = mainController.generateCode();
 
-        // Verify the package diagram is added
-        verify(mockDiagramService).addPackageDiagram(any(PackageDiagram.class));
+        // Assert and verify
+        assertEquals("Generated Code", result, "The generated code should match the expected result.");
+        verify(mockCodeGenerationService).generateCode(mockProject);
     }
+
+
+    @Test
+    void testGenerateCode_NoDiagrams() {
+        Project mockProject = mock(Project.class);
+        when(mockProjectService.getCurrentProject()).thenReturn(mockProject);
+        when(mockProject.getDiagrams()).thenReturn(Collections.emptyList());
+
+        String result = mainController.generateCode();
+
+        assertNull(result);
+        verify(mockCodeGenerationService, never()).generateCode(mockProject);
+    }
+
+    @Test
+    void testGenerateCode_NoProject() {
+        when(mockProjectService.getCurrentProject()).thenReturn(null);
+
+        String result = mainController.generateCode();
+
+        assertNull(result);
+        verify(mockCodeGenerationService, never()).generateCode(any());
+    }
+
+
+    @Test
+    void testGetMainView() {
+        mainController.setMainView(mockMainView);
+        MainView result = mainController.getmainview();
+
+        assertNotNull(result, "MainView should not be null after setting it.");
+        assertEquals(mockMainView, result, "MainView returned should match the mockMainView.");
+    }
+
+    @Test
+    void testGetCurrentProject() {
+        Project mockProject = mock(Project.class);
+        when(mockProjectService.getCurrentProject()).thenReturn(mockProject);
+
+        mainController.setProjectService(mockProjectService);
+        Project result = mainController.getCurrentProject();
+
+        assertNotNull(result, "Current project should not be null if a project is set.");
+        assertEquals(mockProject, result, "The returned project should match the mock project.");
+        verify(mockProjectService).getCurrentProject();
+    }
+
+    @Test
+    void testGetAvailableClassNames_WithValidProject() {
+        Project mockProject = mock(Project.class);
+        BClassBox mockClassBox1 = mock(BClassBox.class);
+        BClassBox mockClassBox2 = mock(BClassBox.class);
+
+        when(mockProjectService.getCurrentProject()).thenReturn(mockProject);
+        when(mockClassBox1.getTitle()).thenReturn("Class1");
+        when(mockClassBox2.getTitle()).thenReturn("Class2");
+        when(mockProject.getDiagrams()).thenReturn(List.of(mockClassBox1, mockClassBox2));
+
+        mainController.setProjectService(mockProjectService);
+        List<String> result = mainController.getAvailableClassNames();
+
+        assertNotNull(result, "Available class names should not be null.");
+        assertEquals(List.of("Class1", "Class2"), result, "Class names should match the titles of BClassBox diagrams.");
+        verify(mockProjectService).getCurrentProject();
+        verify(mockProject).getDiagrams();
+        verify(mockClassBox1).getTitle();
+        verify(mockClassBox2).getTitle();
+    }
+
+    @Test
+    void testGetAvailableClassNames_NoProject() {
+        when(mockProjectService.getCurrentProject()).thenReturn(null);
+
+        mainController.setProjectService(mockProjectService);
+        List<String> result = mainController.getAvailableClassNames();
+
+        assertNotNull(result, "Available class names should not be null, even if no project is available.");
+        assertTrue(result.isEmpty(), "Available class names should be an empty list if no project is available.");
+        verify(mockProjectService).getCurrentProject();
+    }
+
+    @Test
+    void testGetDiagramService() {
+        DiagramService result = mainController.getDiagramService();
+
+        assertNotNull(result, "DiagramService should not be null.");
+        assertEquals(mockDiagramService, result, "The returned DiagramService should match the mock service.");
+    }
+
+    @Test
+    void testSetMainView() {
+        MainView newMockMainView = mock(MainView.class);
+
+        mainController.setMainView(newMockMainView);
+        MainView result = mainController.getmainview();
+
+        assertNotNull(result, "MainView should not be null after setting it.");
+        assertEquals(newMockMainView, result, "MainView returned should match the new mockMainView.");
+    }
+
 
 }

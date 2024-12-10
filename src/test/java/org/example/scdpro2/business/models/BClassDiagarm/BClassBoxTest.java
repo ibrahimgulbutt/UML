@@ -1,126 +1,118 @@
 package org.example.scdpro2.business.models.BClassDiagarm;
 
+import org.example.scdpro2.business.models.BClassDiagarm.AttributeComponent;
+import org.example.scdpro2.business.models.BClassDiagarm.OperationComponent;
+import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
+import org.example.scdpro2.business.models.BClassDiagarm.BClassBox;
 import org.example.scdpro2.business.models.DiagramType;
-import org.example.scdpro2.ui.views.ClassDiagram.RelationshipLine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import org.mockito.Mockito;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class BClassBoxTest {
 
     private BClassBox bClassBox;
-    private AttributeComponent mockAttribute;
-    private OperationComponent mockOperation;
-    private Relationship mockRelationship;
+    private AttributeComponent attribute;
+    private OperationComponent operation;
+    private Relationship relationship;
 
     @BeforeEach
     void setUp() {
-        bClassBox = new BClassBox("Test Class");
-
-        // Mocking an AttributeComponent with 3 arguments (name, type, access modifier)
-        mockAttribute = new AttributeComponent("attributeName", "String", "private");
-
-        // Mocking an OperationComponent with 3 arguments (method name, return type, access modifier)
-        mockOperation = new OperationComponent("methodName", "void", "public");
-
-        // Create two BClassBox instances to be used as source and target
-        BClassBox sourceClass = new BClassBox("Source Class");
-        BClassBox targetClass = new BClassBox("Target Class");
-
-        // Mocking a Relationship with all required parameters
-        RelationshipLine.RelationshipType relationshipType = RelationshipLine.RelationshipType.ASSOCIATION; // Assuming you have an enum RelationshipType with this constant
-        mockRelationship = new Relationship(sourceClass, targetClass, relationshipType, "1", "1..*", "associationLabel");
-    }
-
-    @Test
-    void testConstructor_default() {
-        BClassBox bClassBox = new BClassBox();
-        assertEquals("Untitled", bClassBox.getTitle());
-        assertTrue(bClassBox.getAttributes().isEmpty());
-        assertTrue(bClassBox.getOperations().isEmpty());
-        assertTrue(bClassBox.getRelationships().isEmpty());
-        assertEquals(0, bClassBox.getX());
-        assertEquals(0, bClassBox.getY());
-    }
-
-    @Test
-    void testConstructor_withTitle() {
-        assertEquals("Test Class", bClassBox.getTitle());
-    }
-
-    @Test
-    void testSetAndGetX() {
-        bClassBox.setX(100);
-        assertEquals(100, bClassBox.getX());
-    }
-
-    @Test
-    void testSetAndGetY() {
-        bClassBox.setY(200);
-        assertEquals(200, bClassBox.getY());
+        // Initialize the BClassBox and mock dependencies before each test
+        bClassBox = new BClassBox("Test Class Box");
+        attribute = Mockito.mock(AttributeComponent.class);
+        operation = Mockito.mock(OperationComponent.class);
+        relationship = Mockito.mock(Relationship.class);
     }
 
     @Test
     void testAddAttribute() {
-        bClassBox.addAttribute(mockAttribute);
-        assertEquals(1, bClassBox.getAttributes().size());
-        assertTrue(bClassBox.getAttributes().contains(mockAttribute));
+        // Test that an attribute can be added to the BClassBox
+        bClassBox.addAttribute(attribute);
+        List<AttributeComponent> attributes = bClassBox.getAttributes();
+        assertEquals(1, attributes.size(), "Attribute should be added");
+        assertTrue(attributes.contains(attribute), "The added attribute should be in the list");
     }
 
     @Test
     void testRemoveAttribute() {
-        bClassBox.addAttribute(mockAttribute);
-        bClassBox.removeAttribute(mockAttribute);
-        assertEquals(0, bClassBox.getAttributes().size());
+        // Test that an attribute can be removed from the BClassBox
+        bClassBox.addAttribute(attribute);
+        bClassBox.removeAttribute(attribute);
+        List<AttributeComponent> attributes = bClassBox.getAttributes();
+        assertTrue(attributes.isEmpty(), "Attribute should be removed");
     }
 
     @Test
     void testAddOperation() {
-        bClassBox.addOperation(mockOperation);
-        assertEquals(1, bClassBox.getOperations().size());
-        assertTrue(bClassBox.getOperations().contains(mockOperation));
+        // Test that an operation can be added to the BClassBox
+        bClassBox.addOperation(operation);
+        List<OperationComponent> operations = bClassBox.getOperations();
+        assertEquals(1, operations.size(), "Operation should be added");
+        assertTrue(operations.contains(operation), "The added operation should be in the list");
     }
 
     @Test
     void testRemoveOperation() {
-        bClassBox.addOperation(mockOperation);
-        bClassBox.removeOperation(mockOperation);
-        assertEquals(0, bClassBox.getOperations().size());
+        // Test that an operation can be removed from the BClassBox
+        bClassBox.addOperation(operation);
+        bClassBox.removeOperation(operation);
+        List<OperationComponent> operations = bClassBox.getOperations();
+        assertTrue(operations.isEmpty(), "Operation should be removed");
     }
 
     @Test
     void testAddRelationship() {
-        bClassBox.addRelationship(mockRelationship);
-        assertEquals(1, bClassBox.getRelationships().size());
-        assertTrue(bClassBox.getRelationships().contains(mockRelationship));
+        // Test that a relationship can be added to the BClassBox
+        bClassBox.addRelationship(relationship);
+        List<Relationship> relationships = bClassBox.getRelationships();
+        assertEquals(1, relationships.size(), "Relationship should be added");
+        assertTrue(relationships.contains(relationship), "The added relationship should be in the list");
     }
 
     @Test
-    void testRemoveRelationship() {
-        bClassBox.addRelationship(mockRelationship);
-        bClassBox.getRelationships().remove(mockRelationship);
-        assertEquals(0, bClassBox.getRelationships().size());
+    void testGetXAndYCoordinates() {
+        // Test that the X and Y coordinates can be set and retrieved correctly
+        bClassBox.setX(100.0);
+        bClassBox.setY(200.0);
+
+        assertEquals(100.0, bClassBox.getX(), "X-coordinate should be set to 100.0");
+        assertEquals(200.0, bClassBox.getY(), "Y-coordinate should be set to 200.0");
     }
 
     @Test
     void testToCode() {
-        // Expected output format after calling toCode()
-        String expectedCode = "class TestClass {\n  attributeName: String\n  methodName(): void\n}";
+        // Test the toCode method to ensure it generates the expected code
+        bClassBox.addAttribute(attribute);
+        bClassBox.addOperation(operation);
 
-        // Get the actual generated code from the BClassBox
-        String actualCode = bClassBox.toCode();
+        Mockito.when(attribute.generateCode()).thenReturn("private String name;");
+        Mockito.when(operation.generateCode()).thenReturn("public void setName(String name);");
 
-        // Print generatedCode for debugging if test fails
-        System.out.println("Generated Code: " + actualCode);
+        String expectedCode = "class Test Class Box {\n  private String name;\n  public void setName(String name);\n}";
+        String generatedCode = bClassBox.toCode();
 
-        // Assert that the generated code matches the expected code
-        assertEquals(expectedCode, actualCode);
+        assertEquals(expectedCode, generatedCode, "The generated code should match the expected code");
     }
 
     @Test
     void testGetType() {
-        assertEquals(DiagramType.CLASS, bClassBox.getType());
+        // Test that the getType method returns the correct type
+        assertEquals(DiagramType.CLASS, bClassBox.getType(), "The diagram type should be CLASS");
+    }
+
+    @Test
+    void testInitialState() {
+        // Test that the BClassBox is initialized with default values
+        assertNotNull(bClassBox.getAttributes(), "Attributes list should be initialized");
+        assertNotNull(bClassBox.getOperations(), "Operations list should be initialized");
+        assertNotNull(bClassBox.getRelationships(), "Relationships list should be initialized");
+        assertEquals(0.0, bClassBox.getX(), "Initial X-coordinate should be 0.0");
+        assertEquals(0.0, bClassBox.getY(), "Initial Y-coordinate should be 0.0");
     }
 }

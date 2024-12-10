@@ -120,7 +120,6 @@ public class PackageBox extends BorderPane  {
                     nameLabel.setText(newName);
                     contentBox.getChildren().remove(nameField);
                     contentBox.getChildren().add(0, nameLabel);
-                    controller.getmainview().addClassToList(newName);
                 }
             });
             contentBox.getChildren().remove(nameLabel);

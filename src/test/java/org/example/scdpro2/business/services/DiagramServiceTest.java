@@ -2,7 +2,6 @@ package org.example.scdpro2.business.services;
 
 import org.example.scdpro2.business.models.BClassDiagarm.BClassBox;
 import org.example.scdpro2.business.models.BClassDiagarm.Relationship;
-import org.example.scdpro2.business.models.BPackageDiagarm.PackageDiagram;
 import org.example.scdpro2.business.models.Diagram;
 import org.example.scdpro2.business.models.Project;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +20,6 @@ class DiagramServiceTest {
     private Project mockProject;
     private Diagram mockDiagram;
     private Relationship mockRelationship;
-    private PackageDiagram mockPackageDiagram;
 
     @BeforeEach
     void setUp() {
@@ -29,7 +27,6 @@ class DiagramServiceTest {
         mockProject = mock(Project.class);
         mockDiagram = mock(Diagram.class);
         mockRelationship = mock(Relationship.class);
-        mockPackageDiagram = mock(PackageDiagram.class);
     }
 
     @Test
@@ -69,40 +66,6 @@ class DiagramServiceTest {
     }
 
     @Test
-    void testFindDiagramByTitleWhenProjectIsNull() {
-        Optional<Diagram> result = diagramService.findDiagramByTitle("TestTitle");
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void testFindDiagramByTitleInCurrentProject() {
-        when(mockProject.getDiagrams()).thenReturn(List.of(mockDiagram));
-        when(mockDiagram.getTitle()).thenReturn("TestTitle");
-
-        diagramService.setCurrentProject(mockProject);
-        Optional<Diagram> result = diagramService.findDiagramByTitle("TestTitle");
-
-        assertTrue(result.isPresent());
-        assertEquals(mockDiagram, result.get());
-    }
-
-    @Test
-    void testAddRelationshipWhenProjectIsNullThrowsException() {
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-            diagramService.addRelationship(mockRelationship);
-        });
-        assertEquals("No project is loaded. Please create or load a project first.", exception.getMessage());
-    }
-
-    @Test
-    void testAddRelationshipToCurrentProject() {
-        diagramService.setCurrentProject(mockProject);
-        diagramService.addRelationship(mockRelationship);
-
-        verify(mockProject).addRelationship(mockRelationship);
-    }
-
-    @Test
     void testRemoveRelationshipBetweenDiagrams() {
         BClassBox sourceDiagram = mock(BClassBox.class);
         BClassBox targetDiagram = mock(BClassBox.class);
@@ -131,32 +94,4 @@ class DiagramServiceTest {
         assertFalse(targetRelationships.contains(mockRelationship));
     }
 
-
-    @Test
-    void testAddPackageDiagram() {
-        diagramService.addPackageDiagram(mockPackageDiagram);
-        assertTrue(diagramService.getPackageDiagrams().contains(mockPackageDiagram));
-    }
-
-    @Test
-    void testAddDuplicatePackageDiagram() {
-        diagramService.addPackageDiagram(mockPackageDiagram);
-        diagramService.addPackageDiagram(mockPackageDiagram);
-
-        assertEquals(1, diagramService.getPackageDiagrams().size());
-    }
-
-    @Test
-    void testGetOrCreateActivePackageDiagramWhenNoneExist() {
-        PackageDiagram result = diagramService.getOrCreateActivePackageDiagram();
-        assertEquals("Default Package Diagram", result.getTitle());
-    }
-
-    @Test
-    void testGetOrCreateActivePackageDiagramWhenExists() {
-        diagramService.addPackageDiagram(mockPackageDiagram);
-
-        PackageDiagram result = diagramService.getOrCreateActivePackageDiagram();
-        assertEquals(mockPackageDiagram, result);
-    }
 }

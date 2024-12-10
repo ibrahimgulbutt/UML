@@ -647,4 +647,12 @@ public class MainController {
         PackageRelationshipMapping.put(relationship,bPackageRelationShip);
 
     }
+
+    public void setCodeGenerationService(CodeGenerationService codeGenerationService) {
+        this.codeGenerationService = codeGenerationService;
+    }
+
+    public void setProjectService(ProjectService projectService) {
+        this.projectService = projectService;
+    }
 }
